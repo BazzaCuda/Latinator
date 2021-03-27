@@ -1,0 +1,616 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Latin>
+	<dn>
+		<ns></ns>
+		<vs></vs>
+		<as></as>
+		<gs></gs>
+		<ds></ds>
+		<bs></bs>
+		<np></np>
+		<vp></vp>
+		<ap></ap>
+		<gp></gp>
+		<dp></dp>
+		<bp></bp>
+	</dn>
+	<_1cv>
+		<_1ps></_1ps>
+		<_2ps></_2ps>
+		<_3ps></_3ps>
+		<_1pp></_1pp>
+		<_2pp></_2pp>
+		<_3pp></_3pp>
+	</_1cv>
+	<_1dn>
+		<ns>a</ns>
+		<vs>a</vs>
+		<as>am</as>
+		<gs>ae</gs>
+		<ds>ae</ds>
+		<bs>ā</bs>
+		<np>ae</np>
+		<vp>ae</vp>
+		<ap>ās</ap>
+		<gp>ārum</gp>
+		<dp>īs</dp>
+		<bp>īs</bp>
+	</_1dn>
+	<pronunciation nb="no silent letters in Latin; long vowels take about twice as long to say as short ones, cf: crotchets and quavers">
+		<vowel>
+			<a>between u in cup and a in cat; like first a in a-ha!</a>
+			<ā>like a in father</ā>
+			<e>like e in jet</e>
+			<ē>like e in prey</ē>
+			<i>like i in Itālia (not pit), or like y in yet when used as a consonant</i>
+			<ī>like i in machine</ī>
+			<o>like o in hot</o>
+			<ō>like o in tone, although closer is French o in chose</ō>
+			<u>like u in put, unless it follows q in which case its like w in qwick</u>
+			<ū>like u food</ū>
+			<y>like French u in tu</y>
+		</vowel>
+		<consonant>
+			<b>as b in but</b>
+			<c>as c in cut, not as in church, cider or loch</c>
+			<d>as d in dog</d>
+			<f>as f in fat</f>
+			<g>as g in gut, not as in genius</g>
+			<h>as h in hut</h>
+			<k nb="only appears in kalendae;first day of the month">as k in kin</k>
+			<l>as l in lit</l>
+			<m>as m in mum</m>
+			<n>as n in nut, but as ng before c, g and qu</n>
+			<p>as p in pat</p>
+			<q>as q in queen; is always followed by u</q>
+			<r>always rolled like in Italian</r>
+			<s>as s in sun, not as in was, treasure or sugar</s>
+			<t>as t in top, not as in motion</t>
+			<v>as w in win, although closer is the Hindi pronunciation of v</v>
+			<x nb="is the double consonant ks">as x in axe, not as in exact</x>
+			<z nb="only used in words of Greek origin">as z in zoo</z>
+		</consonant>
+		<diphthong>
+			<ae eg="praeda:booty">like ai in aisle</ae>
+			<au eg="aurum:gold">like ou in house</au>
+			<oe eg="poena:penalty">like oi in boil</oe>
+			<ei nb="rare as a diphthong; only found in the exclamations ei! eia! heia!;oh! aha! and Pompeii">like ei in reign</ei>
+			<eu nb="rare as a diphthong" eg="seu:whether">like ew in pew</eu>
+			<ui nb="rare as a diphthong" eg="huic:to this">like wea in weak</ui>
+		</diphthong>
+		<nondiphthong nb="usually, these are not diphthongs and are pronounced separately">
+			<ei eg="mei:mine">mei=mayee</ei>
+			<eu eg="deus:god">deus=dayoos</eu>
+			<ui eg="tui:yours">tui=tooee</ui>
+		</nondiphthong>
+		<syllable>
+			<syllabification1 eg="de-a;de-ae">separate two contiguous vowels or a vowel and diphthong</syllabification1>
+			<syllabification2 eg="a-mī-cus">a single consonant between two vowels goes with the second vowel</syllabification2>
+			<syllabification3 eg="mit-tō;ser-vā-re;cōn-sūmp-tus">when two or more consonants sit between vowels, generally only the second consonant goes with the following vowel</syllabification3>
+			<syllabification4 eg="pa-trem;cas-tra">a stop (p|b|t|d|c|g) plus a liquid (l|r) generally count as a single consonant so go with the following vowel</syllabification4>
+			<syllabification5 eg="ar-chi-tec-tus;lo-quā-cem">qu and the aspirates (ch|ph|th) count as single consonants which should never by separated in syllabification</syllabification5>
+			<longshort>the difference is rather like that between a crotchet and a quaver</longshort>
+			<long>long vowel|diphthong|ends in two consonants|ends in x|ends in single consonant and next word begins with a consonant</long>
+			<longbynature eg="s1s2:lau-dō;s1:Rō-ma;s2:a-mī-cus">long vowel|diphthong</longbynature>
+			<longbyposition eg="s1:ser-vat;s3:sa-pi-ēn-ti;s1:ax-is">short vowel followed by two or more consonants or by x (ks)</longbyposition>
+		</syllable>
+	</pronunciation>
+	<mood>
+		<finitemood nb="Finite moods are limited to a particular person">
+			<indicativemood>generally for making statements and asking questions</indicativemood>
+			<imperativemood>used for giving commands</imperativemood>
+			<subjunctivemood>used mainly as a verb in subordinate clauses, often to express anticipated or conditional actions; less commonly, when it is a main verb, it usually expresses a wish and is often found in mottos</subjunctivemood>
+		</finitemood>
+		<infinitemood nb="no part of the verb is limited to a particular person">infinitive|participle|gerundive|gerund|supine
+		</infinitemood>
+	</mood>
+	<voice>
+		<active eg="the cat chases the mouse">the subject performs the verb</active>
+		<passive eg="the mouse is chased by the cat">the subject experiences the verb</passive>
+	</voice>
+	<tense nb="a tense can  be active|passive, as well as indicative|subjunctive">pluperfect|perfect|imperfect|present|futureperfect|future
+		<pluperfect>an action which occurred two stages back in the past, expressed in English with "had" plus Past Participle</pluperfect><perfect>refers mostly to single, completed actions in the past; formed with 1ps_PfIA</perfect><imperfect>imperfect means incomplete; actions in the past which didn't get finished, went on regularly, lasted for some time before they ended or only just got started; as opposed to single actions which were completed in one go; however, the normal past tense can be used if it's clear that the action took place over a period of time, eg: I wrote in my diary every day</imperfect></tense>
+	<nouns>
+		<case>
+			<nominative>subject and complement</nominative>
+			<vocative>for addressing someone directly</vocative>
+			<accusative>direct object|used after certain prepositions|duration of time|motion towards|adverbial</accusative>
+			<genitive>denotes posssession|wide range of other meanings|contains the noun's stem</genitive>
+			<dative>indirect object (to|for)|wide range of other meanings</dative>
+			<ablative>denotes means|association or separation (by|with|from)|used after certain prepositions|(by|of|with|in|from)</ablative>
+			<locative>in relation to a particular place (at|towards|from)</locative>
+		</case>
+		<gender>
+			<masculine>men's names|men's occupations</masculine>
+			<feminine>women's names|women's occupations</feminine>
+		</gender>
+		<dictionaryentry>nominative;genitive(noun stem);gender;meaning</dictionaryentry>
+	</nouns>
+	<_1dn end="-a" gen="-ae" nb="mostly feminine but with some masculine roles(agricola:farmer|poeta:poet|scriba:scribe)" eg="silva:wood|puella:girl">
+		<ns>-a</ns>
+		<vs>-a</vs>
+		<as>-am</as>
+		<gs>-ae</gs>
+		<ds>-ae</ds>
+		<bs>-ā</bs>
+		<np>-ae</np>
+		<vp>-ae</vp>
+		<ap>-ās</ap>
+		<gp>-ārum</gp>
+		<dp>-īs</dp>
+		<bp>-īs</bp>
+	</_1dn>
+	<_2dn end="M(-us|-ius|-er);N(-um)" gen="-ī" nb="mostly masculine and neuter" eg="M(taurus:bull);N(templum:temple);M(puer:boy|ager:field)">
+		<ns>
+			<M>-us|-ius|-er</M>
+			<N>-um</N>
+		</ns>
+		<vs>
+			<M>-e|-i|-er</M>
+			<N>-um</N>
+		</vs>
+		<as>-um</as>
+		<gs>-ī</gs>
+		<ds>-ō</ds>
+		<bs>-ō</bs>
+		<np>-ī</np>
+		<vp>-ī</vp>
+		<ap>-ōs</ap>
+		<gp>-ōrum</gp>
+		<dp>-īs</dp>
+		<bp>-īs</bp>
+	</_2dn>
+	<_3dn1 end="*" gen="-is" nb="all genders" eg="MF(leo:lion);N(corpus:body)">
+		<ns>*</ns>
+		<vs>*</vs>
+		<as>
+			<MF>-em</MF>
+			<N>*</N>
+		</as>
+		<gs>-is</gs>
+		<ds>-ī</ds>
+		<bs>-e</bs>
+		<np>
+			<MF>-ēs</MF>
+			<N>-a</N>
+		</np>
+		<vp>
+			<MF>-ēs</MF>
+			<N>-a</N>
+		</vp>
+		<ap>
+			<MF>-ēs</MF>
+			<N>-a</N>
+		</ap>
+		<gp>-um</gp>
+		<dp>-ibus</dp>
+		<bp>-ibus</bp>
+	</_3dn1>
+	<_3dn2 end="*" gen="-is" nb="all genders" eg="M(venter:stomach);MF(civis:citizen)">
+		<ns>
+			<MF>er|-is|-ēs</MF>
+			<N>-e|-l|-r</N>
+		</ns>
+		<vs>
+			<MF>er|-is|-ēs</MF>
+			<N>-e|-l|-r</N>
+		</vs>
+		<as>
+			<MF>-em|-im</MF>
+			<N>-e|-l|-r</N>
+		</as>
+		<gs>-is</gs>
+		<ds>-ī</ds>
+		<bs>-ī|-e</bs>
+		<np>
+			<MF>-ēs</MF>
+			<N>-ia</N>
+		</np>
+		<vp>
+			<MF>-ēs</MF>
+			<N>-ia</N>
+		</vp>
+		<ap>
+			<MF>-ēs|-īs</MF>
+			<N>-ia</N>
+		</ap>
+		<gp>-ium</gp>
+		<dp>-ibus</dp>
+		<bp>-ibus</bp>
+	</_3dn2>
+	<_3din-vis eg="vis:violence;force;pl(strength)" nb="defective noun">
+		<ns>vis</ns>
+		<vs></vs>
+		<as>vim</as>
+		<gs></gs>
+		<ds></ds>
+		<bs>vī</bs>
+		<np>virēs</np>
+		<vp>virēs</vp>
+		<ap>virēs</ap>
+		<gp>virium</gp>
+		<dp>viribus</dp>
+		<bp>viribus</bp>	
+	</_3din-vis>
+	<_3din-senex eg="senex:old man">
+		<ns>senex</ns>
+		<vs>senex</vs>
+		<as>senem</as>
+		<gs>senis</gs>
+		<ds>senī</ds>
+		<bs>sene</bs>
+		<np>senēs</np>
+		<vp>senēs</vp>
+		<ap>senēs</ap>
+		<gp>senum</gp>
+		<dp>senibus</dp>
+		<bp>senibus</bp>
+	</_3din-senex>
+	<_4dn end="MF(-us);N(-u)" gen="-ūs" nb="mostly masculine with some feminine and neuter" eg="MF(gradus:step);F(manus:hand);N(genu:knee)">
+		<ns>
+			<MF>-us</MF>
+			<N>-u</N>
+		</ns>
+		<vs>
+			<MF>-us</MF>
+			<N>-u</N>
+		</vs>
+		<as>
+			<MF>-um</MF>
+			<N>-u</N>
+		</as>
+		<gs>-ūs</gs>
+		<ds>
+			<MF>-uī</MF>
+			<N>-ū</N>
+		</ds>
+		<bs>-ū</bs>
+		<np>
+			<MF>-ūs</MF>
+			<N>-ua</N>
+		</np>
+		<vp>
+			<MF>-ūs</MF>
+			<N>-ua</N>
+		</vp>
+		<ap>
+			<MF>-ūs</MF>
+			<N>-ua</N>
+		</ap>
+		<gp>-uum</gp>
+		<dp>-ibus|-ubus</dp>
+		<bp>-ibus|-ubus</bp>
+	</_4dn>
+	<_5dn end="-ēs" gen="-eī" nb="all feminine except for one masculine(diēs:day) and its compound (meridies:midday)" eg="M(dies:day|meridies:midday);F(res:thing)">
+		<ns>-ēs</ns>
+		<vs>-ēs</vs>
+		<as>-em</as>
+		<gs>-eī</gs>
+		<ds>-eī</ds>
+		<bs>-ē</bs>
+		<np>-ēs</np>
+		<vp>-ēs</vp>
+		<ap>-ēs</ap>
+		<gp>-ērum</gp>
+		<dp>-ēbus</dp>
+		<bp>-ēbus</bp>
+	</_5dn>
+	<_5dn-respublica>
+		<ns>respublica</ns>
+		<vs>respublica</vs>
+		<as>rempublicam</as>
+		<gs>reipubplicae</gs>
+		<ds>reipublicae</ds>
+		<bs>republica</bs>
+		<np>respublicae</np>
+		<vp>respublicae</vp>
+		<ap>respublicae</ap>
+		<gp>rerumpublicarum</gp>
+		<dp>rebuspublicis</dp>
+		<bp>rebuspublicis</bp>
+	</_5dn-respublica>
+	<!--Greek Nouns-->
+	<_1dgn eg="M(Aeneas:a Trojan hero)" nb="most are proper names; plurals same as _1dn">
+		<ns>-ās</ns>
+		<vs>-ā</vs>
+		<as>-ān</as>
+		<gs>-āe</gs>
+		<ds>-āe</ds>
+		<bs>-ā</bs>
+		<np>-ae</np>
+		<vp>-ae</vp>
+		<ap>-ās</ap>
+		<gp>-ārum</gp>
+		<dp>-īs</dp>
+		<bp>-īs</bp>
+	</_1dgn>
+	<_1dgn2 eg="M(Anchises:Aeneas's father)" nb="most are proper names; plurals same as _1dn">
+		<ns>-ēs</ns>
+		<vs>-ē|-ā</vs>
+		<as>-ēn-ān</as>
+		<gs>-ae</gs>
+		<ds>-ae</ds>
+		<bs>-ē|-ā</bs>
+		<np>-ae</np>
+		<vp>-ae</vp>
+		<ap>-ās</ap>
+		<gp>-ārum</gp>
+		<dp>-īs</dp>
+		<bp>-īs</bp>
+	</_1dgn2>
+	<_1dgn3 eg="F(Circe:a goddess)" nb="most are proper names; plurals same as _1dn">
+		<ns>-ē|-ā</ns>
+		<vs>-ē|-ā</vs>
+		<as>-ēn-am</as>
+		<gs>-ēs|-ae</gs>
+		<ds>-ae</ds>
+		<bs>-ē|-ā</bs>
+		<np>-ae</np>
+		<vp>-ae</vp>
+		<ap>-ās</ap>
+		<gp>-ārum</gp>
+		<dp>-īs</dp>
+		<bp>-īs</bp>
+	</_1dgn3>
+	<!--Patronymics-->
+	<_1dgn4 eg="M(Atrides:son of Atreus(Agamemnon)|Pilides:son of Peleus(Achilles))" nb="-ides:son of; declines like Anchises(_1dgn2) except {ns} and {gp}">
+		<ns>-ides</ns>
+		<vs>-ē|-ā</vs>
+		<as>-ēn-ān</as>
+		<gs>-ae</gs>
+		<ds>-ae</ds>
+		<bs>-ē|-ā</bs>
+		<np>-ae</np>
+		<vp>-ae</vp>
+		<ap>-ās</ap>
+		<gp>-um</gp>
+		<dp>-īs</dp>
+		<bp>-īs</bp>
+	</_1dgn4>
+	<_2dgn1 nb="two types of mostly proper names" eg="F(Delos:the Aegean island where Apollo and Artemis were born);N(Pelion:a Greek mountain)">
+		<ns>-os</ns>
+		<vs>-os</vs>
+		<as>-on|-um</as>
+		<gs>-ī</gs>
+		<ds>-ō</ds>
+		<bs>-ō</bs>
+		<np>-ae</np>
+		<vp>-ae</vp>
+		<ap>-ās</ap>
+		<gp>-um</gp>
+		<dp>-īs</dp>
+		<bp>-īs</bp>
+	</_2dgn1>
+	<_2dgn2 nb="two types of mostly proper names" eg="N(Pelion:a Greek mountain)">
+		<ns>-on</ns>
+		<vs>-on</vs>
+		<as>-on</as>
+		<gs>-ī</gs>
+		<ds>-ō</ds>
+		<bs>-ō</bs>
+		<np>-ae</np>
+		<vp>-ae</vp>
+		<ap>-ās</ap>
+		<gp>-um</gp>
+		<dp>-īs</dp>
+		<bp>-īs</bp>
+	</_2dgn2>	
+	<_3dgn eg="M(crater:mixing bowl)">
+		<ns>*</ns>
+		<vs>*</vs>
+		<as>-a|-em</as>
+		<gs>-os|-is</gs>
+		<ds>-ī</ds>
+		<bs>-e</bs>
+		<np>-es</np>
+		<vp>-es</vp>
+		<ap>-as|-es</ap>
+		<gp>-um</gp>
+		<dp>-ibus</dp>
+		<bp>-ibus</bp>
+	</_3dgn>
+	<in-domus>
+		<ns>domus</ns>
+		<vs>domus</vs>
+		<as>domum</as>
+		<gs>domūs</gs>
+		<ds>domuī|domō</ds>
+		<bs>domūs</bs>
+		<np>domūs</np>
+		<vp>domūs</vp>
+		<ap>domūs|domōs</ap>
+		<gp>domuum|domōrum</gp>
+		<dp>domibus</dp>
+		<bp>domibus</bp>
+		<lo>domum:homeward|domi:at home|domo:from home</lo>
+	</in-domus>
+	<timeline>pp-pf-ip-pr-fp-ft</timeline>
+	<timelinelong>PluPerfect-Perfect-Imperfect-Present-FuturePerfect-Future</timelinelong>
+	<principalparts eg="porto,portare,portavi,portatum">
+		1ps_PIA,PA_Infinitive,1ps_PfIA,supine(acc:-um|abl:-u)|prPastParticiple
+	</principalparts>
+	<verbconjugations>
+		<_1cv eg="portō,portāre" _1ps="-ō" end="-āre"></_1cv>
+		<_2cv eg="habeō,habēre" _1ps="-eō" end="-ēre"></_2cv>
+		<_3cv eg="regō,regere|capiō,capere" _1ps="-ō|-iō" end="-ere"></_3cv>
+		<_4cv eg="audiō,audīre" _1ps="-iō" end="-īre"></_4cv>
+	</verbconjugations>
+	<verbs>
+		<transativeverb>do_acc</transativeverb>
+	</verbs>
+	<_1234cv-pluperfect-indicative-active>
+		<meaning>I had ~ed</meaning>
+		<stem>pf</stem>
+		<_1ps>-eram</_1ps>
+		<_2ps>-erās</_2ps>
+		<_3ps>-erat</_3ps>
+		<_1pp>-erāmus</_1pp>
+		<_2pp>-erātis</_2pp>
+		<_3pp>-erant</_3pp>
+	</_1234cv-pluperfect-indicative-active>
+	<_1234cv-perfect-indicative-active>
+		<meaning>I ~ed|I have ~ed</meaning>
+		<stem>pf</stem>
+		<_1ps>-ī</_1ps>
+		<_2ps>-istī</_2ps>
+		<_3ps>-it</_3ps>
+		<_1pp>-imus</_1pp>
+		<_2pp>-istis</_2pp>
+		<_3pp>-ērunt</_3pp>
+	</_1234cv-perfect-indicative-active>
+	<_4cv-perfect-indicative-active>
+		<meaning>I ~ed|I have ~ed</meaning>
+		<stem>pf</stem>
+		<_1ps>-ii</_1ps>
+		<_2ps>-iistī</_2ps>
+		<_3ps>-iit</_3ps>
+		<_1pp>-iimus</_1pp>
+		<_2pp>-iistis</_2pp>
+		<_3pp>-iērunt</_3pp>
+	</_4cv-perfect-indicative-active>
+	<_12cv-imperfect-indicative-active>
+		<meaning>I was ~ing|I used to ~|I kept on ~ing|I began to ~</meaning>
+		<stem>pr</stem>
+		<_1ps>-bam</_1ps>
+		<_2ps>-bās</_2ps>
+		<_3ps>-bat</_3ps>
+		<_1pp>-bāmus</_1pp>
+		<_2pp>-bātis</_2pp>
+		<_3pp>-bant</_3pp>
+	</_12cv-imperfect-indicative-active>
+	<_34cv-imperfect-indicative-active>
+		<meaning>I was ~ing|I used to ~|I kept on ~ing|I began to ~</meaning>
+		<stem>pr</stem>
+		<_1ps>-ebam</_1ps>
+		<_2ps>-ebās</_2ps>
+		<_3ps>-ebat</_3ps>
+		<_1pp>-ebāmus</_1pp>
+		<_2pp>-ebātis</_2pp>
+		<_3pp>-ebant</_3pp>
+	</_34cv-imperfect-indicative-active>
+	<_1cv-present-indicative-active>
+		<meaning>I ~|I am ~ing|I do ~</meaning>
+		<stem>pr</stem>
+		<_1ps>-ō</_1ps>
+		<_2ps>-s</_2ps>
+		<_3ps>-t</_3ps>
+		<_1pp>-mus</_1pp>
+		<_2pp>-tis</_2pp>
+		<_3pp>-nt</_3pp>
+	</_1cv-present-indicative-active>
+	<_234cv-present-indicative-active>
+		<meaning>I ~|I am ~ing|I do ~</meaning>
+		<stem>pr</stem>
+		<_1ps>-ō</_1ps>
+		<_2ps>-s</_2ps>
+		<_3ps>-t</_3ps>
+		<_1pp>-mus</_1pp>
+		<_2pp>-tis</_2pp>
+		<_3pp>-unt</_3pp>
+	</_234cv-present-indicative-active>
+	<_1234cv-futureperfect-indicative-active>
+		<meaning>I will have ~ed</meaning>
+		<stem>pf</stem>
+		<_1ps>-erō</_1ps>
+		<_2ps>-eris</_2ps>
+		<_3ps>-erit</_3ps>
+		<_1pp>-erimus</_1pp>
+		<_2pp>-eritis</_2pp>
+		<_3pp>-erint</_3pp>
+	</_1234cv-futureperfect-indicative-active>
+	<_4cv-futureperfect-indicative-active>
+		<meaning>I will have ~ed</meaning>
+		<stem>pf</stem>
+		<_1ps>-verō</_1ps>
+		<_2ps>-veris</_2ps>
+		<_3ps>-verit</_3ps>
+		<_1pp>-verimus</_1pp>
+		<_2pp>-veritis</_2pp>
+		<_3pp>-verint</_3pp>
+	</_4cv-futureperfect-indicative-active>
+	<_12cv-future-indicative-active>
+		<meaning>I will ~</meaning>
+		<stem>pr</stem>
+		<_1ps>-bō</_1ps>
+		<_2ps>-bis</_2ps>
+		<_3ps>-bit</_3ps>
+		<_1pp>-bimus</_1pp>
+		<_2pp>-bitis</_2pp>
+		<_3pp>-bunt</_3pp>
+	</_12cv-future-indicative-active>
+	<_34cv-future-indicative-active>
+		<meaning>I will ~</meaning>
+		<stem>pr</stem>
+		<_1ps>-am</_1ps>
+		<_2ps>-ēs</_2ps>
+		<_3ps>-et</_3ps>
+		<_1pp>-ēmus</_1pp>
+		<_2pp>-ētis</_2pp>
+		<_3pp>-ēnt</_3pp>
+	</_34cv-future-indicative-active>
+	<sum-pluperfect-indicative-active>
+		<meaning>I had been</meaning>
+		<_1ps>fueram</_1ps>
+		<_2ps>fueras</_2ps>
+		<_3ps>fuerat</_3ps>
+		<_1pp>fueramus</_1pp>
+		<_2pp>fueratis</_2pp>
+		<_3pp>fuerant</_3pp>
+	</sum-pluperfect-indicative-active>
+	<sum-perfect-indicative-active>
+		<meaning>I have been</meaning>
+		<_1ps>fui</_1ps>
+		<_2ps>fuisti</_2ps>
+		<_3ps>fuit</_3ps>
+		<_1pp>fuimus</_1pp>
+		<_2pp>fuistis</_2pp>
+		<_3pp>fuerunt</_3pp>
+	</sum-perfect-indicative-active>
+	<sum-imperfect-indicative-active>
+		<meaning>I was</meaning>
+		<_1ps>eram</_1ps>
+		<_2ps>eras</_2ps>
+		<_3ps>erat</_3ps>
+		<_1pp>eramus</_1pp>
+		<_2pp>eratis</_2pp>
+		<_3pp>erant</_3pp>
+	</sum-imperfect-indicative-active>
+	<sum-present-indicative-active>
+		<meaning>I am</meaning>
+		<_1ps>sum</_1ps>
+		<_2ps>es</_2ps>
+		<_3ps>est</_3ps>
+		<_1pp>sumus</_1pp>
+		<_2pp>estis</_2pp>
+		<_3pp>sunt</_3pp>
+	</sum-present-indicative-active>
+	<sum-futureperfect-indicative-active>
+		<meaning>I will have been</meaning>
+		<_1ps>fuero</_1ps>
+		<_2ps>fueris</_2ps>
+		<_3ps>fuerit</_3ps>
+		<_1pp>fuerimus</_1pp>
+		<_2pp>fueristis</_2pp>
+		<_3pp>fuerint</_3pp>
+	</sum-futureperfect-indicative-active>
+	<sum-future-indicative-active>
+		<meaning>I will be</meaning>
+		<_1ps>ero</_1ps>
+		<_2ps>eris</_2ps>
+		<_3ps>erit</_3ps>
+		<_1pp>erimus</_1pp>
+		<_2pp>eritis</_2pp>
+		<_3pp>erunt</_3pp>
+	</sum-future-indicative-active>
+	<ire-present-indicative-active></ire-present-indicative-active>
+	<_1234cv-present-future-imperfect-passive>
+		<meaning>I am ~ed</meaning>
+		<stem></stem>
+		<_1ps>-or|-r</_1ps>
+		<_2ps>-ris|-eris|-re</_2ps>
+		<_3ps>-tur</_3ps>
+		<_1pp>-mur</_1pp>
+		<_2pp>-mini</_2pp>
+		<_3pp>-ntur</_3pp>
+	</_1234cv-present-future-imperfect-passive>
+</Latin>

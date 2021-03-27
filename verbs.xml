@@ -1,0 +1,11 @@
+; don't use macrons
+; vc,1ps{meaning},infinitive,1ps perfect indicative active,supine,perfect passive participle,stems
+; perfect stem is the 1ps_PfIA before the -i-, eg portavi => portav-
+1,porto{carry},partare,portavi,portatum,portatus,pr{*:porta-},pf{*:portav-}
+2,habeo{have},habere,habui,habitum,,pr{*:habe-},pf{*:habu-}
+3a,dico{say;speak;tell},dicere,dixi,dictum,,pr{*:dic-},pf{*:dix-}
+3b,capio{seize,take},capere,cepi,captum,,pr{*:capi-},pf{*:cep-}
+4,audio{hear},audire,audivi,auditum,,pr{*:audi-},pf{*:audiv-}
+3,ago{do;drive},agere,egi,actum,,pr{*:ag-},pf{*:eg-}
+1,do{give},dare,dedi,datum,,pr{*:da-},pf{*:ded-}
+0,eo(go),ire, ivi|ii,itum
