@@ -1,13 +1,13 @@
-object Form1: TForm1
+object lblWord: TlblWord
   Left = 0
   Top = 0
   Caption = 'Latinator'
-  ClientHeight = 307
-  ClientWidth = 643
+  ClientHeight = 345
+  ClientWidth = 552
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -21
   Font.Name = 'Tahoma'
   Font.Style = []
   Icon.Data = {
@@ -6945,20 +6945,61 @@ object Form1: TForm1
     0000FE070000F8030000F0030000E0070000C007000080030000800100000000
     0000000000000000000000000000E0070000E0070000F00F0000F81F0000}
   OldCreateOrder = False
+  Position = poScreenCenter
+  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
-  TextHeight = 13
-  object Label1: TLabel
-    Left = 136
-    Top = 96
-    Width = 92
-    Height = 39
-    Caption = 'Label1'
+  TextHeight = 25
+  object lblLatin: TLabel
+    Left = 15
+    Top = 106
+    Width = 40
+    Height = 25
+    Caption = 'latin'
+  end
+  object lblEnglish: TLabel
+    Left = 152
+    Top = 106
+    Width = 66
+    Height = 25
+    Caption = 'english'
+  end
+  object lblWordType: TLabel
+    Left = 13
+    Top = 129
+    Width = 186
+    Height = 25
+    Caption = '1st declension noun'
+  end
+  object sg: TStringGrid
+    Left = 8
+    Top = 155
+    Width = 439
+    Height = 184
+    ColCount = 3
+    DefaultColWidth = 86
+    DefaultDrawing = False
+    DrawingStyle = gdsClassic
+    RowCount = 7
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
+    Options = [goColSizing, goRowSelect]
     ParentFont = False
+    ScrollBars = ssVertical
+    TabOrder = 0
+    OnDrawCell = sgDrawCell
+  end
+  object btnExit: TButton
+    Left = 453
+    Top = 306
+    Width = 91
+    Height = 33
+    Cancel = True
+    Caption = 'E&xit'
+    TabOrder = 1
+    OnClick = btnExitClick
   end
 end
