@@ -2,7 +2,7 @@ object lblWord: TlblWord
   Left = 0
   Top = 0
   Caption = 'Latinator'
-  ClientHeight = 345
+  ClientHeight = 301
   ClientWidth = 552
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -6952,28 +6952,76 @@ object lblWord: TlblWord
   TextHeight = 25
   object lblLatin: TLabel
     Left = 15
-    Top = 106
+    Top = 61
     Width = 40
     Height = 25
     Caption = 'latin'
   end
   object lblEnglish: TLabel
     Left = 152
-    Top = 106
+    Top = 61
     Width = 66
     Height = 25
     Caption = 'english'
   end
   object lblWordType: TLabel
     Left = 13
-    Top = 129
+    Top = 84
     Width = 186
     Height = 25
     Caption = '1st declension noun'
   end
+  object lblRecNo: TLabel
+    Left = 459
+    Top = 177
+    Width = 76
+    Height = 16
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'x of y'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label1: TLabel
+    Left = 15
+    Top = 20
+    Width = 68
+    Height = 25
+    Caption = 'search:'
+  end
+  object lblFound: TLabel
+    Left = 459
+    Top = 25
+    Width = 61
+    Height = 19
+    Caption = 'lblFound'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 334
+    Top = 51
+    Width = 109
+    Height = 13
+    Caption = 'press ENTER to search'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+  end
   object sg: TStringGrid
     Left = 8
-    Top = 155
+    Top = 110
     Width = 439
     Height = 184
     ColCount = 3
@@ -6989,17 +7037,55 @@ object lblWord: TlblWord
     Options = [goColSizing, goRowSelect]
     ParentFont = False
     ScrollBars = ssVertical
-    TabOrder = 0
+    TabOrder = 5
     OnDrawCell = sgDrawCell
   end
   object btnExit: TButton
     Left = 453
-    Top = 306
+    Top = 261
     Width = 91
     Height = 33
     Cancel = True
     Caption = 'E&xit'
-    TabOrder = 1
+    TabOrder = 4
     OnClick = btnExitClick
+  end
+  object btnEdit: TButton
+    Left = 453
+    Top = 222
+    Width = 91
+    Height = 33
+    Cancel = True
+    Caption = 'E&dit'
+    TabOrder = 3
+    OnClick = btnEditClick
+  end
+  object btnNext: TButton
+    Left = 453
+    Top = 142
+    Width = 91
+    Height = 33
+    Cancel = True
+    Caption = '&Next'
+    TabOrder = 2
+    OnClick = btnNextClick
+  end
+  object btnPrev: TButton
+    Left = 453
+    Top = 110
+    Width = 91
+    Height = 33
+    Cancel = True
+    Caption = '&Prev'
+    TabOrder = 1
+    OnClick = btnPrevClick
+  end
+  object edtSearch: TEdit
+    Left = 89
+    Top = 17
+    Width = 358
+    Height = 33
+    TabOrder = 0
+    OnKeyUp = edtSearchKeyUp
   end
 end
