@@ -1,8 +1,8 @@
-object lblWord: TlblWord
+object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'Latinator'
-  ClientHeight = 301
+  ClientHeight = 312
   ClientWidth = 552
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -6957,15 +6957,8 @@ object lblWord: TlblWord
     Height = 25
     Caption = 'latin'
   end
-  object lblEnglish: TLabel
-    Left = 152
-    Top = 61
-    Width = 66
-    Height = 25
-    Caption = 'english'
-  end
   object lblWordType: TLabel
-    Left = 13
+    Left = 15
     Top = 84
     Width = 186
     Height = 25
@@ -6994,27 +6987,43 @@ object lblWord: TlblWord
     Caption = 'search:'
   end
   object lblFound: TLabel
-    Left = 459
-    Top = 25
-    Width = 61
-    Height = 19
-    Caption = 'lblFound'
+    Left = 391
+    Top = 3
+    Width = 52
+    Height = 13
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Not Found'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -16
+    Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
   end
   object Label2: TLabel
-    Left = 334
-    Top = 51
-    Width = 109
+    Left = 131
+    Top = 49
+    Width = 275
     Height = 13
-    Caption = 'press ENTER to search'
+    Alignment = taRightJustify
+    Caption = 'To enter macrons hold the SHIFT key and press A E I O U'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblInfo: TLabel
+    Left = 15
+    Top = 293
+    Width = 35
+    Height = 16
+    Caption = 'lblInfo'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
@@ -7055,7 +7064,6 @@ object lblWord: TlblWord
     Top = 222
     Width = 91
     Height = 33
-    Cancel = True
     Caption = 'E&dit'
     TabOrder = 3
     OnClick = btnEditClick
@@ -7065,7 +7073,6 @@ object lblWord: TlblWord
     Top = 142
     Width = 91
     Height = 33
-    Cancel = True
     Caption = '&Next'
     TabOrder = 2
     OnClick = btnNextClick
@@ -7075,7 +7082,6 @@ object lblWord: TlblWord
     Top = 110
     Width = 91
     Height = 33
-    Cancel = True
     Caption = '&Prev'
     TabOrder = 1
     OnClick = btnPrevClick
@@ -7086,6 +7092,17 @@ object lblWord: TlblWord
     Width = 358
     Height = 33
     TabOrder = 0
+    OnKeyPress = edtSearchKeyPress
     OnKeyUp = edtSearchKeyUp
+  end
+  object btnFindNext: TButton
+    Left = 449
+    Top = 17
+    Width = 100
+    Height = 33
+    Caption = '&Find Next'
+    TabOrder = 6
+    Visible = False
+    OnClick = btnFindNextClick
   end
 end

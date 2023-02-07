@@ -4,15 +4,15 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Grids;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Grids,
+  Vcl.Buttons;
 
 type
   TEntryType = (etNone, etNoun, etVerb);
 
-  TlblWord = class(TForm)
+  TMainForm = class(TForm)
     sg: TStringGrid;
     lblLatin: TLabel;
-    lblEnglish: TLabel;
     lblWordType: TLabel;
     btnExit: TButton;
     btnEdit: TButton;
@@ -22,7 +22,9 @@ type
     edtSearch: TEdit;
     Label1: TLabel;
     lblFound: TLabel;
+    btnFindNext: TButton;
     Label2: TLabel;
+    lblInfo: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure sgDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -31,6 +33,8 @@ type
     procedure btnPrevClick(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
     procedure edtSearchKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure btnFindNextClick(Sender: TObject);
+    procedure edtSearchKeyPress(Sender: TObject; var Key: Char);
   private
     Ix:         integer;
     FIniFile:   TStringList;
@@ -39,6 +43,8 @@ type
     FWordDescs: TStringList;
     FVerbTypes: TStringList;
     FVerbDescs: TStringList;
+    FStop:      boolean;
+    FSearchTerm: string;
     procedure clearSG;
     procedure doEntry;
     procedure doNounHeaders;
@@ -46,6 +52,7 @@ type
     procedure doVerbHeaders;
     procedure doVerb(verbString: string);
     function  getEntryType(entryString: string): TEntryType;
+    function  getInfo(typeString: string): string;
     function  getVerbType(typeString: string): string;
     function  getWordType(typeString: string): string;
     procedure loadINIFile;
@@ -53,14 +60,14 @@ type
     procedure populateWordDescs;
     procedure populateVerbTypes;
     procedure populateVerbDescs;
-    procedure searchRecs;
+    procedure searchRecs(fromIx: integer = 0);
     procedure updateRecLabel;
   public
     { Public declarations }
   end;
 
 var
-  lblWord: TlblWord;
+  MainForm: TMainForm;
 
 implementation
 
@@ -71,7 +78,7 @@ const
 
 {$R *.dfm}
 
-procedure TlblWord.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   case FIniFile   <> NIL of TRUE: FIniFile.free; end;
   case FStrings   <> NIL of TRUE: FStrings.free; end;
@@ -83,7 +90,7 @@ begin
   FStrings.Delimiter  := ',';
 end;
 
-procedure TlblWord.FormCreate(Sender: TObject);
+procedure TMainForm.FormCreate(Sender: TObject);
 begin
   FIniFile    := TStringList.create;
   FStrings    := TStringList.create;
@@ -99,13 +106,13 @@ begin
 
   loadINIFile;
 
-  lblFound.caption := '';
+  lblFound.caption  := '';
+  lblInfo.caption   := '';
 
-  ix := 0;
-  DoEntry;
+  DoEntry; // ix := 0 is set in loadINIFile
 end;
 
-function TlblWord.getEntryType(entryString: string): TEntryType;
+function TMainForm.getEntryType(entryString: string): TEntryType;
 begin
   result := etNone;
   case length(entryString) <> 2 of TRUE: EXIT; end;
@@ -113,24 +120,44 @@ begin
   case entryString[2] in ['v', 'i'] of TRUE: result := etVerb; end;
 end;
 
-function TlblWord.getVerbType(typeString: string): string;
+function TMainForm.getInfo(typeString: string): string;
+begin
+  result := '';
+  case typeString = '1n' of TRUE: result := '1D: mostly f. characterised by the vowel -a. Nom: -a, Gen: -ae'; end;
+  case typeString = '2n' of TRUE: result := '2D: mostly m. n. characterised by the vowels -o/-u. NomM: -us -ius -er NomN: -um Gen: -i'; end;
+  case (typeString = '3n') or (typeString = 'in') or (typeString = 'nn') of TRUE:
+                                  result := '3D: m. f. n. Nom: various Gen: -is'; end;
+  case typeString = '4n' of TRUE: result := '4D: mostly m. some f. n. NomMF: -us NomN: -u Gen: -us'; end;
+  case typeString = '5n' of TRUE: result := '5D: all f. except diēs/day (m or f) Nom: -es Gen: ēī'; end;
+
+  case typeString = '1v' of TRUE: result := ''; end;
+  case typeString = '2v' of TRUE: result := ''; end;
+  case typeString = '3v' of TRUE: result := ''; end;
+  case typeString = '3i' of TRUE: result := ''; end;
+  case typeString = '4v' of TRUE: result := ''; end;
+  case typeString = 'iv' of TRUE: result := ''; end;
+
+end;
+
+function TMainForm.getVerbType(typeString: string): string;
 begin
   result := FVerbDescs[FVerbTypes.indexOf(typeString)];
 end;
 
-function TlblWord.getWordType(typeString: string): string;
+function TMainForm.getWordType(typeString: string): string;
 begin
   result := FWordDescs[FWordTypes.indexOf(typeString)];
 end;
 
-procedure TlblWord.loadINIFile;
+procedure TMainForm.loadINIFile;
 begin
   DICT_FILE := extractFilePath(paramStr(0)) + 'latinator.ini';
   FIniFile.sorted := TRUE;
   FIniFile.loadFromFile(DICT_FILE);
+  ix := 0;
 end;
 
-procedure TlblWord.populateVerbDescs;
+procedure TMainForm.populateVerbDescs;
 begin
   FVerbDescs.add('present indicative active');
   FVerbDescs.add('imperfect indicative active');
@@ -146,12 +173,12 @@ begin
   FVerbDescs.add('future perfect indicative passive');
 end;
 
-procedure TlblWord.populateVerbTypes;
+procedure TMainForm.populateVerbTypes;
 begin
   FVerbTypes.add('pia');
   FVerbTypes.add('iia');
   FVerbTypes.add('fia');
-  FVerbTypes.add('pia');
+  FVerbTypes.add('pfia');
   FVerbTypes.add('ppia');
   FVerbTypes.add('fpia');
   FVerbTypes.add('pip');
@@ -162,11 +189,13 @@ begin
   FVerbTypes.add('fpip');
 end;
 
-procedure TlblWord.populateWordDescs;
+procedure TMainForm.populateWordDescs;
 begin
   FWordDescs.add('1st declension noun');
   FWordDescs.add('2nd declension noun');
   FWordDescs.add('3rd declension noun');
+  FWordDescs.add('3rd declension i-stem noun');
+  FWordDescs.add('3rd declension irregular noun');
   FWordDescs.add('4th declension noun');
   FWordDescs.add('5th declension noun');
   FWordDescs.add('1st conjugation verb');
@@ -174,13 +203,16 @@ begin
   FWordDescs.add('3rd conjugation verb');
   FWordDescs.add('3rd conjugation i-stem verb');
   FWordDescs.add('4th conjugation verb');
+  FWordDescs.add('irregular verb');
 end;
 
-procedure TlblWord.populateWordTypes;
+procedure TMainForm.populateWordTypes;
 begin
   FWordTypes.add('1n');
   FWordTypes.add('2n');
   FWordTypes.add('3n');
+  FWordTypes.add('in');
+  FWordTypes.add('nn');
   FWordTypes.add('4n');
   FWordTypes.add('5n');
   FWordTypes.add('1v');
@@ -188,21 +220,28 @@ begin
   FWordTypes.add('3v');
   FWordTypes.add('3i');
   FWordTypes.add('4v');
+  FWordTypes.add('iv');
 end;
 
-procedure TlblWord.searchRecs;
+procedure TMainForm.searchRecs(fromIx: integer = 0);
 begin
+  case (fromIx = 0) and (edtSearch.text = FSearchTerm) of TRUE: begin FSearchTerm := ''; EXIT; end;end; // again, VK_RETURN on btnFindNext triggers in edtSearch.OnKeyPress!
+  FSearchTerm := edtSearch.text;
   case trim(edtSearch.text) = '' of TRUE: EXIT; end;
   lblFound.caption := 'Found!';
-  for var i := 0 to FIniFile.count - 1 do
+  for var i := fromIx to FIniFile.count - 1 do
     case pos(edtSearch.text, FIniFile[i]) > 0 of TRUE:  begin
                                                           ix := i;
                                                           doEntry;
+                                                          btnFindNext.visible := TRUE;
+                                                          btnFindNext.setFocus;
                                                           EXIT; end;end;
+  btnFindNext.visible := FALSE;
   lblFound.caption := 'Not Found';
+  edtSearch.setFocus; // the VK_RETURN culprit! But this needs to be done for UX reasons.
 end;
 
-procedure TlblWord.sgDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+procedure TMainForm.sgDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 begin
   // default colors
   // $232323;  // black-ish background
@@ -231,12 +270,12 @@ begin
   sg.canvas.textRect(rect, rect.left, rect.top, text);
 end;
 
-procedure TlblWord.updateRecLabel;
+procedure TMainForm.updateRecLabel;
 begin
   lblRecNo.caption := format('%d of %d', [ix + 1, FIniFile.count]);
 end;
 
-procedure TlblWord.btnEditClick(Sender: TObject);
+procedure TMainForm.btnEditClick(Sender: TObject);
 begin
   with TEditForm.create(NIL) do begin
     VerbTypes := FVerbTypes;
@@ -245,29 +284,36 @@ begin
     populateWordDescs(FWordDescs);
     showModal;
     loadINIFile;
+    doEntry;
+    edtSearch.setFocus;
   end;
 end;
 
-procedure TlblWord.btnExitClick(Sender: TObject);
+procedure TMainForm.btnExitClick(Sender: TObject);
 begin
   CLOSE;
 end;
 
-procedure TlblWord.btnNextClick(Sender: TObject);
+procedure TMainForm.btnFindNextClick(Sender: TObject);
+begin
+  searchRecs(ix + 1);
+end;
+
+procedure TMainForm.btnNextClick(Sender: TObject);
 begin
   lblFound.caption := '';
   case ix < FIniFile.count - 1 of TRUE: inc(ix); end;
   doEntry;
 end;
 
-procedure TlblWord.btnPrevClick(Sender: TObject);
+procedure TMainForm.btnPrevClick(Sender: TObject);
 begin
   lblFound.caption := '';
   case ix > 0 of TRUE: dec(ix); end;
   doEntry;
 end;
 
-procedure TlblWord.clearSG;
+procedure TMainForm.clearSG;
 begin
   for var i := 0 to sg.ColCount - 1 do begin
     sg.cols[i].Clear;
@@ -276,7 +322,7 @@ begin
   sg.rowCount := 1;
 end;
 
-procedure TlblWord.doEntry;
+procedure TMainForm.doEntry;
 begin
   FStrings.commaText := FIniFile[ix];
 
@@ -289,11 +335,10 @@ begin
   updateRecLabel;
 end;
 
-procedure TlblWord.doNoun(nounString: string);
+procedure TMainForm.doNoun(nounString: string);
 begin
   doNounHeaders;
   lblLatin.caption    := '';
-  lblEnglish.caption  := '';
   lblWordType.caption := '';
   case trim(nounString) = '' of TRUE: EXIT; end;
 
@@ -301,18 +346,19 @@ begin
 
   try
     lblWordType.caption := getWordType(FStrings[0]);
-    lblLatin.caption    := Fstrings[1] + '. ' + FStrings[2];
-    lblEnglish.caption  := FStrings[3];
+    lblLatin.caption    := Fstrings[1] + '. ' + FStrings[2] + ' = ' + FStrings[3];
 
     for var i := 1 to 6 do
       sg.cells[1, i] := ' ' + FStrings[i + 3]; // entries [4] to [9] go in the singular columm
 
     for var i := 1 to 6 do
       sg.cells[2, i] := ' ' + FStrings[i + 9]; // entries [10] to [15] go in the plural column
-  except end;
+  except end; // not every record has every field, but that's ok
+
+  lblInfo.caption := getInfo(FStrings[0]);
 end;
 
-procedure TlblWord.doNounHeaders;
+procedure TMainForm.doNounHeaders;
 begin
   clearSG;
   sg.colCount := 3;
@@ -328,11 +374,10 @@ begin
   sg.cells[0, 6] := ' ablative';
 end;
 
-procedure TlblWord.doVerb(verbString: string);
+procedure TMainForm.doVerb(verbString: string);
 begin
   doVerbHeaders;
   lblLatin.caption    := '';
-  lblEnglish.caption  := '';
   lblWordType.caption := '';
   case trim(verbString) = '' of TRUE: EXIT; end;
 
@@ -340,18 +385,17 @@ begin
 
   try
     lblWordType.caption := getWordType(FStrings[0]) + ' - ' + getVerbType(FStrings[1]);
-    lblLatin.caption    := FStrings[2];
-    lblEnglish.caption  := FStrings[3];
+    lblLatin.caption    := FStrings[2] + ' = ' + FStrings[3];
 
     for var i := 1 to 3 do
       sg.cells[1, i] := ' ' + FStrings[i + 3]; // entries [4] to [6] go in the singular columm
 
     for var i := 1 to 3 do
       sg.cells[2, i] := ' ' + FStrings[i + 6]; // entries [7] to [9] go in the plural column
-  except; end;
+  except; end; // not every record has every field, but that's ok
 end;
 
-procedure TlblWord.doVerbHeaders;
+procedure TMainForm.doVerbHeaders;
 begin
   clearSG;
   sg.colCount := 3;
@@ -364,8 +408,16 @@ begin
   sg.cells[0, 3] := ' 3rd person';
 end;
 
-procedure TlblWord.edtSearchKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TMainForm.edtSearchKeyPress(Sender: TObject; var Key: Char);
 begin
+  case isShiftKeyDown     of  TRUE: key := getMacronChar(key); end;
+  case validMacron(key)   of  TRUE: EXIT; end;
+  case key in VALID_KEYS  of FALSE: key := #0; end;
+end;
+
+procedure TMainForm.edtSearchKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  btnFindNext.visible := FALSE;
   case key = VK_RETURN of TRUE: searchRecs; end;
 end;
 

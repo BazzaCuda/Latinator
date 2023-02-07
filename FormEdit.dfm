@@ -3054,12 +3054,43 @@ object EditForm: TEditForm
     Height = 16
     Caption = 'click an entry to load it into the boxes for editing'
   end
+  object Label5: TLabel
+    Left = 12
+    Top = 302
+    Width = 275
+    Height = 13
+    Alignment = taRightJustify
+    Caption = 'To enter macrons hold the SHIFT key and press A E I O U'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblPressEnter: TLabel
+    Left = 592
+    Top = 302
+    Width = 128
+    Height = 16
+    Caption = 'press ENTER to ADD'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Visible = False
+  end
   object edtEntry: TEdit
     Left = 8
     Top = 278
     Width = 917
     Height = 24
     TabOrder = 6
+    OnEnter = edtEntryEnter
+    OnExit = edtEntryExit
+    OnKeyPress = edtEntryKeyPress
     OnKeyUp = edtEntryKeyUp
   end
   object lbLatin: TListBox
@@ -3069,6 +3100,7 @@ object EditForm: TEditForm
     Height = 193
     TabStop = False
     Align = alTop
+    Sorted = True
     TabOrder = 0
     OnClick = lbLatinClick
   end
@@ -3107,8 +3139,8 @@ object EditForm: TEditForm
     AutoDropDown = True
     Style = csDropDownList
     TabOrder = 4
+    OnCloseUp = cbMFNCloseUp
     OnEnter = cbMFNEnter
-    OnSelect = cbMFNSelect
     Items.Strings = (
       'm'
       'f'
@@ -3123,7 +3155,6 @@ object EditForm: TEditForm
     Style = csDropDownList
     TabOrder = 5
     OnCloseUp = cbVerbDescCloseUp
-    OnEnter = cbVerbDescEnter
   end
   object edtLatin: TEdit
     Left = 8
@@ -3131,6 +3162,7 @@ object EditForm: TEditForm
     Width = 257
     Height = 24
     TabOrder = 1
+    OnKeyPress = edtLatinKeyPress
     OnKeyUp = edtLatinKeyUp
   end
   object edtEnglish: TEdit

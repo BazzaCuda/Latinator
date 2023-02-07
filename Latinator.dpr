@@ -2,7 +2,7 @@ program Latinator;
 
 uses
   Vcl.Forms,
-  main in 'main.pas' {lblWord},
+  main in 'main.pas' {MainForm},
   Vcl.Themes,
   Vcl.Styles;
 
@@ -12,6 +12,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   TStyleManager.TrySetStyle('Charcoal Dark Slate');
-  Application.CreateForm(TlblWord, lblWord);
+  Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

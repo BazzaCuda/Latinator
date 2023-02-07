@@ -1,4 +1,4 @@
-unit FormEdit;
+﻿unit FormEdit;
 
 interface
 
@@ -21,6 +21,8 @@ type
     Label3: TLabel;
     btnClear: TButton;
     Label4: TLabel;
+    Label5: TLabel;
+    lblPressEnter: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure edtEntryKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -28,14 +30,17 @@ type
     procedure edtEnglishKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnExitClick(Sender: TObject);
     procedure edtLatinKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure cbMFNSelect(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
     procedure cbWordDescEnter(Sender: TObject);
     procedure cbMFNEnter(Sender: TObject);
-    procedure cbVerbDescEnter(Sender: TObject);
     procedure edtEnglishKeyPress(Sender: TObject; var Key: Char);
     procedure cbWordDescCloseUp(Sender: TObject);
     procedure cbVerbDescCloseUp(Sender: TObject);
+    procedure edtEntryKeyPress(Sender: TObject; var Key: Char);
+    procedure edtLatinKeyPress(Sender: TObject; var Key: Char);
+    procedure cbMFNCloseUp(Sender: TObject);
+    procedure edtEntryEnter(Sender: TObject);
+    procedure edtEntryExit(Sender: TObject);
   private
     entreez:    TStringList;
     FVerbTypes: TStringList;
@@ -59,17 +64,62 @@ type
 
 const
   TXT_EXT = '.txt';
+  VALID_KEYS = ['a'..'z', #8, '/', ',', '+', ' ', #22]; // #8 = backspae, #22 = Ctrl-v
 
 var
   DICT_FILE: string;
 
+function getMacronChar(aChar: char): char;
+function getMacronWord(key: WORD): WORD;
+function isShiftKeyDown: boolean;
+function validMacron(key: char): boolean;
+
 implementation
+
+function getMacronChar(aChar: char): char;
+begin
+  result := aChar;
+  case aChar of
+    'A', 'a': result := 'ā';
+    'E', 'e': result := 'ē';
+    'I', 'i': result := 'ī';
+    'O', 'o': result := 'ō';
+    'U', 'u': result := 'ū';
+  end;
+end;
+
+function getMacronWord(key: WORD): WORD;
+begin
+  result := key;
+  case key of
+    65: result := 257;
+    69: result := 275;
+    73: result := 299;
+    79: result := 333;
+    85: result := 363;
+  end;
+end;
+
+function isShiftKeyDown: boolean;
+begin
+  result := (GetKeyState(VK_SHIFT) AND $80) <> 0;
+end;
+
+function validMacron(key: char): boolean;
+begin
+  result := FALSE;
+  case ord(key) of
+    257, 275, 299, 333, 363: result := TRUE; // ā ē ī ō ū
+//    257, 275, 299, 333, 363, 256, 274, 298, 332, 362: result := TRUE; // ā ē ī ō ū Ā Ē Ī Ō Ū
+  end;
+end;
 
 {$R *.dfm}
 
 function TEditForm.addEntry: boolean;
 begin
   lbLatin.itemIndex := lbLatin.items.add(getEntry);
+  lbLatin.topIndex  := lbLatin.itemIndex - 5;
   saveLatin;
   resetBoxes;
 end;
@@ -81,21 +131,28 @@ end;
 
 procedure TEditForm.resetAllBoxes;
 begin
-  edtLatin.text := '';
-  edtEnglish.text := '';
-  cbWordDesc.itemIndex := -1;
-  cbMFN.itemIndex := -1;
-  cbVerbDesc.itemIndex := -1;
-  edtEntry.text := '';
+  edtLatin.text         := '';
+  edtEnglish.text       := '';
+  cbWordDesc.itemIndex  := -1;
+  cbMFN.itemIndex       := -1;
+  cbVerbDesc.itemIndex  := -1;
+  FEdit                 := FALSE;
+  lblPressEnter.caption := 'press ENTER to ADD';
+  edtEntry.text         := '';
+  edtLatin.setfocus;
 end;
 
 procedure TEditForm.resetBoxes;
 // for conveniece, this omits Latin, English and wordType, so that multiple entries (e.g. tenses of the same verb) can be made in succession
 begin
-  cbMFN.itemIndex := -1;
-  cbVerbDesc.itemIndex := -1;
-  edtEntry.text := '';
-  edtEntry.setFocus;
+  case pos('noun', cbWordDesc.text) > 0 of TRUE:  resetAllBoxes; end;
+  case pos('verb', cbWordDesc.text) > 0 of TRUE:  begin
+                                                    cbMFN.itemIndex       := -1;
+                                                    cbVerbDesc.itemIndex  := -1;
+                                                    FEdit                 := FALSE;
+                                                    edtEntry.text         := '';
+                                                    edtEntry.setFocus;
+                                                  end;end;
 end;
 
 procedure TEditForm.btnClearClick(Sender: TObject);
@@ -108,24 +165,19 @@ begin
   modalResult := mrOK;
 end;
 
+procedure TEditForm.cbMFNCloseUp(Sender: TObject);
+begin
+  edtEntry.setFocus;
+end;
+
 procedure TEditForm.cbMFNEnter(Sender: TObject);
 begin
   cbMFN.droppedDown := TRUE;
 end;
 
-procedure TEditForm.cbMFNSelect(Sender: TObject);
-begin
-  edtEntry.setFocus;
-end;
-
 procedure TEditForm.cbVerbDescCloseUp(Sender: TObject);
 begin
   edtEntry.setFocus;
-end;
-
-procedure TEditForm.cbVerbDescEnter(Sender: TObject);
-begin
-  cbVerbDesc.droppedDown := TRUE;
 end;
 
 procedure TEditForm.cbWordDescCloseUp(Sender: TObject);
@@ -146,25 +198,44 @@ end;
 
 procedure TEditForm.edtEnglishKeyPress(Sender: TObject; var Key: Char);
 begin
-  case key in ['a'..'z', 'A'..'Z', #8] of FALSE: key := #0; end;
+  case validMacron(key)   of  TRUE: EXIT; end;
+  case key in VALID_KEYS  of FALSE: key := #0; end;
 end;
 
 procedure TEditForm.edtEnglishKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case Key = VK_RETURN of  TRUE:  begin cbWordDesc.setFocus; cbWordDesc.droppedDown := TRUE; end;end;
-//                          FALSE:  begin
-//                                    var ix := lbDictionary.items.count - 1;
-//                                    while (ix > 0) and (compareText(edtEnglish.text, lbDictionary.items[ix]) < 0) do dec(ix); // this goes one too far
-//                                    lbDictionary.itemIndex := ix + 1;                                                         // so add one back in
-//                                    lbDictionary.topIndex  := ix - 5;                                                         // position it four-squarely in the middlelode
-//                                    end;end;
+end;
+
+procedure TEditForm.edtEntryEnter(Sender: TObject);
+begin
+  lblPressEnter.visible := TRUE;
+end;
+
+procedure TEditForm.edtEntryExit(Sender: TObject);
+begin
+  lblPressEnter.visible := FALSE;
+end;
+
+procedure TEditForm.edtEntryKeyPress(Sender: TObject; var Key: Char);
+begin
+  case isShiftKeyDown of TRUE: key := getMacronChar(key); end;
+  case validMacron(key)   of  TRUE: EXIT; end;
+  case key in VALID_KEYS  of FALSE: key := #0; end;
 end;
 
 procedure TEditForm.edtEntryKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  case trim(edtEntry.text) = '' of TRUE: EXIT; end; // if cbVerbDescCloseUp is trigged by VK_RETURN, edtEntry.setFocus fires without VK_RETURN being cleared
-  case Key = VK_RETURN of TRUE: case FEDIT of  TRUE: updEntry;
-                                              FALSE: addEntry; end;end;
+// if cbVerbDescCloseUp is trigged by VK_RETURN, edtEntry.setFocus fires without VK_RETURN being cleared
+  case (Key = VK_RETURN) and (trim(edtEntry.text) <> '') of TRUE: case FEDIT of  TRUE: updEntry;
+                                                                                FALSE: addEntry; end;end;
+end;
+
+procedure TEditForm.edtLatinKeyPress(Sender: TObject; var Key: Char);
+begin
+  case isShiftKeyDown of TRUE: key := getMacronChar(key); end;
+  case validMacron(key)   of  TRUE: EXIT; end;
+  case key in VALID_KEYS  of FALSE: key := #0; end;
 end;
 
 procedure TEditForm.edtLatinKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -224,6 +295,7 @@ begin
   var lenPrefix   := length(FStrings[0] + ',' + FStrings[1] + ',' + FStrings[2] + ',' + FStrings[3] + ',');
   edtEntry.text   := replaceQuotes(copy(FStrings.delimitedText, lenPrefix + 1, 255));
   FEdit := TRUE;
+  lblPressEnter.caption := 'press ENTER to UPDATE';
 end;
 
 procedure TEditForm.populateVerbDescs(verbDescs: TStringList);
@@ -252,6 +324,8 @@ begin
   saveLatin;
   resetAllBoxes;
   FEDIT := FALSE;
+  lblPressEnter.caption := 'press ENTER to ADD';
+  lblPressEnter.visible := FALSE;
 end;
 
 end.
