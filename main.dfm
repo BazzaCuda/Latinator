@@ -6963,6 +6963,7 @@ object MainForm: TMainForm
     Width = 186
     Height = 25
     Caption = '1st declension noun'
+    ShowAccelChar = False
   end
   object lblRecNo: TLabel
     Left = 459
@@ -6981,14 +6982,14 @@ object MainForm: TMainForm
   end
   object Label1: TLabel
     Left = 15
-    Top = 20
+    Top = 12
     Width = 68
     Height = 25
     Caption = 'search:'
   end
   object lblFound: TLabel
-    Left = 391
-    Top = 3
+    Left = 471
+    Top = 22
     Width = 52
     Height = 13
     Alignment = taRightJustify
@@ -7003,7 +7004,7 @@ object MainForm: TMainForm
   end
   object Label2: TLabel
     Left = 131
-    Top = 49
+    Top = 41
     Width = 275
     Height = 13
     Alignment = taRightJustify
@@ -7027,6 +7028,16 @@ object MainForm: TMainForm
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+  end
+  object btnFindNext: TButton
+    Left = 449
+    Top = 9
+    Width = 100
+    Height = 33
+    Caption = '&Find Next'
+    TabOrder = 6
+    Visible = False
+    OnClick = btnFindNextClick
   end
   object sg: TStringGrid
     Left = 8
@@ -7088,21 +7099,12 @@ object MainForm: TMainForm
   end
   object edtSearch: TEdit
     Left = 89
-    Top = 17
+    Top = 9
     Width = 358
     Height = 33
     TabOrder = 0
+    OnEnter = edtSearchEnter
     OnKeyPress = edtSearchKeyPress
     OnKeyUp = edtSearchKeyUp
-  end
-  object btnFindNext: TButton
-    Left = 449
-    Top = 17
-    Width = 100
-    Height = 33
-    Caption = '&Find Next'
-    TabOrder = 6
-    Visible = False
-    OnClick = btnFindNextClick
   end
 end

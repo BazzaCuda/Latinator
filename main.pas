@@ -8,7 +8,7 @@ uses
   Vcl.Buttons;
 
 type
-  TEntryType = (etNone, etNoun, etVerb);
+  TEntryType = (etNone, etNoun, etVerb, etAdjective);
 
   TMainForm = class(TForm)
     sg: TStringGrid;
@@ -35,6 +35,7 @@ type
     procedure edtSearchKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnFindNextClick(Sender: TObject);
     procedure edtSearchKeyPress(Sender: TObject; var Key: Char);
+    procedure edtSearchEnter(Sender: TObject);
   private
     Ix:         integer;
     FIniFile:   TStringList;
@@ -115,9 +116,10 @@ end;
 function TMainForm.getEntryType(entryString: string): TEntryType;
 begin
   result := etNone;
-  case length(entryString) <> 2 of TRUE: EXIT; end;
-  case entryString[2] = 'n'         of TRUE: result := etNoun; end;
-  case entryString[2] in ['v', 'i'] of TRUE: result := etVerb; end;
+  case length(entryString) <> 2           of TRUE: EXIT; end;
+  case entryString[2] in ['n']            of TRUE: result := etNoun;      end;
+  case entryString[2] in ['v', 'i']       of TRUE: result := etVerb;      end;
+  case entryString[2] in ['a', 'c', 's']  of TRUE: result := etAdjective; end;
 end;
 
 function TMainForm.getInfo(typeString: string): string;
@@ -136,6 +138,14 @@ begin
   case typeString = '3i' of TRUE: result := ''; end;
   case typeString = '4v' of TRUE: result := ''; end;
   case typeString = 'iv' of TRUE: result := ''; end;
+
+  case typeString = '1a' of TRUE: result := ''; end;
+  case typeString = '3a' of TRUE: result := ''; end;
+  case typeString = '1c' of TRUE: result := ''; end;
+  case typeString = '3c' of TRUE: result := ''; end;
+  case typeString = '1s' of TRUE: result := ''; end;
+  case typeString = '3s' of TRUE: result := ''; end;
+
 
 end;
 
@@ -204,6 +214,12 @@ begin
   FWordDescs.add('3rd conjugation i-stem verb');
   FWordDescs.add('4th conjugation verb');
   FWordDescs.add('irregular verb');
+  FWordDescs.add('1st & 2nd declension adjective');
+  FWordDescs.add('3rd declension adjective');
+  FWordDescs.add('1st & 2nd declension comparitive');
+  FWordDescs.add('3rd declension comparitive');
+  FWordDescs.add('1st & 2nd declension superlative');
+  FWordDescs.add('3rd declension superlative');
 end;
 
 procedure TMainForm.populateWordTypes;
@@ -221,6 +237,12 @@ begin
   FWordTypes.add('3i');
   FWordTypes.add('4v');
   FWordTypes.add('iv');
+  FWordTypes.add('1a');
+  FWordTypes.add('3a');
+  FWordTypes.add('1c');
+  FWordTypes.add('3c');
+  FWordTypes.add('1s');
+  FWordTypes.add('3s');
 end;
 
 procedure TMainForm.searchRecs(fromIx: integer = 0);
@@ -328,8 +350,9 @@ begin
 
   case getEntryType(FStrings[0]) of
     etNone: ;
-    etNoun: doNoun(FIniFile[ix]);
-    etVerb: doVerb(FIniFile[ix]);
+    etNoun:       doNoun(FIniFile[ix]);
+    etVerb:       doVerb(FIniFile[ix]);
+    etAdjective:  doNoun(FIniFile[ix]);
   end;
 
   updateRecLabel;
@@ -408,8 +431,15 @@ begin
   sg.cells[0, 3] := ' 3rd person';
 end;
 
+procedure TMainForm.edtSearchEnter(Sender: TObject);
+begin
+  btnFindNext.visible := FALSE;
+  lblFound.caption    := '';
+end;
+
 procedure TMainForm.edtSearchKeyPress(Sender: TObject; var Key: Char);
 begin
+  btnFindNext.visible := FALSE;
   case isShiftKeyDown     of  TRUE: key := getMacronChar(key); end;
   case validMacron(key)   of  TRUE: EXIT; end;
   case key in VALID_KEYS  of FALSE: key := #0; end;

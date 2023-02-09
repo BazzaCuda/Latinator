@@ -32,7 +32,6 @@ type
     procedure edtLatinKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnClearClick(Sender: TObject);
     procedure cbWordDescEnter(Sender: TObject);
-    procedure cbMFNEnter(Sender: TObject);
     procedure edtEnglishKeyPress(Sender: TObject; var Key: Char);
     procedure cbWordDescCloseUp(Sender: TObject);
     procedure cbVerbDescCloseUp(Sender: TObject);
@@ -41,10 +40,12 @@ type
     procedure cbMFNCloseUp(Sender: TObject);
     procedure edtEntryEnter(Sender: TObject);
     procedure edtEntryExit(Sender: TObject);
+    procedure cbMFNSelect(Sender: TObject);
   private
     entreez:    TStringList;
-    FVerbTypes: TStringList;
-    FWordTypes: TStringList;
+    FVerbTypes: TStringList; // set in MainForm
+    FWordTypes: TStringList; // set in MainForm
+    FMFN:       TStringList;
     FStrings:   TStringList;
     FEdit:      boolean;
     function  addEntry: boolean;
@@ -64,7 +65,7 @@ type
 
 const
   TXT_EXT = '.txt';
-  VALID_KEYS = ['a'..'z', #8, '/', ',', '+', ' ', #22]; // #8 = backspae, #22 = Ctrl-v
+  VALID_KEYS = ['a'..'z', '1'..'5', #8, '/', ',', '+', '-', ' ', #22]; // #8 = backspae, #22 = Ctrl-v
 
 var
   DICT_FILE: string;
@@ -77,6 +78,7 @@ function validMacron(key: char): boolean;
 implementation
 
 function getMacronChar(aChar: char): char;
+// convert uppercase A E I O U or lowercase a e i o u to ā ē ī ō ū
 begin
   result := aChar;
   case aChar of
@@ -89,6 +91,7 @@ begin
 end;
 
 function getMacronWord(key: WORD): WORD;
+// convert uppercase A E I O U to ā ē ī ō ū
 begin
   result := key;
   case key of
@@ -146,12 +149,20 @@ procedure TEditForm.resetBoxes;
 // for conveniece, this omits Latin, English and wordType, so that multiple entries (e.g. tenses of the same verb) can be made in succession
 begin
   case pos('noun', cbWordDesc.text) > 0 of TRUE:  resetAllBoxes; end;
+
   case pos('verb', cbWordDesc.text) > 0 of TRUE:  begin
                                                     cbMFN.itemIndex       := -1;
                                                     cbVerbDesc.itemIndex  := -1;
                                                     FEdit                 := FALSE;
                                                     edtEntry.text         := '';
                                                     edtEntry.setFocus;
+                                                  end;end;
+
+  case pos('adjective', cbWordDesc.text) > 0 of TRUE:  begin
+                                                    cbMFN.itemIndex       := -1;
+                                                    FEdit                 := FALSE;
+                                                    edtEntry.text         := '';
+                                                    edtLatin.setFocus;
                                                   end;end;
 end;
 
@@ -170,9 +181,9 @@ begin
   edtEntry.setFocus;
 end;
 
-procedure TEditForm.cbMFNEnter(Sender: TObject);
+procedure TEditForm.cbMFNSelect(Sender: TObject);
 begin
-  cbMFN.droppedDown := TRUE;
+  case (pos('noun', cbWordDesc.text) > 0) or (pos('adjective', cbWordDesc.text) > 0) of FALSE: cbMFN.itemIndex := -1; end;
 end;
 
 procedure TEditForm.cbVerbDescCloseUp(Sender: TObject);
@@ -182,12 +193,15 @@ end;
 
 procedure TEditForm.cbWordDescCloseUp(Sender: TObject);
 begin
-  case pos('noun', cbWordDesc.text) > 0 of TRUE:  begin
-                                                    cbMFN.droppedDown := TRUE;
-                                                    cbMFN.setFocus; end;end;
-  case pos('verb', cbWordDesc.text) > 0 of TRUE:  begin
-                                                    cbVerbDesc.droppedDown  := TRUE;
-                                                    cbVerbDesc.setFocus; end;end;
+  case pos('noun', cbWordDesc.text)       > 0 of TRUE:  begin
+                                                          cbMFN.droppedDown := TRUE;
+                                                          cbMFN.setFocus; end;end;
+  case pos('verb', cbWordDesc.text)       > 0 of TRUE:  begin
+                                                          cbVerbDesc.droppedDown  := TRUE;
+                                                          cbVerbDesc.setFocus; end;end;
+  case pos('adjective', cbWordDesc.text)  > 0 of TRUE:  begin
+                                                          cbMFN.droppedDown := TRUE;
+                                                          cbMFN.setFocus; end;end;
 end;
 
 procedure TEditForm.cbWordDescEnter(Sender: TObject);
@@ -245,8 +259,9 @@ end;
 
 procedure TEditForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  case entreez  <> NIL of TRUE: entreez.free; end;
-  case FStrings <> NIL of TRUE: FStrings.free; end;
+  case entreez  <> NIL of TRUE: entreez.free;   end;
+  case FMFN     <> NIL of TRUE: FMFN.free;      end;
+  case FStrings <> NIL of TRUE: FStrings.free;  end;
   action := caFree;
 end;
 
@@ -261,6 +276,8 @@ begin
 
   case copyFile(PWideChar(DICT_FILE), PWideChar(bakFile), TRUE) of FALSE: EXIT; end;
 
+  FMFN     := TStringList.create;
+  FMFN.add('m'); FMFN.add('f'); FMFN.add('n');
   FStrings := TStringList.create;
 
   entreez := TStringList.create;
@@ -272,10 +289,11 @@ begin
 end;
 
 function TEditForm.getEntry: string;
+// formulate an INI file entry from the data in the boxes
 begin
   result := '';
   case cbWordDesc.itemIndex <> -1 of TRUE: result := FWordTypes[cbWordDesc.itemIndex]; end;
-  case cbMFN.itemIndex      <> -1 of TRUE: result := result + ',' + cbMFN.items[cbMFN.itemIndex]; end;
+  case cbMFN.itemIndex      <> -1 of TRUE: result := result + ',' + cbMFN.items[cbMFN.itemIndex][1]; end; // just the first letter: m f n
   case cbVerbDesc.itemIndex <> -1 of TRUE: result := result + ',' + FVerbTypes[cbVerbDesc.itemIndex]; end;
   result := result + ',' + edtLatin.text + ',' + edtEnglish.text;
   var noTabs := replaceTabs(edtEntry.text);
@@ -284,11 +302,12 @@ begin
 end;
 
 procedure TEditForm.lbLatinClick(Sender: TObject);
+// populate the boxes from the INI file entry
 begin
   resetAllBoxes;
   FStrings.commaText := lbLatin.items[lbLatin.itemIndex];
   case FWordTypes.indexOf(FStrings[0])  <> -1 of TRUE: cbWordDesc.itemIndex := FWordTypes.indexOf(FStrings[0]); end;
-  case cbMFN.items.indexOf(FStrings[1]) <> -1 of TRUE: cbMFN.itemIndex      := cbMFN.items.indexOf(FStrings[1]); end;
+  case FMFN.indexOf(FStrings[1])        <> -1 of TRUE: cbMFN.itemIndex      := FMFN.indexOf(FStrings[1]); end;
   case FVerbTypes.indexOf(FStrings[1])  <> -1 of TRUE: cbVerbDesc.itemIndex := FVerbTypes.indexOf(FStrings[1]); end;
   edtLatin.text   := FStrings[2];
   edtEnglish.text := FStrings[3];

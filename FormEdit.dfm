@@ -3140,11 +3140,11 @@ object EditForm: TEditForm
     Style = csDropDownList
     TabOrder = 4
     OnCloseUp = cbMFNCloseUp
-    OnEnter = cbMFNEnter
+    OnSelect = cbMFNSelect
     Items.Strings = (
-      'm'
-      'f'
-      'n')
+      'masculine'
+      'feminine'
+      'neuter')
   end
   object cbVerbDesc: TComboBox
     Left = 440
