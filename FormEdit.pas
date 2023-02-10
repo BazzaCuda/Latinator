@@ -77,6 +77,16 @@ function validMacron(key: char): boolean;
 
 implementation
 
+// uses _debugWindow;
+
+{ Returns a count of the number of occurences of SubText in Text }
+function countOccurs(const subText: string; const text: string): integer;
+begin
+  result := pos(subText, text);
+  case result > 0 of TRUE:
+    result := (length(text) - length(stringReplace(text, subText, '', [rfReplaceAll]))) div length(subText); end;
+end;
+
 function getMacronChar(aChar: char): char;
 // convert uppercase A E I O U or lowercase a e i o u to ā ē ī ō ū
 begin
@@ -148,7 +158,8 @@ end;
 procedure TEditForm.resetBoxes;
 // for conveniece, this omits Latin, English and wordType, so that multiple entries (e.g. tenses of the same verb) can be made in succession
 begin
-  case pos('noun', cbWordDesc.text) > 0 of TRUE:  resetAllBoxes; end;
+  case pos('noun', cbWordDesc.text)     > 0 of TRUE:  resetAllBoxes; end;
+  case pos('pronoun', cbWordDesc.text)  > 0 of TRUE:  resetAllBoxes; end;
 
   case pos('verb', cbWordDesc.text) > 0 of TRUE:  begin
                                                     cbMFN.itemIndex       := -1;
@@ -193,7 +204,7 @@ end;
 
 procedure TEditForm.cbWordDescCloseUp(Sender: TObject);
 begin
-  case pos('noun', cbWordDesc.text)       > 0 of TRUE:  begin
+  case pos('noun', cbWordDesc.text)       > 0 of TRUE:  begin // includes "pronoun"
                                                           cbMFN.droppedDown := TRUE;
                                                           cbMFN.setFocus; end;end;
   case pos('verb', cbWordDesc.text)       > 0 of TRUE:  begin
@@ -277,7 +288,7 @@ begin
   case copyFile(PWideChar(DICT_FILE), PWideChar(bakFile), TRUE) of FALSE: EXIT; end;
 
   FMFN     := TStringList.create;
-  FMFN.add('m'); FMFN.add('f'); FMFN.add('n');
+  FMFN.add('m'); FMFN.add('f'); FMFN.add('n'); FMFN.add('a');
   FStrings := TStringList.create;
 
   entreez := TStringList.create;
@@ -290,19 +301,26 @@ end;
 
 function TEditForm.getEntry: string;
 // formulate an INI file entry from the data in the boxes
+  function doQuotes(aString: string): string; // double-quote anything with spaces in it.
+  begin
+    case pos(' ', aString) > 0 of  TRUE: result := '"' + aString + '"';
+                                  FALSE: result := aString; end;
+  end;
 begin
   result := '';
   case cbWordDesc.itemIndex <> -1 of TRUE: result := FWordTypes[cbWordDesc.itemIndex]; end;
   case cbMFN.itemIndex      <> -1 of TRUE: result := result + ',' + cbMFN.items[cbMFN.itemIndex][1]; end; // just the first letter: m f n
   case cbVerbDesc.itemIndex <> -1 of TRUE: result := result + ',' + FVerbTypes[cbVerbDesc.itemIndex]; end;
-  result := result + ',' + edtLatin.text + ',' + edtEnglish.text;
-  var noTabs := replaceTabs(edtEntry.text);
-  case pos(' ', noTabs) > 0 of TRUE: noTabs := '"' + noTabs + '"'; end; // double-quote anything with spaces in it.
+  result := result + ',' + doQuotes(edtLatin.text) + ',' + doQuotes(edtEnglish.text);
+  var noTabs := replaceTabs(doQuotes(edtEntry.text));
   result := result + ',' + noTabs;
 end;
 
 procedure TEditForm.lbLatinClick(Sender: TObject);
 // populate the boxes from the INI file entry
+// Assigning a string to .commaText removes any double quotes from each individual comma-separated item
+// as does assigning a string (such as any part of .delimitedText) to a TEdit.text
+// ...which is nice.
 begin
   resetAllBoxes;
   FStrings.commaText := lbLatin.items[lbLatin.itemIndex];
@@ -311,8 +329,12 @@ begin
   case FVerbTypes.indexOf(FStrings[1])  <> -1 of TRUE: cbVerbDesc.itemIndex := FVerbTypes.indexOf(FStrings[1]); end;
   edtLatin.text   := FStrings[2];
   edtEnglish.text := FStrings[3];
+
   var lenPrefix   := length(FStrings[0] + ',' + FStrings[1] + ',' + FStrings[2] + ',' + FStrings[3] + ',');
-  edtEntry.text   := replaceQuotes(copy(FStrings.delimitedText, lenPrefix + 1, 255));
+  // count closing double-quotes and x 2 to include opening double-quotes
+  // can't just count " as the text following the prefix might also be doubled-quoted.
+  lenPrefix       := lenPrefix + (countOccurs('",', FStrings.delimitedText) * 2);
+  edtEntry.text   := replaceQuotes(copy(FStrings.delimitedText, lenPrefix + 1, 255)); // separate the main entry from what precedes it
   FEdit := TRUE;
   lblPressEnter.caption := 'press ENTER to UPDATE';
 end;

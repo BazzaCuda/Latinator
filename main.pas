@@ -8,7 +8,7 @@ uses
   Vcl.Buttons;
 
 type
-  TEntryType = (etNone, etNoun, etVerb, etAdjective);
+  TEntryType = (etNone, etNoun, etVerb, etAdjective, etPronoun);
 
   TMainForm = class(TForm)
     sg: TStringGrid;
@@ -36,6 +36,7 @@ type
     procedure btnFindNextClick(Sender: TObject);
     procedure edtSearchKeyPress(Sender: TObject; var Key: Char);
     procedure edtSearchEnter(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     Ix:         integer;
     FIniFile:   TStringList;
@@ -50,6 +51,8 @@ type
     procedure doEntry;
     procedure doNounHeaders;
     procedure doNoun(nounString: string);
+    procedure doPronoun(pronounString: string);
+    procedure doPronounHeaders;
     procedure doVerbHeaders;
     procedure doVerb(verbString: string);
     function  getEntryType(entryString: string): TEntryType;
@@ -72,7 +75,7 @@ var
 
 implementation
 
-uses FormEdit;
+uses FormEdit{, _debugWindow};
 
 const
   DEFAULT_COL_WIDTH = 86;
@@ -93,6 +96,12 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  // non-resizable
+  constraints.maxHeight := 460;  // well, maybe just a tad
+  constraints.maxWidth  := width;
+  constraints.minHeight := height;
+  constraints.minWidth  := width;
+
   FIniFile    := TStringList.create;
   FStrings    := TStringList.create;
   FWordTypes  := TStringList.create;
@@ -113,6 +122,11 @@ begin
   DoEntry; // ix := 0 is set in loadINIFile
 end;
 
+procedure TMainForm.FormResize(Sender: TObject);
+begin
+  sg.height := lblInfo.top - sg.top;
+end;
+
 function TMainForm.getEntryType(entryString: string): TEntryType;
 begin
   result := etNone;
@@ -120,6 +134,7 @@ begin
   case entryString[2] in ['n']            of TRUE: result := etNoun;      end;
   case entryString[2] in ['v', 'i']       of TRUE: result := etVerb;      end;
   case entryString[2] in ['a', 'c', 's']  of TRUE: result := etAdjective; end;
+  case entryString = 'pn'                 of TRUE: result := etPronoun;   end;
 end;
 
 function TMainForm.getInfo(typeString: string): string;
@@ -132,9 +147,9 @@ begin
   case typeString = '4n' of TRUE: result := '4D: mostly m. some f. n. NomMF: -us NomN: -u Gen: -us'; end;
   case typeString = '5n' of TRUE: result := '5D: all f. except diēs/day (m or f) Nom: -es Gen: ēī'; end;
 
-  case typeString = '1v' of TRUE: result := ''; end;
-  case typeString = '2v' of TRUE: result := ''; end;
-  case typeString = '3v' of TRUE: result := ''; end;
+  case typeString = '1v' of TRUE: result := '1c: have stems ending in -ā'; end;
+  case typeString = '2v' of TRUE: result := '2c: have stems ending in -ē'; end;
+  case typeString = '3v' of TRUE: result := '3c: stem ending in consonant; 3rd person singular ending in -it'; end;
   case typeString = '3i' of TRUE: result := ''; end;
   case typeString = '4v' of TRUE: result := ''; end;
   case typeString = 'iv' of TRUE: result := ''; end;
@@ -145,8 +160,6 @@ begin
   case typeString = '3c' of TRUE: result := ''; end;
   case typeString = '1s' of TRUE: result := ''; end;
   case typeString = '3s' of TRUE: result := ''; end;
-
-
 end;
 
 function TMainForm.getVerbType(typeString: string): string;
@@ -220,6 +233,7 @@ begin
   FWordDescs.add('3rd declension comparitive');
   FWordDescs.add('1st & 2nd declension superlative');
   FWordDescs.add('3rd declension superlative');
+  FWordDescs.add('pronouns');
 end;
 
 procedure TMainForm.populateWordTypes;
@@ -243,6 +257,7 @@ begin
   FWordTypes.add('3c');
   FWordTypes.add('1s');
   FWordTypes.add('3s');
+  FWordTypes.add('pn');
 end;
 
 procedure TMainForm.searchRecs(fromIx: integer = 0);
@@ -264,32 +279,54 @@ begin
 end;
 
 procedure TMainForm.sgDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  separator: boolean;
+  title: boolean;
+  heading: boolean;
 begin
   // default colors
   // $232323;  // black-ish background
   // $3E3E3E;  // greenish background
+
+  // defaults for the Latin part of the grid
   sg.canvas.font.color  := $C0C0C0;  // silver
   sg.canvas.font.style  := [];
-  sg.canvas.font.size   := 10;
+  sg.canvas.font.size   := 12;
   sg.canvas.brush.color := $3E3E3E;
 
-  case (aCol = 0) of TRUE: sg.canvas.brush.color := $232323; end;
-  case (aRow = 0) of TRUE: sg.canvas.brush.color := $232323; end;
+  var text := stringReplace(sg.cells[aCol, aRow], '/', ' / ', [rfReplaceAll]); // looks less cluttered when alternatives are displayed like this
 
-  case ((aCol = 0) and (aRow <> 0)) of TRUE: sg.canvas.font.style := [fsBold]; end; // omit [0, 0]
-  case ((aRow = 0) and (aCol <> 0)) of TRUE: sg.canvas.font.style := [fsBold]; end; // omit [0, 0]
+  case length(text) > 0 of  TRUE: begin
+                                    heading   := text[1] = '+';
+                                    title     := text[1] = '-';
+                                    separator := text[1] = '_'; end;end;
 
-  case (aCol > 0) and (aRow > 0) of TRUE: sg.canvas.font.size := 12; end;
+  case title of TRUE: begin
+                        sg.canvas.brush.color := $232323;
+                        sg.canvas.font.size   := 10;
+                        sg.canvas.font.style := []; end;end;
 
-  var text := sg.cells[aCol, aRow];
-  text := stringReplace(text, '/', ' / ', [rfReplaceAll]);
+  case heading of TRUE: begin
+                          sg.canvas.brush.color := $232323;
+                          sg.canvas.font.size   := 10;
+                          sg.canvas.font.style  := [fsBold]; end;end;
+
+  case length(text) > 0 of TRUE: text[1] := ' '; end; // remove any formatting character
 
   var vTextWidth := sg.canvas.textWidth(text);
-  case vTextWidth > sg.colWidths[aCol] of TRUE: sg.colWidths[aCol] := vTextWidth + 6; end;
+  case vTextWidth > sg.colWidths[aCol] of TRUE: sg.colWidths[aCol] := vTextWidth + 6; end; // also add a margin before the main part of the grid
 
   sg.canvas.fillRect(rect);
 
+  case title    of TRUE: rect.left  := rect.left  + 14; end;  // these can only be done after fillRect
+  case title or heading  of TRUE: rect.top   := rect.top   + 2;  end;
+
   sg.canvas.textRect(rect, rect.left, rect.top, text);
+
+  case separator of TRUE: begin
+                            sg.Canvas.pen.Color := clGray;
+                            sg.Canvas.MoveTo(Rect.Left + 0, Rect.Bottom - 3);
+                            sg.Canvas.LineTo(Rect.Right - 0, Rect.Bottom - 3); end;end;
 end;
 
 procedure TMainForm.updateRecLabel;
@@ -353,6 +390,7 @@ begin
     etNoun:       doNoun(FIniFile[ix]);
     etVerb:       doVerb(FIniFile[ix]);
     etAdjective:  doNoun(FIniFile[ix]);
+    etPronoun:    doProNoun(FIniFile[ix]);
   end;
 
   updateRecLabel;
@@ -369,7 +407,7 @@ begin
 
   try
     lblWordType.caption := getWordType(FStrings[0]);
-    lblLatin.caption    := Fstrings[1] + '. ' + FStrings[2] + ' = ' + FStrings[3];
+    lblLatin.caption := FStrings[1] + '. ' + FStrings[2] + ' = ' + FStrings[3];
 
     for var i := 1 to 6 do
       sg.cells[1, i] := ' ' + FStrings[i + 3]; // entries [4] to [9] go in the singular columm
@@ -378,7 +416,7 @@ begin
       sg.cells[2, i] := ' ' + FStrings[i + 9]; // entries [10] to [15] go in the plural column
   except end; // not every record has every field, but that's ok
 
-  lblInfo.caption := getInfo(FStrings[0]);
+  lblInfo.caption := '    ' + getInfo(FStrings[0]);
 end;
 
 procedure TMainForm.doNounHeaders;
@@ -386,15 +424,76 @@ begin
   clearSG;
   sg.colCount := 3;
   sg.rowCount := 7;
-  sg.cells[0, 0] := '';
-  sg.cells[1, 0] := ' singular';
-  sg.cells[2, 0] := ' plural';
-  sg.cells[0, 1] := ' nominative';
-  sg.cells[0, 2] := ' vocative';
-  sg.cells[0, 3] := ' accusative';
-  sg.cells[0, 4] := ' genitive';
-  sg.cells[0, 5] := ' dative';
-  sg.cells[0, 6] := ' ablative';
+  sg.cells[0, 0] := '+';
+  sg.cells[1, 0] := '+singular';
+  sg.cells[2, 0] := '+plural';
+  sg.cells[0, 1] := '+nominative';
+  sg.cells[0, 2] := '+vocative';
+  sg.cells[0, 3] := '+accusative';
+  sg.cells[0, 4] := '+genitive';
+  sg.cells[0, 5] := '+dative';
+  sg.cells[0, 6] := '+ablative';
+end;
+
+procedure TMainForm.doPronoun(pronounString: string);
+var j: integer;
+begin
+  doPronounHeaders;
+  lblLatin.caption    := '';
+  lblWordType.caption := '';
+  case trim(pronounString) = '' of TRUE: EXIT; end;
+
+  FStrings.commaText  := pronounString;
+
+  try
+    lblWordType.caption := getWordType(FStrings[0]);
+    lblLatin.caption    := FStrings[2] + ' = ' + FStrings[3];
+
+    for var i := 1 to 10 do begin
+      j := i;
+      case i > 5 of TRUE: inc(j); end; // create a blank line to separate singular and plural lines
+      sg.cells[1, j] := ' ' + FStrings[i + 3]; // entries [4] to [13] go in the singular columm
+    end;
+
+    for var i := 1 to 10 do begin
+      j := i;
+      case i > 5 of TRUE: inc(j); end; // create a blank line to separate singular and plural lines
+      sg.cells[2, j] := ' ' + FStrings[i + 13]; // entries [14] to [23] go in the plural column
+    end;
+
+    for var i := 1 to 10 do begin
+      j := i;
+      case i > 5 of TRUE: inc(j); end; // create a blank line to separate singular and plural lines
+      sg.cells[3, j] := ' ' + FStrings[i + 23]; // entries [24] to [33] go in the plural column
+    end;
+  except end; // not every record has every field, but that's ok
+
+  lblInfo.caption := getInfo(FStrings[0]);
+end;
+
+procedure TMainForm.doPronounHeaders;
+begin
+  clearSG;
+  sg.colCount := 4;
+  sg.rowCount := 12;
+  sg.cells[0, 0] := '-singular';
+  sg.cells[1, 0] := '+masculine';
+  sg.cells[2, 0] := '+feminine';
+  sg.cells[3, 0] := '+neuter';
+  sg.cells[0, 1] := '+nominative';
+  sg.cells[0, 2] := '+accusative';
+  sg.cells[0, 3] := '+genitive';
+  sg.cells[0, 4] := '+dative';
+  sg.cells[0, 5] := '+ablative';
+  sg.cells[0, 6] := '-plural';
+  sg.cells[1, 6] := '+masculine';
+  sg.cells[2, 6] := '+feminine';
+  sg.cells[3, 6] := '+neuter';
+  sg.cells[0, 7] := '+nominative';
+  sg.cells[0, 8] := '+accusative';
+  sg.cells[0, 9] := '+genitive';
+  sg.cells[0, 10] := '+dative';
+  sg.cells[0, 11] := '+ablative';
 end;
 
 procedure TMainForm.doVerb(verbString: string);
@@ -423,12 +522,12 @@ begin
   clearSG;
   sg.colCount := 3;
   sg.rowCount := 4;
-  sg.cells[0, 0] := '';
-  sg.cells[1, 0] := ' singular';
-  sg.cells[2, 0] := ' plural';
-  sg.cells[0, 1] := ' 1st person';
-  sg.cells[0, 2] := ' 2nd person';
-  sg.cells[0, 3] := ' 3rd person';
+  sg.cells[0, 0] := '+';
+  sg.cells[1, 0] := '+singular';
+  sg.cells[2, 0] := '+plural';
+  sg.cells[0, 1] := '+1st person';
+  sg.cells[0, 2] := '+2nd person';
+  sg.cells[0, 3] := '+3rd person';
 end;
 
 procedure TMainForm.edtSearchEnter(Sender: TObject);

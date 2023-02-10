@@ -1,6 +1,7 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
+  BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Latinator'
   ClientHeight = 312
   ClientWidth = 552
@@ -6948,6 +6949,7 @@ object MainForm: TMainForm
   Position = poScreenCenter
   OnClose = FormClose
   OnCreate = FormCreate
+  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 25
   object lblLatin: TLabel
@@ -7017,10 +7019,11 @@ object MainForm: TMainForm
     ParentFont = False
   end
   object lblInfo: TLabel
-    Left = 15
-    Top = 293
-    Width = 35
+    Left = 0
+    Top = 296
+    Width = 552
     Height = 16
+    Align = alBottom
     Caption = 'lblInfo'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -7028,6 +7031,9 @@ object MainForm: TMainForm
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ExplicitLeft = 15
+    ExplicitTop = 293
+    ExplicitWidth = 35
   end
   object btnFindNext: TButton
     Left = 449

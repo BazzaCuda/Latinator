@@ -3144,7 +3144,8 @@ object EditForm: TEditForm
     Items.Strings = (
       'masculine'
       'feminine'
-      'neuter')
+      'neuter'
+      'all')
   end
   object cbVerbDesc: TComboBox
     Left = 440

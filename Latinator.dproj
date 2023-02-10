@@ -136,6 +136,7 @@
             <Form>MainForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\DebugWindow\_debugWindow.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -182,9 +183,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win64\Debug\Latinator.rsm" Configuration="Debug" Class="DebugSymbols">
+                <DeployFile LocalName="Win64\Release\Latinator.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win64">
-                        <RemoteName>Latinator.rsm</RemoteName>
+                        <RemoteName>Latinator.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
