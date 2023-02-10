@@ -230,7 +230,7 @@ begin
   FWordDescs.add('1st & 2nd declension adjective');
   FWordDescs.add('3rd declension adjective');
   FWordDescs.add('1st & 2nd declension comparitive');
-  FWordDescs.add('3rd declension comparitive');
+  FWordDescs.add('3rd declension comparative');
   FWordDescs.add('1st & 2nd declension superlative');
   FWordDescs.add('3rd declension superlative');
   FWordDescs.add('pronouns');
@@ -344,6 +344,7 @@ begin
     showModal;
     loadINIFile;
     doEntry;
+    edtSearch.clear;
     edtSearch.setFocus;
   end;
 end;

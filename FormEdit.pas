@@ -194,7 +194,8 @@ end;
 
 procedure TEditForm.cbMFNSelect(Sender: TObject);
 begin
-  case (pos('noun', cbWordDesc.text) > 0) or (pos('adjective', cbWordDesc.text) > 0) of FALSE: cbMFN.itemIndex := -1; end;
+  case (pos('noun', cbWordDesc.text) > 0) or (pos('adjective', cbWordDesc.text) > 0)
+  or (pos('comparative', cbWordDesc.text) > 0) or (pos('superlative', cbWordDesc.text) > 0) of FALSE: cbMFN.itemIndex := -1; end;
 end;
 
 procedure TEditForm.cbVerbDescCloseUp(Sender: TObject);
@@ -204,15 +205,21 @@ end;
 
 procedure TEditForm.cbWordDescCloseUp(Sender: TObject);
 begin
-  case pos('noun', cbWordDesc.text)       > 0 of TRUE:  begin // includes "pronoun"
-                                                          cbMFN.droppedDown := TRUE;
-                                                          cbMFN.setFocus; end;end;
-  case pos('verb', cbWordDesc.text)       > 0 of TRUE:  begin
-                                                          cbVerbDesc.droppedDown  := TRUE;
-                                                          cbVerbDesc.setFocus; end;end;
-  case pos('adjective', cbWordDesc.text)  > 0 of TRUE:  begin
-                                                          cbMFN.droppedDown := TRUE;
-                                                          cbMFN.setFocus; end;end;
+  case pos('noun', cbWordDesc.text)         > 0 of TRUE:  begin // includes "pronoun"
+                                                            cbMFN.droppedDown := TRUE;
+                                                            cbMFN.setFocus; end;end;
+  case pos('comparative', cbWordDesc.text)  > 0 of TRUE:  begin // includes "pronoun"
+                                                            cbMFN.droppedDown := TRUE;
+                                                            cbMFN.setFocus; end;end;
+  case pos('superlative', cbWordDesc.text)  > 0 of TRUE:  begin // includes "pronoun"
+                                                            cbMFN.droppedDown := TRUE;
+                                                            cbMFN.setFocus; end;end;
+  case pos('verb', cbWordDesc.text)         > 0 of TRUE:  begin
+                                                            cbVerbDesc.droppedDown  := TRUE;
+                                                            cbVerbDesc.setFocus; end;end;
+  case pos('adjective', cbWordDesc.text)    > 0 of TRUE:  begin
+                                                            cbMFN.droppedDown := TRUE;
+                                                            cbMFN.setFocus; end;end;
 end;
 
 procedure TEditForm.cbWordDescEnter(Sender: TObject);
