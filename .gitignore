@@ -59,9 +59,9 @@
 
 # additional
 *bak*
-#*.lnk
-#*.htm
-#*.xml
+*.lnk
+*.htm
+*.xml
 
 
 # Delphi history and backups
