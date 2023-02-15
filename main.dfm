@@ -7031,9 +7031,23 @@ object MainForm: TMainForm
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
-    ExplicitLeft = 15
-    ExplicitTop = 293
     ExplicitWidth = 35
+  end
+  object lblStar: TLabel
+    Left = 459
+    Top = 199
+    Width = 76
+    Height = 16
+    Alignment = taCenter
+    AutoSize = False
+    Caption = '*'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Visible = False
   end
   object btnFindNext: TButton
     Left = 449

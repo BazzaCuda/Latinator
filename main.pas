@@ -9,6 +9,7 @@ uses
 
 type
   TEntryType = (etNone, etNoun, etVerb, etAdjective, etPronoun);
+  TNounGender = (ngNone, ngMasculine, ngFeminine, ngNeuter);
 
   TMainForm = class(TForm)
     sg: TStringGrid;
@@ -25,6 +26,7 @@ type
     btnFindNext: TButton;
     Label2: TLabel;
     lblInfo: TLabel;
+    lblStar: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure sgDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -49,6 +51,7 @@ type
     FSearchTerm: string;
     procedure clearSG;
     procedure doEntry;
+    procedure doExpandNoun(aGender: TNounGender; aNom: string; aGen: string);
     procedure doNounHeaders;
     procedure doNoun(nounString: string);
     procedure doPronoun(pronounString: string);
@@ -57,6 +60,7 @@ type
     procedure doVerb(verbString: string);
     function  getEntryType(entryString: string): TEntryType;
     function  getInfo(typeString: string): string;
+    function  getNounGender(genderString: string): TNounGender;
     function  getVerbType(typeString: string): string;
     function  getWordType(typeString: string): string;
     procedure loadINIFile;
@@ -75,7 +79,7 @@ var
 
 implementation
 
-uses FormEdit{, _debugWindow};
+uses FormEdit, _debugWindow;
 
 const
   DEFAULT_COL_WIDTH = 86;
@@ -130,36 +134,41 @@ end;
 function TMainForm.getEntryType(entryString: string): TEntryType;
 begin
   result := etNone;
-  case length(entryString) <> 2           of TRUE: EXIT; end;
-  case entryString[2] in ['n']            of TRUE: result := etNoun;      end;
-  case entryString[2] in ['v', 'i']       of TRUE: result := etVerb;      end;
-  case entryString[2] in ['a', 'c', 's']  of TRUE: result := etAdjective; end;
-  case entryString = 'pn'                 of TRUE: result := etPronoun;   end;
+  case length(entryString) <> 3           of TRUE: EXIT; end;
+  case entryString[3] in ['n']            of TRUE: result := etNoun;      end;
+  case entryString[3] in ['v']            of TRUE: result := etVerb;      end;
+  case entryString[3] in ['a', 'c', 's']  of TRUE: result := etAdjective; end; // adjectives, comparatives, superlatives
+  case entryString = 'ppn'                of TRUE: result := etPronoun;   end;
 end;
 
 function TMainForm.getInfo(typeString: string): string;
 begin
   result := '';
-  case typeString = '1n' of TRUE: result := '1D: mostly f. characterised by the vowel -a. Nom: -a, Gen: -ae'; end;
-  case typeString = '2n' of TRUE: result := '2D: mostly m. n. characterised by the vowels -o/-u. NomM: -us -ius -er NomN: -um Gen: -i'; end;
-  case (typeString = '3n') or (typeString = 'in') or (typeString = 'nn') of TRUE:
+  case typeString = '1dn' of TRUE: result := '1D: mostly f. characterised by the vowel -a. Nom: -a, Gen: -ae'; end;
+  case typeString = '2dn' of TRUE: result := '2D: mostly m. n. characterised by the vowels -o/-u. NomM: -us -ius -er NomN: -um Gen: -i'; end;
+  case (typeString = '3dn') or (typeString = '3in') or (typeString = '3nn') of TRUE:
                                   result := '3D: m. f. n. Nom: various Gen: -is'; end;
-  case typeString = '4n' of TRUE: result := '4D: mostly m. some f. n. NomMF: -us NomN: -u Gen: -us'; end;
-  case typeString = '5n' of TRUE: result := '5D: all f. except diēs/day (m or f) Nom: -es Gen: ēī'; end;
+  case typeString = '4dn' of TRUE: result := '4D: mostly m. some f. n. NomMF: -us NomN: -u Gen: -us'; end;
+  case typeString = '5dn' of TRUE: result := '5D: all f. except diēs/day (m or f) Nom: -es Gen: ēī'; end;
 
-  case typeString = '1v' of TRUE: result := '1c: have stems ending in -ā'; end;
-  case typeString = '2v' of TRUE: result := '2c: have stems ending in -ē'; end;
-  case typeString = '3v' of TRUE: result := '3c: stem ending in consonant; 3rd person singular ending in -it'; end;
-  case typeString = '3i' of TRUE: result := ''; end;
-  case typeString = '4v' of TRUE: result := ''; end;
-  case typeString = 'iv' of TRUE: result := ''; end;
+  case typeString = '1cv' of TRUE: result := '1c: have stems ending in -ā'; end;
+  case typeString = '2cv' of TRUE: result := '2c: have stems ending in -ē'; end;
+  case typeString = '3cv' of TRUE: result := '3c: stem ending in consonant; 3rd person singular ending in -it'; end;
+  case typeString = '3iv' of TRUE: result := ''; end;
+  case typeString = '4cv' of TRUE: result := ''; end;
+  case typeString = 'irv' of TRUE: result := ''; end;
 
-  case typeString = '1a' of TRUE: result := ''; end;
-  case typeString = '3a' of TRUE: result := ''; end;
-  case typeString = '1c' of TRUE: result := ''; end;
-  case typeString = '3c' of TRUE: result := ''; end;
-  case typeString = '1s' of TRUE: result := ''; end;
-  case typeString = '3s' of TRUE: result := ''; end;
+  case typeString = '1da' of TRUE: result := ''; end;
+  case typeString = '3da' of TRUE: result := ''; end;
+  case typeString = '1dc' of TRUE: result := ''; end;
+  case typeString = '3dc' of TRUE: result := ''; end;
+  case typeString = '1ds' of TRUE: result := ''; end;
+  case typeString = '3ds' of TRUE: result := ''; end;
+end;
+
+function TMainForm.getNounGender(genderString: string): TNounGender;
+begin
+  result := TNounGender(pos(genderString, 'mfn'));
 end;
 
 function TMainForm.getVerbType(typeString: string): string;
@@ -233,31 +242,31 @@ begin
   FWordDescs.add('3rd declension comparative');
   FWordDescs.add('1st & 2nd declension superlative');
   FWordDescs.add('3rd declension superlative');
-  FWordDescs.add('pronouns');
+  FWordDescs.add('personal pronoun');
 end;
 
 procedure TMainForm.populateWordTypes;
 begin
-  FWordTypes.add('1n');
-  FWordTypes.add('2n');
-  FWordTypes.add('3n');
-  FWordTypes.add('in');
-  FWordTypes.add('nn');
-  FWordTypes.add('4n');
-  FWordTypes.add('5n');
-  FWordTypes.add('1v');
-  FWordTypes.add('2v');
-  FWordTypes.add('3v');
-  FWordTypes.add('3i');
-  FWordTypes.add('4v');
-  FWordTypes.add('iv');
-  FWordTypes.add('1a');
-  FWordTypes.add('3a');
-  FWordTypes.add('1c');
-  FWordTypes.add('3c');
-  FWordTypes.add('1s');
-  FWordTypes.add('3s');
-  FWordTypes.add('pn');
+  FWordTypes.add('1dn');
+  FWordTypes.add('2dn');
+  FWordTypes.add('3dn');
+  FWordTypes.add('3in');
+  FWordTypes.add('3nn');
+  FWordTypes.add('4dn');
+  FWordTypes.add('5dn');
+  FWordTypes.add('1cv');
+  FWordTypes.add('2cv');
+  FWordTypes.add('3cv');
+  FWordTypes.add('3iv');
+  FWordTypes.add('4cv');
+  FWordTypes.add('irv');
+  FWordTypes.add('1ca');
+  FWordTypes.add('3ca');
+  FWordTypes.add('1dc');
+  FWordTypes.add('3dc');
+  FWordTypes.add('1ds');
+  FWordTypes.add('3ds');
+  FWordTypes.add('ppn');
 end;
 
 procedure TMainForm.searchRecs(fromIx: integer = 0);
@@ -362,6 +371,7 @@ end;
 procedure TMainForm.btnNextClick(Sender: TObject);
 begin
   lblFound.caption := '';
+  edtSearch.text   := '';
   case ix < FIniFile.count - 1 of TRUE: inc(ix); end;
   doEntry;
 end;
@@ -369,6 +379,7 @@ end;
 procedure TMainForm.btnPrevClick(Sender: TObject);
 begin
   lblFound.caption := '';
+  edtSearch.text   := '';
   case ix > 0 of TRUE: dec(ix); end;
   doEntry;
 end;
@@ -384,7 +395,8 @@ end;
 
 procedure TMainForm.doEntry;
 begin
-  FStrings.commaText := FIniFile[ix];
+  lblStar.visible     := FALSE;
+  FStrings.commaText  := FIniFile[ix];
 
   case getEntryType(FStrings[0]) of
     etNone: ;
@@ -397,6 +409,159 @@ begin
   updateRecLabel;
 end;
 
+procedure TMainForm.doExpandNoun(aGender: TNounGender; aNom: string; aGen: string);
+// the genitive is in the form <stem>-<genEnd>, e.g. puer-ī
+  function getStem: string;
+  begin
+    var posHyphen := pos('-', aGen);
+    result        := copy(aGen, 1, posHyphen - 1);
+  end;
+  function getGenEnd: string;
+  begin
+    var posHyphen := pos('-', aGen);
+    result        := copy(aGen, posHyphen + 1, 255);
+  end;
+  function isER: boolean;
+  begin
+    result := (length(aNom) >= 2) and (aNom[length(aNom) - 1] = 'e') and (aNom[length(aNom)] = 'r');
+  end;
+  function isUS: boolean;
+  begin
+    result := (length(aNom) >= 2) and (aNom[length(aNom) - 1] = 'u') and (aNom[length(aNom)] = 's');
+  end;
+begin
+  lblStar.visible := TRUE;
+  var stem        := getStem;
+  var genEnd      := getGenEnd;
+  debugString('Nom', aNom);
+  debugString('Gen', aGen);
+  debugString('stem', stem);
+  debugString('genEnd', genEnd);
+  debugBoolean('isER', isER);
+
+  case (aGender in [ngFeminine, ngMasculine]) and (genEnd = 'ae') of TRUE: begin // 1D
+                                FStrings[4] := stem + 'a';
+                                FStrings.add(stem + 'a');
+                                FStrings.add(stem + 'am');
+                                FStrings.add(stem + 'ae');
+                                FStrings.add(stem + 'ae');
+                                FStrings.add(stem + 'ā');
+                                FStrings.add(stem + 'ae');
+                                FStrings.add(stem + 'ae');
+                                FStrings.add(stem + 'ās');
+                                FStrings.add(stem + 'ārum');
+                                FStrings.add(stem + 'īs');
+                                FStrings.add(stem + 'īs');
+                              end;end;
+
+  case (aGender = ngMasculine) and (genEnd = 'ī') and isUS of TRUE: begin // 2D -us nouns, e.g. dominus, domin-e
+                                FStrings[4] := stem + 'us';
+                                case stem[length(stem)] = 'i' of  TRUE: FStrings.add(stem + ' ');
+                                                                 FALSE: FStrings.add(stem + 'e'); end;
+                                FStrings.add(stem + 'um');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ō');
+                                FStrings.add(stem + 'ō');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ōs');
+                                FStrings.add(stem + 'ōrum');
+                                FStrings.add(stem + 'īs');
+                                FStrings.add(stem + 'īs');
+                              end;end;
+
+  case (aGender = ngMasculine) and (genEnd = 'ī') and isER of TRUE: begin // 2D  -er nouns, e.g. puer, puer-ī
+                                FStrings[4] := stem;
+                                FStrings.add(stem);
+                                FStrings.add(stem + 'um');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ō');
+                                FStrings.add(stem + 'ō');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ōrum');
+                                FStrings.add(stem + 'īs');
+                                FStrings.add(stem + 'īs');
+                              end;end;
+
+  case (aGender = ngNeuter) and (genEnd = 'ī') of TRUE: begin // 2D  neuter nouns, e.g. dōnum, dōn-ī
+                                FStrings[4] := aNom;
+                                FStrings.add(aNom);
+                                FStrings.add(stem + 'um');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ō');
+                                FStrings.add(stem + 'ō');
+                                FStrings.add(stem + 'a');
+                                FStrings.add(stem + 'a');
+                                FStrings.add(stem + 'a');
+                                FStrings.add(stem + 'ōrum');
+                                FStrings.add(stem + 'īs');
+                                FStrings.add(stem + 'īs');
+                              end;end;
+
+  case (aGender = ngMasculine) and (genEnd = 'rī') and isER of TRUE: begin // 2D  -er nouns, e.g. ager, ag-rī
+                                stem := stem + 'r';
+                                FStrings[4] := aNom;
+                                FStrings.add(aNom);
+                                FStrings.add(stem + 'um');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ō');
+                                FStrings.add(stem + 'ō');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ōs');
+                                FStrings.add(stem + 'ōrum');
+                                FStrings.add(stem + 'īs');
+                                FStrings.add(stem + 'īs');
+                              end;end;
+
+  case genEnd = 'is' of TRUE: begin // 3D
+                                FStrings[4] := stem + 'īs';
+                                FStrings.add(stem + 'īs');
+                                FStrings.add(stem + 'īm');
+                                FStrings.add(stem + 'īs');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ī');
+                                FStrings.add(stem + 'ōrum');
+                                FStrings.add(stem + 'īs');
+                                FStrings.add(stem + 'īs');
+                              end;end;
+
+  case genEnd = 'ūs' of TRUE: begin // 4D
+                                FStrings[4] := stem + 'us';
+                                FStrings.add(stem + 'us');
+                                FStrings.add(stem + 'um');
+                                FStrings.add(stem + 'ūs');
+                                FStrings.add(stem + 'uī');
+                                FStrings.add(stem + 'ū');
+                                FStrings.add(stem + 'ūs');
+                                FStrings.add(stem + 'ūs');
+                                FStrings.add(stem + 'ūs');
+                                FStrings.add(stem + 'uum');
+                                FStrings.add(stem + 'ibus');
+                                FStrings.add(stem + 'ibus');
+                              end;end;
+
+  case (genEnd = 'eī') or (genEnd = 'ēī') of TRUE: begin // 5D
+                                FStrings[4] := stem + 'ēs';
+                                FStrings.add(stem + 'ēs');
+                                FStrings.add(stem + 'em');
+                                FStrings.add(stem + 'eī');
+                                FStrings.add(stem + 'eī');
+                                FStrings.add(stem + 'ē');
+                                FStrings.add(stem + 'ēs');
+                                FStrings.add(stem + 'ēs');
+                                FStrings.add(stem + 'ēs');
+                                FStrings.add(stem + 'ērum');
+                                FStrings.add(stem + 'ēbus');
+                                FStrings.add(stem + 'ēbus');
+                              end;end;
+end;
+
 procedure TMainForm.doNoun(nounString: string);
 begin
   doNounHeaders;
@@ -405,6 +570,8 @@ begin
   case trim(nounString) = '' of TRUE: EXIT; end;
 
   FStrings.commaText  := nounString;
+
+  case pos('-', FStrings[4]) > 0 of TRUE: doExpandNoun(getNounGender(FStrings[1]), FStrings[2], FStrings[4]); end;
 
   try
     lblWordType.caption := getWordType(FStrings[0]);
@@ -550,5 +717,8 @@ begin
   btnFindNext.visible := FALSE;
   case key = VK_RETURN of TRUE: searchRecs; end;
 end;
+
+initialization
+  debugClear;
 
 end.
