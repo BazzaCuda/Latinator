@@ -6947,7 +6947,6 @@ object MainForm: TMainForm
     0000000000000000000000000000E0070000E0070000F00F0000F81F0000}
   OldCreateOrder = False
   Position = poScreenCenter
-  OnClose = FormClose
   OnCreate = FormCreate
   OnResize = FormResize
   PixelsPerInch = 96

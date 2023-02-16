@@ -43,8 +43,8 @@ type
     procedure cbMFNSelect(Sender: TObject);
   private
     entreez:    TStringList;
-    FVerbTypes: TStringList; // set in MainForm
-    FWordTypes: TStringList; // set in MainForm
+    FVerbTypes: TStringList;
+    FWordTypes: TStringList;
     FMFN:       TStringList;
     FStrings:   TStringList;
     FEdit:      boolean;
@@ -57,27 +57,19 @@ type
     procedure resetAllBoxes;
     procedure resetBoxes;
   public
-    procedure populateVerbDescs(verbDescs: TStringList);
-    procedure populateWordDescs(wordDescs: TStringList);
-    property  VerbTypes: TStringList write FVerbTypes;
-    property  WordTypes: TStringList write FWordTypes;
   end;
 
 const
   TXT_EXT = '.txt';
-  VALID_KEYS = ['a'..'z', '1'..'5', #8, '/', ',', '+', '-', ' ', #22]; // #8 = backspae, #22 = Ctrl-v
 
 var
   DICT_FILE: string;
 
-function getMacronChar(aChar: char): char;
-function getMacronWord(key: WORD): WORD;
 function isShiftKeyDown: boolean;
-function validMacron(key: char): boolean;
 
 implementation
 
-// uses _debugWindow;
+uses latinGrammar{, _debugWindow};
 
 { Returns a count of the number of occurences of SubText in Text }
 function countOccurs(const subText: string; const text: string): integer;
@@ -87,44 +79,9 @@ begin
     result := (length(text) - length(stringReplace(text, subText, '', [rfReplaceAll]))) div length(subText); end;
 end;
 
-function getMacronChar(aChar: char): char;
-// convert uppercase A E I O U or lowercase a e i o u to ā ē ī ō ū
-begin
-  result := aChar;
-  case aChar of
-    'A', 'a': result := 'ā';
-    'E', 'e': result := 'ē';
-    'I', 'i': result := 'ī';
-    'O', 'o': result := 'ō';
-    'U', 'u': result := 'ū';
-  end;
-end;
-
-function getMacronWord(key: WORD): WORD;
-// convert uppercase A E I O U to ā ē ī ō ū
-begin
-  result := key;
-  case key of
-    65: result := 257;
-    69: result := 275;
-    73: result := 299;
-    79: result := 333;
-    85: result := 363;
-  end;
-end;
-
 function isShiftKeyDown: boolean;
 begin
   result := (GetKeyState(VK_SHIFT) AND $80) <> 0;
-end;
-
-function validMacron(key: char): boolean;
-begin
-  result := FALSE;
-  case ord(key) of
-    257, 275, 299, 333, 363: result := TRUE; // ā ē ī ō ū
-//    257, 275, 299, 333, 363, 256, 274, 298, 332, 362: result := TRUE; // ā ē ī ō ū Ā Ē Ī Ō Ū
-  end;
 end;
 
 {$R *.dfm}
@@ -156,7 +113,7 @@ begin
 end;
 
 procedure TEditForm.resetBoxes;
-// for conveniece, this omits Latin, English and wordType, so that multiple entries (e.g. tenses of the same verb) can be made in succession
+// for convenience, this omits Latin, English and wordType, so that multiple entries (e.g. tenses of the same verb) can be made in succession
 begin
   case pos('noun', cbWordDesc.text)     > 0 of TRUE:  resetAllBoxes; end;
   case pos('pronoun', cbWordDesc.text)  > 0 of TRUE:  resetAllBoxes; end;
@@ -230,13 +187,13 @@ end;
 
 procedure TEditForm.edtEnglishKeyPress(Sender: TObject; var Key: Char);
 begin
-  case validMacron(key)   of  TRUE: EXIT; end;
+  case latin.validMacron(key)   of  TRUE: EXIT; end;
   case key in VALID_KEYS  of FALSE: key := #0; end;
 end;
 
 procedure TEditForm.edtEnglishKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  case Key = VK_RETURN of  TRUE:  begin cbWordDesc.setFocus; cbWordDesc.droppedDown := TRUE; end;end;
+  case Key = VK_RETURN of TRUE: begin cbWordDesc.setFocus; cbWordDesc.droppedDown := TRUE; end;end;
 end;
 
 procedure TEditForm.edtEntryEnter(Sender: TObject);
@@ -251,9 +208,9 @@ end;
 
 procedure TEditForm.edtEntryKeyPress(Sender: TObject; var Key: Char);
 begin
-  case isShiftKeyDown of TRUE: key := getMacronChar(key); end;
-  case validMacron(key)   of  TRUE: EXIT; end;
-  case key in VALID_KEYS  of FALSE: key := #0; end;
+  case isShiftKeyDown of TRUE: key := latin.getMacronChar(key); end;
+  case latin.validMacron(key) of TRUE: EXIT; end;
+  case key in VALID_KEYS      of FALSE: key := #0; end;
 end;
 
 procedure TEditForm.edtEntryKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -265,8 +222,8 @@ end;
 
 procedure TEditForm.edtLatinKeyPress(Sender: TObject; var Key: Char);
 begin
-  case isShiftKeyDown of TRUE: key := getMacronChar(key); end;
-  case validMacron(key)   of  TRUE: EXIT; end;
+  case isShiftKeyDown of TRUE: key := latin.getMacronChar(key); end;
+  case latin.validMacron(key)   of  TRUE: EXIT; end;
   case key in VALID_KEYS  of FALSE: key := #0; end;
 end;
 
@@ -277,15 +234,18 @@ end;
 
 procedure TEditForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  case entreez  <> NIL of TRUE: entreez.free;   end;
-  case FMFN     <> NIL of TRUE: FMFN.free;      end;
-  case FStrings <> NIL of TRUE: FStrings.free;  end;
+  case entreez    <> NIL of TRUE: entreez.free;   end;
+  case FMFN       <> NIL of TRUE: FMFN.free;      end;
+  case FStrings   <> NIL of TRUE: FStrings.free;  end;
+  case FVerbTypes <> NIL of TRUE: FVerbTypes.free; end;
+  case FWordTypes <> NIL of TRUE: FWordTypes.free; end;
   action := caFree;
 end;
 
 procedure TEditForm.FormCreate(Sender: TObject);
 var bakFile: string;
 begin
+  DICT_FILE := extractFilePath(paramStr(0)) + 'latinator.ini';
   var i := 0;
   repeat
     inc(i);
@@ -293,6 +253,14 @@ begin
   until not fileExists(bakFile);
 
   case copyFile(PWideChar(DICT_FILE), PWideChar(bakFile), TRUE) of FALSE: EXIT; end;
+
+  FVerbTypes := TStringList.create;
+  FWordTypes := TStringList.create;
+
+  latin.getVerbTypes(FVerbTypes);
+  latin.getWordTypes(FWordTypes);
+  latin.getWordDescs(cbWordDesc.items);
+  latin.getVerbDescs(cbVerbDesc.items);
 
   FMFN     := TStringList.create;
   FMFN.add('m'); FMFN.add('f'); FMFN.add('n'); FMFN.add('a');
@@ -344,16 +312,6 @@ begin
   edtEntry.text   := replaceQuotes(copy(FStrings.delimitedText, lenPrefix + 1, 255)); // separate the main entry from what precedes it
   FEdit := TRUE;
   lblPressEnter.caption := 'press ENTER to UPDATE';
-end;
-
-procedure TEditForm.populateVerbDescs(verbDescs: TStringList);
-begin
-  cbVerbDesc.items.assign(verbDescs);
-end;
-
-procedure TEditForm.populateWordDescs(wordDescs: TStringList);
-begin
-  cbWordDesc.items.assign(wordDescs);
 end;
 
 function TEditForm.replaceQuotes(aString: string): string;

@@ -5,7 +5,8 @@ uses
   main in 'main.pas' {MainForm},
   Vcl.Themes,
   Vcl.Styles,
-  _debugWindow in '..\DebugWindow\_debugWindow.pas';
+  _debugWindow in '..\DebugWindow\_debugWindow.pas',
+  latinGrammar in 'latinGrammar.pas';
 
 {$R *.res}
 
