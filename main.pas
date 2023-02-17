@@ -58,7 +58,7 @@ var
 
 implementation
 
-uses FormEdit, latinGrammar, _debugWindow;
+uses FormEdit, latinGrammar{, _debugWindow};
 
 const
   DEFAULT_COL_WIDTH = 86;
@@ -233,19 +233,19 @@ begin
     lblWordType.caption := latin.wordDesc;
     lblLatin.caption := latin.latinDesc;
 
-    sg.cells[1, 1] := ' ' + latin.nounNomSingular;
-    sg.cells[1, 2] := ' ' + latin.nounVocSingular;
-    sg.cells[1, 3] := ' ' + latin.nounAccSingular;
-    sg.cells[1, 4] := ' ' + latin.nounGenSingular;
-    sg.cells[1, 5] := ' ' + latin.nounDatSingular;
-    sg.cells[1, 6] := ' ' + latin.nounAblSingular;
+    sg.cells[1, 1] := ' ' + latin.getNounCase(nominative, singular);
+    sg.cells[1, 2] := ' ' + latin.getNounCase(vocative, singular);
+    sg.cells[1, 3] := ' ' + latin.getNounCase(accusative, singular);
+    sg.cells[1, 4] := ' ' + latin.getNounCase(genitive, singular);
+    sg.cells[1, 5] := ' ' + latin.getNounCase(dative, singular);
+    sg.cells[1, 6] := ' ' + latin.getNounCase(ablative, singular);
 
-    sg.cells[2, 1] := ' ' + latin.nounNomPlural;
-    sg.cells[2, 2] := ' ' + latin.nounVocPlural;
-    sg.cells[2, 3] := ' ' + latin.nounAccPlural;
-    sg.cells[2, 4] := ' ' + latin.nounGenPlural;
-    sg.cells[2, 5] := ' ' + latin.nounDatPlural;
-    sg.cells[2, 6] := ' ' + latin.nounAblPlural;
+    sg.cells[2, 1] := ' ' + latin.getNounCase(nominative, plural);
+    sg.cells[2, 2] := ' ' + latin.getNounCase(vocative, plural);
+    sg.cells[2, 3] := ' ' + latin.getNounCase(accusative, plural);
+    sg.cells[2, 4] := ' ' + latin.getNounCase(genitive, plural);
+    sg.cells[2, 5] := ' ' + latin.getNounCase(dative, plural);
+    sg.cells[2, 6] := ' ' + latin.getNounCase(ablative, plural);
 
   except end; // not every record has every field, but that's ok
 end;
@@ -276,41 +276,41 @@ begin
     lblWordType.caption := latin.wordDesc;
     lblLatin.caption    := latin.pronounDesc;
 
-    sg.cells[1, 1]  := ' ' + latin.pronounMasculineNomSingular;
-    sg.cells[1, 2]  := ' ' + latin.pronounMasculineAccSingular;
-    sg.cells[1, 3]  := ' ' + latin.pronounMasculineGenSingular;
-    sg.cells[1, 4]  := ' ' + latin.pronounMasculineDatSingular;
-    sg.cells[1, 5]  := ' ' + latin.pronounMasculineAblSingular;
+    sg.cells[1, 1]  := ' ' + latin.getPronounCase(masculine, nominative, singular);
+    sg.cells[1, 2]  := ' ' + latin.getPronounCase(masculine, accusative, singular);
+    sg.cells[1, 3]  := ' ' + latin.getPronounCase(masculine, genitive, singular);
+    sg.cells[1, 4]  := ' ' + latin.getPronounCase(masculine, dative, singular);
+    sg.cells[1, 5]  := ' ' + latin.getPronounCase(masculine, ablative, singular);
 
-    sg.cells[1, 7]  := ' ' + latin.pronounMasculineNomPlural;
-    sg.cells[1, 8]  := ' ' + latin.pronounMasculineAccPlural;
-    sg.cells[1, 9]  := ' ' + latin.pronounMasculineGenPlural;
-    sg.cells[1, 10] := ' ' + latin.pronounMasculineDatPlural;
-    sg.cells[1, 11] := ' ' + latin.pronounMasculineAblPlural;
+    sg.cells[1, 7]  := ' ' + latin.getPronounCase(masculine, nominative, plural);
+    sg.cells[1, 8]  := ' ' + latin.getPronounCase(masculine, accusative, plural);
+    sg.cells[1, 9]  := ' ' + latin.getPronounCase(masculine, genitive, plural);
+    sg.cells[1, 10] := ' ' + latin.getPronounCase(masculine, dative, plural);
+    sg.cells[1, 11] := ' ' + latin.getPronounCase(masculine, ablative, plural);
 
-    sg.cells[2, 1]  := ' ' + latin.pronounFeminineNomSingular;
-    sg.cells[2, 2]  := ' ' + latin.pronounFeminineAccSingular;
-    sg.cells[2, 3]  := ' ' + latin.pronounFeminineGenSingular;
-    sg.cells[2, 4]  := ' ' + latin.pronounFeminineDatSingular;
-    sg.cells[2, 5]  := ' ' + latin.pronounFeminineAblSingular;
+    sg.cells[2, 1]  := ' ' + latin.getPronounCase(feminine, nominative, singular);
+    sg.cells[2, 2]  := ' ' + latin.getPronounCase(feminine, accusative, singular);
+    sg.cells[2, 3]  := ' ' + latin.getPronounCase(feminine, genitive, singular);
+    sg.cells[2, 4]  := ' ' + latin.getPronounCase(feminine, dative, singular);
+    sg.cells[2, 5]  := ' ' + latin.getPronounCase(feminine, ablative, singular);
 
-    sg.cells[2, 7]  := ' ' + latin.pronounFeminineNomPlural;
-    sg.cells[2, 8]  := ' ' + latin.pronounFeminineAccPlural;
-    sg.cells[2, 9]  := ' ' + latin.pronounFeminineGenPlural;
-    sg.cells[2, 10] := ' ' + latin.pronounFeminineDatPlural;
-    sg.cells[2, 11] := ' ' + latin.pronounFeminineAblPlural;
+    sg.cells[2, 7]  := ' ' + latin.getPronounCase(feminine, nominative, plural);
+    sg.cells[2, 8]  := ' ' + latin.getPronounCase(feminine, accusative, plural);
+    sg.cells[2, 9]  := ' ' + latin.getPronounCase(feminine, genitive, plural);
+    sg.cells[2, 10] := ' ' + latin.getPronounCase(feminine, dative, plural);
+    sg.cells[2, 11] := ' ' + latin.getPronounCase(feminine, ablative, plural);
 
-    sg.cells[3, 1]  := ' ' + latin.pronounNeuterNomSingular;
-    sg.cells[3, 2]  := ' ' + latin.pronounNeuterAccSingular;
-    sg.cells[3, 3]  := ' ' + latin.pronounNeuterGenSingular;
-    sg.cells[3, 4]  := ' ' + latin.pronounNeuterDatSingular;
-    sg.cells[3, 5]  := ' ' + latin.pronounNeuterAblSingular;
+    sg.cells[3, 1]  := ' ' + latin.getPronounCase(neuter, nominative, singular);
+    sg.cells[3, 2]  := ' ' + latin.getPronounCase(neuter, accusative, singular);
+    sg.cells[3, 3]  := ' ' + latin.getPronounCase(neuter, genitive, singular);
+    sg.cells[3, 4]  := ' ' + latin.getPronounCase(neuter, dative, singular);
+    sg.cells[3, 5]  := ' ' + latin.getPronounCase(neuter, ablative, singular);
 
-    sg.cells[3, 7]  := ' ' + latin.pronounNeuterNomPlural;
-    sg.cells[3, 8]  := ' ' + latin.pronounNeuterAccPlural;
-    sg.cells[3, 9]  := ' ' + latin.pronounNeuterGenPlural;
-    sg.cells[3, 10] := ' ' + latin.pronounNeuterDatPlural;
-    sg.cells[3, 11] := ' ' + latin.pronounNeuterAblPlural;
+    sg.cells[3, 7]  := ' ' + latin.getPronounCase(neuter, nominative, plural);
+    sg.cells[3, 8]  := ' ' + latin.getPronounCase(neuter, accusative, plural);
+    sg.cells[3, 9]  := ' ' + latin.getPronounCase(neuter, genitive, plural);
+    sg.cells[3, 10] := ' ' + latin.getPronounCase(neuter, dative, plural);
+    sg.cells[3, 11] := ' ' + latin.getPronounCase(neuter, ablative, plural);
   except end; // not every record has every field, but that's ok
 end;
 
@@ -349,12 +349,12 @@ begin
     lblWordType.caption := latin.wordDesc + ' - ' + latin.verbType;
     lblLatin.caption    := latin.pronounDesc;
 
-    sg.cells[1, 1] := ' ' + latin.verb1stPersonSingular;
-    sg.cells[1, 2] := ' ' + latin.verb2ndPersonSingular;
-    sg.cells[1, 3] := ' ' + latin.verb3rdPersonSingular;
-    sg.cells[2, 1] := ' ' + latin.verb1stPersonPlural;
-    sg.cells[3, 2] := ' ' + latin.verb2ndPersonPlural;
-    sg.cells[4, 3] := ' ' + latin.verb3rdPersonPlural;
+    sg.cells[1, 1] := ' ' + latin.getVerbCase(firstPerson, singular);
+    sg.cells[1, 2] := ' ' + latin.getVerbCase(secondPerson, singular);
+    sg.cells[1, 3] := ' ' + latin.getVerbCase(thirdPerson, singular);
+    sg.cells[2, 1] := ' ' + latin.getVerbCase(firstPerson, plural);
+    sg.cells[2, 2] := ' ' + latin.getVerbCase(secondPerson, plural);
+    sg.cells[2, 3] := ' ' + latin.getVerbCase(thirdPerson, plural);
 
   except; end; // not every record has every field, but that's ok
 end;
@@ -393,6 +393,6 @@ begin
 end;
 
 initialization
-  debugClear;
+//  debugClear;
 
 end.

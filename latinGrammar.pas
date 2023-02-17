@@ -48,7 +48,6 @@ type
     function  getRecLatinDesc: string;
     function  getRecNounGender: TNounGender;
     function  getRecPronounDesc: string;
-    function  getVerb1stPersonSingular: string;
     function  getRecVerbType: string;
     function  getRecWordDesc: string;
     function  getRecWordType: TWordType;
@@ -56,63 +55,16 @@ type
     function  isERNoun: boolean;
     function  isExpandNounRec: boolean;
     function  isUSNoun: boolean;
-    function  getVerb2ndPersonSingular: string;
-    function  getVerb3rdPersonSingular: string;
-    function  getVerb1stPersonPlural: string;
-    function  getVerb2ndPersonPlural: string;
-    function  getVerb3rdPersonPlural: string;
-    function  getNounAblSingular: string;
-    function  getNounAccSingular: string;
-    function  getNounDatSingular: string;
-    function  getNounGenSingular: string;
-    function  getNounNomSingular: string;
-    function  getNounVocSingular: string;
-    function  getNounAblPlural: string;
-    function  getNounAccPlural: string;
-    function  getNounDatPlural: string;
-    function  getNounGenPlural: string;
-    function  getNounNomPlural: string;
-    function  getNounVocPlural: string;
-
-    function  getNounCase(nounCase: TNounCase; sp: TSingularPlural): string;
-    function  getPronounCase(mfn: TMFN; nounCase: TNounCase; sp: TSingularPlural): string;
-    function  getVerbCase(verbCase: TVerbCase; sp: TSingularPlural): string;
-
-    function  getPronounFeminineAblPlural: string;
-    function  getPronounFeminineAblSingular: string;
-    function  getPronounFeminineAccPlural: string;
-    function  getPronounFeminineAccSingular: string;
-    function  getPronounFeminineDatPlural: string;
-    function  getPronounFeminineDatSingular: string;
-    function  getPronounFeminineGenPlural: string;
-    function  getPronounFeminineGenSingular: string;
-    function  getPronounFeminineNomPlural: string;
-    function  getPronounFeminineNomSingular: string;
-    function  getPronounMasculineAblPlural: string;
-    function  getPronounMasculineAblSingular: string;
-    function  getPronounMasculineAccPlural: string;
-    function  getPronounMasculineAccSingular: string;
-    function  getPronounMasculineDatPlural: string;
-    function  getPronounMasculineDatSingular: string;
-    function  getPronounMasculineGenPlural: string;
-    function  getPronounMasculineGenSingular: string;
-    function  getPronounMasculineNomPlural: string;
-    function  getPronounMasculineNomSingular: string;
-    function  getPronounNeuterAblPlural: string;
-    function  getPronounNeuterAblSingular: string;
-    function  getPronounNeuterAccPlural: string;
-    function  getPronounNeuterAccSingular: string;
-    function  getPronounNeuterDatPlural: string;
-    function  getPronounNeuterDatSingular: string;
-    function  getPronounNeuterGenPlural: string;
-    function  getPronounNeuterGenSingular: string;
-    function  getPronounNeuterNomPlural: string;
-    function  getPronounNeuterNomSingular: string;
   protected
   public
     function  getMacronChar(aChar: char): char;
 //    function getMacronWord(key: WORD): WORD;
     function  validMacron(key: char): boolean;
+
+    function  getNounCase(nounCase: TNounCase; sp: TSingularPlural): string;
+    function  getPronounCase(mfn: TMFN; nounCase: TNounCase; sp: TSingularPlural): string;
+    function  getVerbCase(verbCase: TVerbCase; sp: TSingularPlural): string;
+
     procedure getWordDescs(wordDescs: TStrings);
     procedure getWordTypes(wordTypes: TStrings);
     procedure getVerbDescs(verbDescs: TStrings);
@@ -127,57 +79,7 @@ type
     property  iniFilePath:    string read FIniFilePath write SetIniFilePath;
     property  latinDesc:      string read getRecLatinDesc;
 
-    property  nounNomPlural:    string read getNounNomPlural;
-    property  nounVocPlural:    string read getNounVocPlural;
-    property  nounAccPlural:    string read getNounAccPlural;
-    property  nounGenPlural:    string read getNounGenPlural;
-    property  nounDatPlural:    string read getNounDatPlural;
-    property  nounAblPlural:    string read getNounAblPlural;
-    property  nounNomSingular:  string read getNounNomSingular;
-    property  nounVocSingular:  string read getNounVocSingular;
-    property  nounAccSingular:  string read getNounAccSingular;
-    property  nounGenSingular:  string read getNounGenSingular;
-    property  nounDatSingular:  string read getNounDatSingular;
-    property  nounAblSingular:  string read getNounAblSingular;
     property  pronounDesc:      string read getRecPronounDesc;
-
-    property  pronounMasculineNomSingular:  string read getPronounMasculineNomSingular;
-    property  pronounMasculineAccSingular:  string read getPronounMasculineAccSingular;
-    property  pronounMasculineGenSingular:  string read getPronounMasculineGenSingular;
-    property  pronounMasculineDatSingular:  string read getPronounMasculineDatSingular;
-    property  pronounMasculineAblSingular:  string read getPronounMasculineAblSingular;
-    property  pronounMasculineNomPlural:    string read getPronounMasculineNomPlural;
-    property  pronounMasculineAccPlural:    string read getPronounMasculineAccPlural;
-    property  pronounMasculineGenPlural:    string read getPronounMasculineGenPlural;
-    property  pronounMasculineDatPlural:    string read getPronounMasculineDatPlural;
-    property  pronounMasculineAblPlural:    string read getPronounMasculineAblPlural;
-    property  pronounFeminineNomSingular:   string read getPronounFeminineNomSingular;
-    property  pronounFeminineAccSingular:   string read getPronounFeminineAccSingular;
-    property  pronounFeminineGenSingular:   string read getPronounFeminineGenSingular;
-    property  pronounFeminineDatSingular:   string read getPronounFeminineDatSingular;
-    property  pronounFeminineAblSingular:   string read getPronounFeminineAblSingular;
-    property  pronounFeminineNomPlural:     string read getPronounFeminineNomPlural;
-    property  pronounFeminineAccPlural:     string read getPronounFeminineAccPlural;
-    property  pronounFeminineGenPlural:     string read getPronounFeminineGenPlural;
-    property  pronounFeminineDatPlural:     string read getPronounFeminineDatPlural;
-    property  pronounFeminineAblPlural:     string read getPronounFeminineAblPlural;
-    property  pronounNeuterNomSingular:     string read getPronounNeuterNomSingular;
-    property  pronounNeuterAccSingular:     string read getPronounNeuterAccSingular;
-    property  pronounNeuterGenSingular:     string read getPronounNeuterGenSingular;
-    property  pronounNeuterDatSingular:     string read getPronounNeuterDatSingular;
-    property  pronounNeuterAblSingular:     string read getPronounNeuterAblSingular;
-    property  pronounNeuterNomPlural:       string read getPronounNeuterNomPlural;
-    property  pronounNeuterAccPlural:       string read getPronounNeuterAccPlural;
-    property  pronounNeuterGenPlural:       string read getPronounNeuterGenPlural;
-    property  pronounNeuterDatPlural:       string read getPronounNeuterDatPlural;
-    property  pronounNeuterAblPlural:       string read getPronounNeuterAblPlural;
-
-    property  verb1stPersonPlural:    string read getVerb1stPersonPlural;
-    property  verb2ndPersonPlural:    string read getVerb2ndPersonPlural;
-    property  verb3rdPersonPlural:    string read getVerb3rdPersonPlural;
-    property  verb1stPersonSingular:  string read getVerb1stPersonSingular;
-    property  verb2ndPersonSingular:  string read getVerb2ndPersonSingular;
-    property  verb3rdPersonSingular:  string read getVerb3rdPersonSingular;
 
     property  verbType: string read getRecVerbType;
     property  wordDesc: string read getRecWordDesc;
@@ -436,34 +338,27 @@ begin
                           end;end;end;
 end;
 
-function TLatin.getVerb1stPersonPlural: string;
+function TLatin.getNounCase(nounCase: TNounCase; sp: TSingularPlural): string;
+// noun cases are in elements 4-9 and 10-15 (singular and plural)
+var ix: integer;
 begin
-  result := getVerbCase(firstPerson, plural);
+  result := '';
+  case FStrings.count = 0 of TRUE: EXIT; end;
+  ix := 4 + ord(nounCase);
+  case sp of plural: ix := ix + 6; end;
+  case ix < FStrings.count of TRUE: result := FStrings[ix]; end;
 end;
 
-function TLatin.getVerb1stPersonSingular: string;
+function TLatin.getPronounCase(mfn: TMFN; nounCase: TNounCase; sp: TSingularPlural): string;
+// pronoun cases are in elements 4-13, 14-23, 24-33 (sing/plural masculine, sing/plural feminine and sing/plural neuter)
 begin
-  result := getVerbCase(firstPerson, singular);
-end;
-
-function TLatin.getVerb2ndPersonPlural: string;
-begin
-  result := getVerbCase(secondPerson, plural);
-end;
-
-function TLatin.getVerb2ndPersonSingular: string;
-begin
-  result := getVerbCase(secondPerson, singular);
-end;
-
-function TLatin.getVerb3rdPersonPlural: string;
-begin
-  result := getVerbCase(thirdPerson, plural);
-end;
-
-function TLatin.getVerb3rdPersonSingular: string;
-begin
-  result := getVerbCase(thirdPerson, singular);
+  result := '';
+  var ix := 4 + ord(nounCase);
+  case ord(nounCase) > 0 of TRUE: ix := ix - 1; end; // there's no Vocative for pronouns
+  case sp of plural:    ix := ix + 5; end;
+  case mfn of feminine: ix := ix + 10; end;
+  case mfn of neuter:   ix := ix + 20; end;
+  case ix < FStrings.count of TRUE: result := FStrings[ix]; end;
 end;
 
 function TLatin.getVerbCase(verbCase: TVerbCase; sp: TSingularPlural): string;
@@ -517,93 +412,10 @@ begin
   result := FStrings[2];
 end;
 
-function TLatin.getNounAblPlural: string;
-begin
-  result := getNounCase(ablative, plural);
-end;
-
-function TLatin.getNounAblSingular: string;
-begin
-  result := getNounCase(ablative, singular);
-end;
-
-function TLatin.getNounAccPlural: string;
-begin
-  result := getNounCase(accusative, plural);
-end;
-
-function TLatin.getNounAccSingular: string;
-begin
-  result := getNounCase(accusative, singular);
-end;
-
-function TLatin.getNounCase(nounCase: TNounCase; sp: TSingularPlural): string;
-// noun cases are in elements 4-9 and 10-15 (singular and plural)
-var ix: integer;
-begin
-  result := '';
-  case FStrings.count = 0 of TRUE: EXIT; end;
-  ix := 4 + ord(nounCase);
-  case sp of plural: ix := ix + 6; end;
-  case ix < FStrings.count of TRUE: result := FStrings[ix]; end;
-end;
-
-function TLatin.getNounDatPlural: string;
-begin
-  result := getNounCase(dative, plural);
-end;
-
-function TLatin.getNounDatSingular: string;
-begin
-  result := getNounCase(dative, singular);
-end;
-
 function TLatin.getRecNounGender: TNounGender;
 begin
   case FStrings.count = 0 of TRUE: EXIT; end;
   result := TNounGender(pos(FStrings[1], 'mfn'));
-end;
-
-function TLatin.getNounGenPlural: string;
-begin
-  result := getNounCase(genitive, plural);
-end;
-
-function TLatin.getNounGenSingular: string;
-begin
-  result := getNounCase(genitive, singular);
-end;
-
-function TLatin.getNounNomPlural: string;
-begin
-  result := getNounCase(nominative, plural);
-end;
-
-function TLatin.getNounNomSingular: string;
-begin
-  result := getNounCase(nominative, singular);
-end;
-
-function TLatin.getNounVocPlural: string;
-begin
-  result := getNounCase(vocative, plural);
-end;
-
-function TLatin.getNounVocSingular: string;
-begin
-  result := getNounCase(vocative, singular);
-end;
-
-function TLatin.getPronounCase(mfn: TMFN; nounCase: TNounCase; sp: TSingularPlural): string;
-// pronoun cases are in elements 4-13, 14-23, 24-33 (sing/plural masculine, sing/plural feminine and sing/plural neuter)
-begin
-  result := '';
-  var ix := 4 + ord(nounCase);
-  case ord(nounCase) > 0 of TRUE: ix := ix - 1; end; // there's no Vocative for pronouns
-  case sp of plural:    ix := ix + 5; end;
-  case mfn of feminine: ix := ix + 10; end;
-  case mfn of neuter:   ix := ix + 20; end;
-  case ix < FStrings.count of TRUE: result := FStrings[ix]; end;
 end;
 
 function TLatin.getRecPronounDesc: string;
@@ -611,156 +423,6 @@ begin
   result := '';
   case FStrings.count = 0 of TRUE: EXIT; end;
   result := FStrings[2] + ' = ' + FStrings[3];
-end;
-
-function TLatin.getPronounFeminineAblPlural: string;
-begin
-  result := getPronounCase(feminine, ablative, plural);
-end;
-
-function TLatin.getPronounFeminineAblSingular: string;
-begin
-  result := getPronounCase(feminine, ablative, singular);
-end;
-
-function TLatin.getPronounFeminineAccPlural: string;
-begin
-  result := getPronounCase(feminine, accusative, plural);
-end;
-
-function TLatin.getPronounFeminineAccSingular: string;
-begin
-  result := getPronounCase(feminine, accusative, singular);
-end;
-
-function TLatin.getPronounFeminineDatPlural: string;
-begin
-  result := getPronounCase(feminine, dative, plural);
-end;
-
-function TLatin.getPronounFeminineDatSingular: string;
-begin
-  result := getPronounCase(feminine, dative, singular);
-end;
-
-function TLatin.getPronounFeminineGenPlural: string;
-begin
-  result := getPronounCase(feminine, genitive, plural);
-end;
-
-function TLatin.getPronounFeminineGenSingular: string;
-begin
-  result := getPronounCase(feminine, genitive, singular);
-end;
-
-function TLatin.getPronounFeminineNomPlural: string;
-begin
-  result := getPronounCase(feminine, nominative, plural);
-end;
-
-function TLatin.getPronounFeminineNomSingular: string;
-begin
-  result := getPronounCase(feminine, nominative, singular);
-end;
-
-function TLatin.getPronounMasculineAblPlural: string;
-begin
-  result := getPronounCase(masculine, ablative, plural);
-end;
-
-function TLatin.getPronounMasculineAblSingular: string;
-begin
-  result := getPronounCase(masculine, ablative, singular);
-end;
-
-function TLatin.getPronounMasculineAccPlural: string;
-begin
-  result := getPronounCase(masculine, accusative, plural);
-end;
-
-function TLatin.getPronounMasculineAccSingular: string;
-begin
-  result := getPronounCase(masculine, accusative, singular);
-end;
-
-function TLatin.getPronounMasculineDatPlural: string;
-begin
-  result := getPronounCase(masculine, dative, plural);
-end;
-
-function TLatin.getPronounMasculineDatSingular: string;
-begin
-  result := getPronounCase(masculine, dative, singular);
-end;
-
-function TLatin.getPronounMasculineGenPlural: string;
-begin
-  result := getPronounCase(masculine, genitive, plural);
-end;
-
-function TLatin.getPronounMasculineGenSingular: string;
-begin
-  result := getPronounCase(masculine, genitive, singular);
-end;
-
-function TLatin.getPronounMasculineNomPlural: string;
-begin
-  result := getPronounCase(masculine, nominative, plural);
-end;
-
-function TLatin.getPronounMasculineNomSingular: string;
-begin
-  result := getPronounCase(masculine, nominative, singular);
-end;
-
-function TLatin.getPronounNeuterAblPlural: string;
-begin
-  result := getPronounCase(neuter, ablative, plural);
-end;
-
-function TLatin.getPronounNeuterAblSingular: string;
-begin
-  result := getPronounCase(neuter, ablative, singular);
-end;
-
-function TLatin.getPronounNeuterAccPlural: string;
-begin
-  result := getPronounCase(neuter, accusative, plural);
-end;
-
-function TLatin.getPronounNeuterAccSingular: string;
-begin
-  result := getPronounCase(neuter, accusative, singular);
-end;
-
-function TLatin.getPronounNeuterDatPlural: string;
-begin
-  result := getPronounCase(neuter, dative, plural);
-end;
-
-function TLatin.getPronounNeuterDatSingular: string;
-begin
-  result := getPronounCase(neuter, dative, singular);
-end;
-
-function TLatin.getPronounNeuterGenPlural: string;
-begin
-  result := getPronounCase(neuter, genitive, plural);
-end;
-
-function TLatin.getPronounNeuterGenSingular: string;
-begin
-  result := getPronounCase(neuter, genitive, singular);
-end;
-
-function TLatin.getPronounNeuterNomPlural: string;
-begin
-  result := getPronounCase(neuter, nominative, plural);
-end;
-
-function TLatin.getPronounNeuterNomSingular: string;
-begin
-  result := getPronounCase(neuter, nominative, singular);
 end;
 
 function TLatin.getRecStem: string;
