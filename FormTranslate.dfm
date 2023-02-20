@@ -1,0 +1,32 @@
+object TranslateForm: TTranslateForm
+  Left = 0
+  Top = 0
+  Caption = 'Translate'
+  ClientHeight = 359
+  ClientWidth = 539
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poScreenCenter
+  OnActivate = FormActivate
+  OnClose = FormClose
+  PixelsPerInch = 96
+  TextHeight = 13
+  object edge: TEdgeBrowser
+    Left = 0
+    Top = 0
+    Width = 539
+    Height = 359
+    Align = alClient
+    TabOrder = 0
+    OnCreateWebViewCompleted = edgeCreateWebViewCompleted
+    ExplicitLeft = 200
+    ExplicitTop = 104
+    ExplicitWidth = 100
+    ExplicitHeight = 41
+  end
+end

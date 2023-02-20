@@ -25,6 +25,7 @@ type
     Label2: TLabel;
     lblInfo: TLabel;
     lblStar: TLabel;
+    Translate: TButton;
     procedure FormCreate(Sender: TObject);
     procedure sgDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
     procedure btnExitClick(Sender: TObject);
@@ -36,6 +37,7 @@ type
     procedure edtSearchKeyPress(Sender: TObject; var Key: Char);
     procedure edtSearchEnter(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure TranslateClick(Sender: TObject);
   private
     FSearchTerm: string;
     procedure clearSG;
@@ -58,7 +60,7 @@ var
 
 implementation
 
-uses FormEdit, latinGrammar{, _debugWindow};
+uses FormEdit, latinGrammar, FormTranslate{, _debugWindow};
 
 const
   DEFAULT_COL_WIDTH = 86;
@@ -154,6 +156,11 @@ begin
                             sg.Canvas.pen.Color := clGray;
                             sg.Canvas.MoveTo(Rect.Left + 0, Rect.Bottom - 3);
                             sg.Canvas.LineTo(Rect.Right - 0, Rect.Bottom - 3); end;end;
+end;
+
+procedure TMainForm.TranslateClick(Sender: TObject);
+begin
+  with TTranslateForm.create(NIL) do showModal;
 end;
 
 procedure TMainForm.updateRecLabel;

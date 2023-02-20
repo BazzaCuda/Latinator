@@ -138,6 +138,11 @@
         </DCCReference>
         <DCCReference Include="..\DebugWindow\_debugWindow.pas"/>
         <DCCReference Include="latinGrammar.pas"/>
+        <DCCReference Include="FormTranslate.pas">
+            <Form>TranslateForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="myCoreWeb.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

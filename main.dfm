@@ -7126,4 +7126,13 @@ object MainForm: TMainForm
     OnKeyPress = edtSearchKeyPress
     OnKeyUp = edtSearchKeyUp
   end
+  object Translate: TButton
+    Left = 450
+    Top = 48
+    Width = 95
+    Height = 28
+    Caption = 'Translate'
+    TabOrder = 7
+    OnClick = TranslateClick
+  end
 end

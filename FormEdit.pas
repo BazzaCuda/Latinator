@@ -181,14 +181,14 @@ end;
 
 procedure TEditForm.cbWordDescEnter(Sender: TObject);
 begin
-  cbWordDesc.itemIndex := -1;
-  cbWordDesc.droppedDown := TRUE;
+  cbWordDesc.itemIndex    := -1;
+  cbWordDesc.droppedDown  := TRUE;
 end;
 
 procedure TEditForm.edtEnglishKeyPress(Sender: TObject; var Key: Char);
 begin
-  case latin.validMacron(key)   of  TRUE: EXIT; end;
-  case key in VALID_KEYS  of FALSE: key := #0; end;
+  case latin.validMacron(key) of  TRUE: EXIT; end;
+  case key in VALID_KEYS      of FALSE: key := #0; end;
 end;
 
 procedure TEditForm.edtEnglishKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -222,9 +222,9 @@ end;
 
 procedure TEditForm.edtLatinKeyPress(Sender: TObject; var Key: Char);
 begin
-  case isShiftKeyDown of TRUE: key := latin.getMacronChar(key); end;
-  case latin.validMacron(key)   of  TRUE: EXIT; end;
-  case key in VALID_KEYS  of FALSE: key := #0; end;
+  case isShiftKeyDown         of  TRUE: key := latin.getMacronChar(key); end;
+  case latin.validMacron(key) of  TRUE: EXIT; end;
+  case key in VALID_KEYS      of FALSE: key := #0; end;
 end;
 
 procedure TEditForm.edtLatinKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
