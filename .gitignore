@@ -63,10 +63,6 @@
 *.htm
 *.xml
 *WebView2*
-Latinator.exe.WebView2/*
-Win64/Release/Latinator.exe.WebView2/*
-EBWebView
-
 
 # Delphi history and backups
 __history/
