@@ -278,15 +278,20 @@ function TEditForm.getEntry: string;
 // formulate an INI file entry from the data in the boxes
   function doQuotes(aString: string): string; // double-quote anything with spaces in it.
   begin
-    case pos(' ', aString) > 0 of  TRUE: result := '"' + aString + '"';
-                                  FALSE: result := aString; end;
+    case (pos(' ', aString) > 0) or (pos('/', aString) > 0) of  TRUE: result := '"' + aString + '"';
+                                                               FALSE: result := aString; end;
+  end;
+  function doQuoteCommas(aString: string): string; // double-quote anything with spaces in it.
+  begin
+    case (pos(' ', aString) > 0) or (pos('/', aString) > 0) or (pos(',', aString) > 0) of  TRUE: result := '"' + aString + '"';
+                                                                                          FALSE: result := aString; end;
   end;
 begin
   result := '';
   case cbWordDesc.itemIndex <> -1 of TRUE: result := FWordTypes[cbWordDesc.itemIndex]; end;
   case cbMFN.itemIndex      <> -1 of TRUE: result := result + ',' + cbMFN.items[cbMFN.itemIndex][1]; end; // just the first letter: m f n
   case cbVerbDesc.itemIndex <> -1 of TRUE: result := result + ',' + FVerbTypes[cbVerbDesc.itemIndex]; end;
-  result := result + ',' + doQuotes(edtLatin.text) + ',' + doQuotes(edtEnglish.text);
+  result := result + ',' + doQuoteCommas(edtLatin.text) + ',' + doQuoteCommas(edtEnglish.text);
   var noTabs := replaceTabs(doQuotes(edtEntry.text));
   result := result + ',' + noTabs;
 end;

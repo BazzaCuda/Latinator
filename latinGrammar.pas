@@ -36,6 +36,7 @@ type
     procedure doLatinRec;
     procedure SetIniFilePath(const Value: string);
     procedure doExpandNoun;
+    procedure doExpandVerb;
     procedure doNextRec;
     procedure doNoun;
     procedure doPrevRec;
@@ -48,6 +49,7 @@ type
     function  getRecLatinDesc: string;
     function  getRecNounGender: TNounGender;
     function  getRecPronounDesc: string;
+    function  getRecVerbDesc: string;
     function  getRecVerbType: string;
     function  getRecWordDesc: string;
     function  getRecWordType: TWordType;
@@ -55,6 +57,7 @@ type
     function  isERNoun: boolean;
     function  isExpandNounRec: boolean;
     function  isUSNoun: boolean;
+    function  isExpandVerbRec: boolean;
   protected
   public
     function  getMacronChar(aChar: char): char;
@@ -81,6 +84,7 @@ type
 
     property  pronounDesc:      string read getRecPronounDesc;
 
+    property  verbDesc: string read getRecVerbDesc;
     property  verbType: string read getRecVerbType;
     property  wordDesc: string read getRecWordDesc;
     property  wordType: TWordType read getRecWordType;
@@ -273,6 +277,30 @@ begin
   FAutoExpanded := TRUE;
 end;
 
+procedure TLatin.doExpandVerb;
+  procedure addEndings(stem: string; endings: array of string);
+  begin
+    FStrings.delete(4); // it has served its purpose
+
+    for var i := low(endings) to high(endings) do
+      FStrings.add(stem + endings[i]);
+  end;
+begin
+  case getRecVerbType = 'pia' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  case getRecVerbType = 'iia' of TRUE: addEndings(getRecStem, ['ābam', 'ābās', 'ābat', 'ābāmus', 'ābātis', 'ābant']); end;
+  case getRecVerbType = 'fia' of TRUE: addEndings(getRecStem, ['ābō', 'ābis', 'ābit', 'ābimus', 'ābitis', 'ābunt']); end;
+  case getRecVerbType = 'pfia' of TRUE: addEndings(getRecStem, ['āvī', 'āvīstī', 'āvit', 'āvimus', 'āvistis', 'āvērunt/āvēre']); end;
+  case getRecVerbType = 'ppia' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  case getRecVerbType = 'fpia' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  case getRecVerbType = 'pip' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  case getRecVerbType = 'iip' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  case getRecVerbType = 'fip' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  case getRecVerbType = 'pfip' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  case getRecVerbType = 'ppip' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  case getRecVerbType = 'fpip' of TRUE: addEndings(getRecStem, ['ō', 'ās', 'at', 'āmus', 'ātis', 'unt']); end;
+  FAutoExpanded := TRUE;
+end;
+
 procedure TLatin.doLatinRec;
 begin
   FAutoExpanded       := FALSE;
@@ -312,7 +340,7 @@ end;
 
 procedure TLatin.doVerb;
 begin
-
+  case isExpandVerbRec of TRUE: doExpandVerb; end;
 end;
 
 function TLatin.findFirst(aSearchTerm: string): boolean;
@@ -433,11 +461,18 @@ begin
   result        := copy(FStrings[4], 1, posHyphen - 1);
 end;
 
-function TLatin.getRecVerbType: string;
+function TLatin.getRecVerbDesc: string;
 begin
   result := '';
   case FStrings.count = 0 of TRUE: EXIT; end;
   result := FVerbDescs[FVerbTypes.indexOf(FStrings[1])];
+end;
+
+function TLatin.getRecVerbType: string;
+begin
+  result := '';
+  case FStrings.count < 2 of TRUE: EXIT; end;
+  result := FVerbTypes[FVerbTypes.indexOf(FStrings[1])];
 end;
 
 function TLatin.getRecWordDesc: string;
@@ -484,11 +519,16 @@ begin
   result := (FStrings.count > 4) and (pos('-', FStrings[4]) > 0);
 end;
 
+function TLatin.isExpandVerbRec: boolean;
+begin
+  case FStrings.count = 0 of TRUE: EXIT; end;
+  result := (FStrings.count > 4) and (pos('-', FStrings[4]) > 0);
+end;
+
 function TLatin.isUSNoun: boolean;
 begin
   result := (length(getRecNom) >= 2) and (getRecNom[length(getRecNom) - 1] = 'u') and (getRecNom[length(getRecNom)] = 's');
 end;
-
 
 procedure TLatin.loadIniFile;
 begin

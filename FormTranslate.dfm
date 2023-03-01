@@ -14,6 +14,7 @@ object TranslateForm: TTranslateForm
   Position = poScreenCenter
   OnActivate = FormActivate
   OnClose = FormClose
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object edge: TEdgeBrowser
@@ -24,9 +25,6 @@ object TranslateForm: TTranslateForm
     Align = alClient
     TabOrder = 0
     OnCreateWebViewCompleted = edgeCreateWebViewCompleted
-    ExplicitLeft = 200
-    ExplicitTop = 104
-    ExplicitWidth = 100
-    ExplicitHeight = 41
+    OnNavigationCompleted = edgeNavigationCompleted
   end
 end

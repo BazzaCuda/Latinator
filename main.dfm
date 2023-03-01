@@ -7135,4 +7135,13 @@ object MainForm: TMainForm
     TabOrder = 7
     OnClick = TranslateClick
   end
+  object btnCactus: TButton
+    Left = 456
+    Top = 80
+    Width = 75
+    Height = 25
+    Caption = 'Cactus'
+    TabOrder = 8
+    OnClick = btnCactusClick
+  end
 end

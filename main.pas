@@ -26,6 +26,7 @@ type
     lblInfo: TLabel;
     lblStar: TLabel;
     Translate: TButton;
+    btnCactus: TButton;
     procedure FormCreate(Sender: TObject);
     procedure sgDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
     procedure btnExitClick(Sender: TObject);
@@ -38,6 +39,7 @@ type
     procedure edtSearchEnter(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure TranslateClick(Sender: TObject);
+    procedure btnCactusClick(Sender: TObject);
   private
     FSearchTerm: string;
     procedure clearSG;
@@ -160,12 +162,17 @@ end;
 
 procedure TMainForm.TranslateClick(Sender: TObject);
 begin
-  with TTranslateForm.create(NIL) do showModal;
+  with TTranslateForm.create do showModal;
 end;
 
 procedure TMainForm.updateRecLabel;
 begin
   lblRecNo.caption := latin.recNoText;
+end;
+
+procedure TMainForm.btnCactusClick(Sender: TObject);
+begin
+  with TTranslateForm.create(wsCactus) do showModal;
 end;
 
 procedure TMainForm.btnEditClick(Sender: TObject);
@@ -353,7 +360,7 @@ begin
   lblWordType.caption := '';
 
   try
-    lblWordType.caption := latin.wordDesc + ' - ' + latin.verbType;
+    lblWordType.caption := latin.wordDesc + ' - ' + latin.verbDesc;
     lblLatin.caption    := latin.pronounDesc;
 
     sg.cells[1, 1] := ' ' + latin.getVerbCase(firstPerson, singular);
