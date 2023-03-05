@@ -63,6 +63,9 @@
 *.htm
 *.xml
 *WebView2*
+*.html
+LatinWords.txt
+*.css
 
 # Delphi history and backups
 __history/
