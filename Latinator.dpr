@@ -2,13 +2,9 @@ program Latinator;
 
 uses
   Vcl.Forms,
-  main in 'main.pas' {MainForm},
+  formMain in 'formMain.pas' {Form2},
   Vcl.Themes,
-  Vcl.Styles,
-  _debugWindow in '..\DebugWindow\_debugWindow.pas',
-  latinGrammar in 'latinGrammar.pas',
-  FormTranslate in 'FormTranslate.pas' {TranslateForm},
-  myCoreWeb in 'myCoreWeb.pas';
+  Vcl.Styles;
 
 {$R *.res}
 
@@ -16,7 +12,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   TStyleManager.TrySetStyle('Charcoal Dark Slate');
-  Application.CreateForm(TMainForm, MainForm);
-  Application.CreateForm(TTranslateForm, TranslateForm);
+  Application.CreateForm(TForm2, Form2);
   Application.Run;
 end.

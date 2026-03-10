@@ -79,3 +79,6 @@ __recovery/
 modules/
 Win64/Release/Latinator.zip
 /Win64
+/docs
+/Win64
+/Win64/Release
