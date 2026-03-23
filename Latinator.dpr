@@ -70,31 +70,28 @@ var
 //    end;
 //  end;
 
-  function accessXML(const aFilePath: string): TVoid;
+  function writeEntry(const aEntry: TTEIEntry): TVoid;
+  begin
+    case aEntry = NIL of TRUE: EXIT; end;
+    writeUnicode('orthography1: ' + aEntry.orthography);
+    writeUnicode('orthography2: ' + aEntry.orthography2);
+    writeUnicode('ID: '           + aEntry.id);
+    writeUnicode('Key: '          + aEntry.key);
+    writeUnicode('Type: '         + aEntry.entryType);
+    writeunicode('Language: '     + aEntry.language);
+    writeUnicode('Gender: '       + aEntry.gender);
+    writeUnicode('Inflectin: '    + aEntry.inflection);
+    writeUnicode('Etymology: '    + aEntry.etymology);
+    writeUnicode('Definition: '   + aEntry.definition);
+    TTraverser.writeSenses(aEntry.senses);
+  end;
+
+  function loadXML(const aFilePath: string): TLSDictionary;
   begin
     writeUnicode('Loading Lewis & Short...');
-    var vDictionary := TLSDictionary.create;
-    vDictionary.loadFromFile(aFilePath);
-    debugInteger('xml count', vDictionary.entries.count);
-    var vEntryCount := 0;
-
-
-    for var vEntry in vDictionary.entries do  begin
-                                                case vEntryCount = 0 of TRUE:  begin
-                                                                                  writeUnicode(vEntry.orthography);
-                                                                                  writeUnicode(vEntry.id);
-                                                                                  writeUnicode(vEntry.key);
-                                                                                  writeUnicode(vEntry.inflection);
-                                                                                  writeUnicode(vEntry.etymology);
-                                                                                  writeUnicode(vEntry.definition);
-
-                                                                                  // writeUnicode(vEntry.senses[0].definition);
-                                                                                  TTraverser.writeSenses(vEntry.senses);
-                                                                                  writeLn('');
-                                                                                  BREAK; end;end;
-                                                vEntryCount := vEntryCount + 1;
-                                              end;
-    vDictionary.free;
+    result := TLSDictionary.create;
+    result.loadFromFile(aFilePath);
+    debugInteger('xml count', result.entries.count);
   end;
 
 begin
@@ -149,15 +146,18 @@ begin
 
     // accessFirstEntry('B:\Downloads\Latin\lewis-short-JSON-master\ls_A.json');
 
-   accessXML('B:\Downloads\Latin\lat.ls.perseus-eng2.xml');
+    var vDictionary := loadXML('B:\Downloads\Latin\lat.ls.perseus-eng2.xml');
 
     var vLine: string;
     repeat
       write('> ');
       readLn(vLine);
       for var vString in vLatin.parse(vLine) do writeUnicode(vString);
+      writeEntry(vDictionary.findEntry(vLine));
       // writeLn('');
     until vLine = '';
+
+    vDictionary.free;
   end;end;
 
 end.

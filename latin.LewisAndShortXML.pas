@@ -1,198 +1,3 @@
-//unit latin.lewisAndShortXml;
-//
-//interface
-//
-//uses
-//  system.sysUtils,
-//  system.classes,
-//  system.generics.collections,
-//  system.strUtils,
-//  xml.xmlDoc,
-//  xml.xmlIntf;
-//
-//type
-//  TVoid = (vNone);
-//
-//  TTEISense = class(TObject)
-//  private
-//    FId: string;
-//    FN: string;
-//    FLevel: integer;
-//    FDefinition: string;
-//    FSenses: TObjectList<TTEISense>;
-//  public
-//    constructor create;
-//    destructor destroy; override;
-//    property id: string read FId write FId;
-//    property n: string read FN write FN;
-//    property level: integer read FLevel write FLevel;
-//    property definition: string read FDefinition write FDefinition;
-//    property senses: TObjectList<TTEISense> read FSenses;
-//  end;
-//
-//  TTEIEntry = class(TObject)
-//  private
-//    FId: string;
-//    FKey: string;
-//    FOrthography: string;
-//    FInflection: string;
-//    FEtymology: string;
-//    FDefinition: string;
-//    FSenses: TObjectList<TTEISense>;
-//  public
-//    constructor create;
-//    destructor destroy; override;
-//    property id: string read FId write FId;
-//    property key: string read FKey write FKey;
-//    property orthography: string read FOrthography write FOrthography;
-//    property inflection: string read FInflection write FInflection;
-//    property etymology: string read FEtymology write FEtymology;
-//    property definition: string read FDefinition write FDefinition;
-//    property senses: TObjectList<TTEISense> read FSenses;
-//  end;
-//
-//  TLSDictionary = class(TObject)
-//  private
-//    FEntries: TObjectList<TTEIEntry>;
-//    function scanNodes(const aNode: IXMLNode): TVoid;
-//    function parseSenses(const aNode: IXMLNode; const aList: TObjectList<TTEISense>): TVoid;
-//    function processEntry(const aNode: IXMLNode): TVoid;
-//  public
-//    constructor create;
-//    destructor destroy; override;
-//    function loadFromFile(const aFileName: string): TVoid;
-//    property entries: TObjectList<TTEIEntry> read FEntries;
-//  end;
-//
-//implementation
-//
-//constructor TTEISense.create;
-//begin
-//  inherited create;
-//  FSenses := TObjectList<TTEISense>.create;
-//end;
-//
-//destructor TTEISense.destroy;
-//begin
-//  FSenses.free;
-//  inherited destroy;
-//end;
-//
-//constructor TTEIEntry.create;
-//begin
-//  inherited create;
-//  FSenses := TObjectList<TTEISense>.create;
-//end;
-//
-//destructor TTEIEntry.destroy;
-//begin
-//  FSenses.free;
-//  inherited destroy;
-//end;
-//
-//constructor TLSDictionary.create;
-//begin
-//  inherited create;
-//  FEntries := TObjectList<TTEIEntry>.create;
-//end;
-//
-//destructor TLSDictionary.destroy;
-//begin
-//  FEntries.free;
-//  inherited destroy;
-//end;
-//
-//function TLSDictionary.parseSenses(const aNode: IXMLNode; const aList: TObjectList<TTEISense>): TVoid;
-//begin
-//  var vSense: TTEISense := TTEISense.create;
-//  aList.add(vSense);
-//  case aNode.hasAttribute('id') of True: vSense.id := aNode.attributes['id']; end;
-//  case aNode.hasAttribute('n') of True: vSense.n := aNode.attributes['n']; end;
-//  case aNode.hasAttribute('level') of True: vSense.level := strToIntDef(aNode.attributes['level'], 0); end;
-//  for var vI: integer := 0 to aNode.childNodes.count - 1 do
-//  begin
-//    var vChild: IXMLNode := aNode.childNodes[vI];
-//    case sameText(vChild.nodeName, 'sense') of
-//      True: parseSenses(vChild, vSense.senses);
-//      False: vSense.definition := vSense.definition + vChild.xml;
-//    end;
-//  end;
-//  Result := TVoid.vNone;
-//end;
-//
-//function TLSDictionary.processEntry(const aNode: IXMLNode): TVoid;
-//begin
-//  var vEntry: TTEIEntry := TTEIEntry.create;
-//  FEntries.add(vEntry);
-//  case aNode.hasAttribute('id') of True: vEntry.id := aNode.attributes['id']; end;
-//  case aNode.hasAttribute('key') of True: vEntry.key := aNode.attributes['key']; end;
-//  for var vI: integer := 0 to aNode.childNodes.count - 1 do
-//  begin
-//    var vChild: IXMLNode := aNode.childNodes[vI];
-//    var vName: string := vChild.nodeName;
-//    case sameText(vName, 'orth') of True: vEntry.orthography := vEntry.orthography + vChild.xml; end;
-//    case sameText(vName, 'itype') of True: vEntry.inflection := vEntry.inflection + vChild.xml; end;
-//    case sameText(vName, 'etym') of True: vEntry.etymology := vEntry.etymology + vChild.xml; end;
-//    case sameText(vName, 'sense') of
-//      True: parseSenses(vChild, vEntry.senses);
-//      False:
-//      begin
-//        case (not sameText(vName, 'orth')) and (not sameText(vName, 'itype')) and (not sameText(vName, 'etym')) of
-//          True: vEntry.definition := vEntry.definition + vChild.xml;
-//        end;
-//      end;
-//    end;
-//  end;
-//  Result := TVoid.vNone;
-//end;
-//
-//function TLSDictionary.scanNodes(const aNode: IXMLNode): TVoid;
-//begin
-//  case sameText(aNode.nodeName, 'entryFree') of
-//    True: processEntry(aNode);
-//    False:
-//    begin
-//      for var vI: integer := 0 to aNode.childNodes.count - 1 do
-//      begin
-//        scanNodes(aNode.childNodes[vI]);
-//      end;
-//    end;
-//  end;
-//  Result := TVoid.vNone;
-//end;
-//
-//function TLSDictionary.loadFromFile(const aFileName: string): TVoid;
-//begin
-//  var vRaw: TStringList := TStringList.create;
-//  try
-//    vRaw.loadFromFile(aFileName, TEncoding.UTF8);
-//    for var vI: integer := 0 to vRaw.count - 1 do
-//    begin
-//      case containsText(vRaw[vI], '<!DOCTYPE') of
-//        True:
-//        begin
-//          vRaw[vI] := '';
-//          break;
-//        end;
-//      end;
-//    end;
-//    var vXml: IXMLDocument := loadXMLData(vRaw.text);
-//    scanNodes(vXml.documentElement);
-//  finally
-//    vRaw.free;
-//  end;
-//  Result := TVoid.vNone;
-//end;
-//
-//end.
-
-
-
-
-
-
-
-
 unit latin.LewisAndShortXML;
 
 interface
@@ -226,32 +31,42 @@ type
 
   TTEIEntry = class(TObject)
   private
-    FId:            string;
-    FKey:           string;
-    FOrthography:   string;
-    FInflection:    string;
-    FEtymology:     string;
     FDefinition:    string;
+    FEntryType:     string;
+    FEtymology:     string;
+    FGender:        string;
+    FID:            string;
+    FInflection:    string;
+    FKey:           string;
+    FLanguage:      string;
+    FOrthography:   string;
+    FOrthography2:  string;
     FSenses:        TObjectList<TTEISense>;
   public
     constructor create;
     destructor destroy; override;
-    property id:            string                  read FId          write FId;
-    property key:           string                  read FKey         write FKey;
-    property orthography:   string                  read FOrthography write FOrthography;
-    property inflection:    string                  read FInflection  write FInflection;
-    property etymology:     string                  read FEtymology   write FEtymology;
-    property definition:    string                  read FDefinition  write FDefinition;
+    property definition:    string                  read FDefinition    write FDefinition;
+    property entryType:     string                  read FEntryType     write FEntryType;
+    property etymology:     string                  read FEtymology     write FEtymology;
+    property gender:        string                  read FGender        write FGender;
+    property ID:            string                  read FID            write FID;
+    property inflection:    string                  read FInflection    write FInflection;
+    property key:           string                  read FKey           write FKey;
+    property language:      string                  read FLanguage      write FLanguage;
+    property orthography:   string                  read FOrthography   write FOrthography;
+    property orthography2:  string                  read FOrthography2  write FOrthography2;
     property senses:        TObjectList<TTEISense>  read FSenses;
   end;
 
   TLSDictionary = class(TObject)
-  private
+  strict private
     FEntries: TObjectList<TTEIEntry>;
+    FIndex:   TObjectDictionary<string, TTEIEntry>;
     function parseSenses(const aNode: IXMLDOMNode; const aList: TObjectList<TTEISense>): TVoid;
   public
     constructor create;
     destructor destroy; override;
+    function findEntry(const aKey: string): TTEIEntry;
     function loadFromFile(const aFileName: string): TVoid;
     property entries: TObjectList<TTEIEntry> read FEntries;
   end;
@@ -290,13 +105,19 @@ end;
 constructor TLSDictionary.create;
 begin
   inherited create;
-  FEntries := TObjectList<TTEIEntry>.create;
+  FEntries  := TObjectList<TTEIEntry>.create;
+  FIndex    := TObjectDictionary<string, TTEIEntry>.create([doOwnsValues]);
 end;
 
 destructor TLSDictionary.destroy;
 begin
   FEntries.free;
   inherited destroy;
+end;
+
+function TLSDictionary.findEntry(const aKey: string): TTEIEntry;
+begin
+  case FIndex.tryGetValue(aKey, result) of FALSE: result := NIL; end;
 end;
 
 function TLSDictionary.parseSenses(const aNode: IXMLDOMNode; const aList: TObjectList<TTEISense>): TVoid;
@@ -354,8 +175,22 @@ begin
                                                 var vKeyAttr: IXMLDOMNode := vAttrs.getNamedItem('key');
                                                 case assigned(vKeyAttr) of TRUE: vEntry.key := vKeyAttr.text; end;end;end;
 
-                                            var vOrth: IXMLDOMNode := vNode.selectSingleNode('orth');
-                                            case assigned(vOrth) of True: vEntry.orthography := vOrth.text; end;
+                                            var vTypeAttr: IXMLDOMNode := vAttrs.getNamedItem('type');
+                                            case assigned(vTypeAttr) of TRUE: vEntry.entryType := vTypeAttr.text; end;
+
+                                            var vOrthNodes: IXMLDOMNodeList := vNode.selectNodes('orth');
+                                            case (vOrthNodes.length > 0) of  TRUE:  begin
+                                                                                      var vFirstOrth: IXMLDOMNode := vOrthNodes.item[0];
+                                                                                      vEntry.orthography := vFirstOrth.text;
+
+                                                                                      var vOAttrs: IXMLDOMNamedNodeMap := vFirstOrth.attributes;
+                                                                                      case assigned(vOAttrs) of  TRUE:  begin
+                                                                                                                          var vLangAttr: IXMLDOMNode := vOAttrs.getNamedItem('lang');
+                                                                                                                          case assigned(vLangAttr) of TRUE: vEntry.language := vLangAttr.text; end;end;end;
+                                                                                      case (vOrthNodes.length > 1) of TRUE: vEntry.orthography2 := vOrthNodes.item[1].text; end;end;end;
+
+                                            var vGen: IXMLDOMNode := vNode.selectSingleNode('gen');
+                                            case assigned(vGen) of TRUE: vEntry.gender := vGen.text; end;
 
                                             var vIType: IXMLDOMNode := vNode.selectSingleNode('itype');
                                             case assigned(vIType) of True: vEntry.inflection := vIType.text; end;
@@ -365,6 +200,9 @@ begin
 
                                             vEntry.definition := vNode.text;
                                             parseSenses(vNode, vEntry.senses);
+
+                                            case (vEntry.key <> '') of TRUE: case FIndex.containsKey(vEntry.key) of FALSE: FIndex.add(vEntry.key, vEntry); end;end;
+
                                           end;
       end;end;end;
 
