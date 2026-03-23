@@ -22,6 +22,7 @@ unit latin.stringUtils;
 interface
 
 function cleanSentences     (const aString: string): string;
+function cleanVJJ           (const aString: string): string;
 function extractSentences   (const aString: string): TArray<string>;
 function removeMacrons      (const aString: string): string;
 function romanNumerals      (const aString: string): boolean;
@@ -32,6 +33,7 @@ implementation
 uses
   winApi.windows,
   system.regularExpressions,
+  system.sysUtils,
   latin.charUtils;
 
 function cleanSentences(const aString: string): string;
@@ -42,6 +44,11 @@ function cleanSentences(const aString: string): string;
 // ' '       replaces all other characters with a space to preserve word boundaries
 begin
   result := TRegEx.replace(aString, '[^a-zA-Z \.\!\?]', ' ');
+end;
+
+function cleanVJJ(const aString: string): string;
+begin
+  result := aString.replace('v', 'u').replace('j', 'i');
 end;
 
 function extractSentences(const aString: string): TArray<string>;

@@ -44,12 +44,58 @@ uses
   latin.consoleUtils in 'latin.consoleUtils.pas',
   latin.stringUtils in 'latin.stringUtils.pas',
   latin.charUtils in 'latin.charUtils.pas',
-  latin.miscUtils in 'latin.miscUtils.pas';
+  latin.miscUtils in 'latin.miscUtils.pas',
+  system.generics.collections,
+//  latin.LewisAndShortJSON in 'latin.LewisAndShortJSON.pas',
+  latin.LewisAndShortXML in 'latin.LewisAndShortXML.pas';
 
 {$R *.res}
 
 var
   vAsGUI: boolean = FALSE;
+
+//  function accessFirstEntry(const vFilePath: string): TVoid;
+//  begin
+//    var vDictionary := TLSDictionaryLoader.loadFromFile(vFilePath);
+//    try
+//      case (vDictionary.count > 0) of  TRUE: begin
+//            var vEntry := vDictionary[18];
+//            var vNotes := vEntry.titleOrthography;
+//            writeUnicode(vNotes);
+//            TTraverser.writeSenses(vEntry.senses);
+//          end;
+//      end;
+//    finally
+//      vDictionary.free;
+//    end;
+//  end;
+
+  function accessXML(const aFilePath: string): TVoid;
+  begin
+    writeUnicode('Loading Lewis & Short...');
+    var vDictionary := TLSDictionary.create;
+    vDictionary.loadFromFile(aFilePath);
+    debugInteger('xml count', vDictionary.entries.count);
+    var vEntryCount := 0;
+
+
+    for var vEntry in vDictionary.entries do  begin
+                                                case vEntryCount = 0 of TRUE:  begin
+                                                                                  writeUnicode(vEntry.orthography);
+                                                                                  writeUnicode(vEntry.id);
+                                                                                  writeUnicode(vEntry.key);
+                                                                                  writeUnicode(vEntry.inflection);
+                                                                                  writeUnicode(vEntry.etymology);
+                                                                                  writeUnicode(vEntry.definition);
+
+                                                                                  // writeUnicode(vEntry.senses[0].definition);
+                                                                                  TTraverser.writeSenses(vEntry.senses);
+                                                                                  writeLn('');
+                                                                                  BREAK; end;end;
+                                                vEntryCount := vEntryCount + 1;
+                                              end;
+    vDictionary.free;
+  end;
 
 begin
   debugClear;
@@ -100,12 +146,17 @@ begin
 
     writeLn('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
     writeLn('Press ENTER to exit.');
+
+    // accessFirstEntry('B:\Downloads\Latin\lewis-short-JSON-master\ls_A.json');
+
+   accessXML('B:\Downloads\Latin\lat.ls.perseus-eng2.xml');
+
     var vLine: string;
     repeat
       write('> ');
       readLn(vLine);
-      for var vString in vLatin.parse(vLine) do writeLn(vString);
-      writeLn('');
+      for var vString in vLatin.parse(vLine) do writeUnicode(vString);
+      // writeLn('');
     until vLine = '';
   end;end;
 

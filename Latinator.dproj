@@ -154,6 +154,7 @@
         <DCCReference Include="latin.stringUtils.pas"/>
         <DCCReference Include="latin.charUtils.pas"/>
         <DCCReference Include="latin.miscUtils.pas"/>
+        <DCCReference Include="latin.LewisAndShortXML.pas"/>
         <None Include="_debugWindow\bazDebugWindow.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

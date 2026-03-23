@@ -30,6 +30,7 @@ uses
 
 function centerWindow(aHWND: HWND): TVoid;
 function applyUserConsoleColors(aOutputHandle: THandle): TVoid;
+function writeUnicode(const vText: string): TVoid;
 
 implementation
 
@@ -86,6 +87,14 @@ begin
   var vY := vScreenRect.top + (vScreenHeight - vWindowHeight) div 2;
 
   setWindowPos(aHWND, 0, vX, vY, 0, 0, SWP_NOSIZE or SWP_NOZORDER);
+end;
+
+function writeUnicode(const vText: string): TVoid;
+begin
+  var vConsoleHandle := getStdHandle(STD_OUTPUT_HANDLE);
+  var vWritten: cardinal := 0;
+  writeConsoleW(vConsoleHandle, PWideChar(vText), length(vText), vWritten, NIL);
+  writeLn('');
 end;
 
 end.

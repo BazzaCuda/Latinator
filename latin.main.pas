@@ -60,6 +60,8 @@ type
     FUniques:     TArray<TUniquesRec>;
   private
     function  formatParseResults  (const aParseResults:   TArray<TParseResultRec>): TArray<string>;
+
+    function  parseEnclitics      (const aWord: string):  TArray<TParseResultRec>;
     function  parseRomanNumerals  (const aWord: string):  TArray<TParseResultRec>;
     function  parseUniques        (const aWord: string):  TArray<TParseResultRec>;
     function  parseWord           (const aWord: string):  TArray<TParseResultRec>;
@@ -99,6 +101,10 @@ end;
 
 function TLatin.formatParseResults(const aParseResults: TArray<TParseResultRec>): TArray<string>;
 begin
+  // otherwise the Delphi compiler optimises all the calls in the "for var vWord in vWords" loop in TLatin.parse
+  // to use the same array reference pointer and the result array will get duplicated on each call here!
+  result := NIL;
+
   for var vParseResult in aParseResults do  begin
                                               var vIxDelta: integer;
 
@@ -211,16 +217,29 @@ begin
   for var vSentence in vSentences do  begin
                                         var vWords := vSentence.split([' '], TStringSplitOptions.ExcludeEmpty);
 
-                                        for var vWord in vWords do begin
-                                          var vParseResults: TArray<TParseResultRec>;
-                                          vParseResults     := vParseResults + parseWord(vWord);
-                                          result            := result + formatParseResults(vParseResults);
-                                          expandArray(result);
-                                          result[length(result) - 1] := ''; end;end;
+                                        for var vWord in vWords do  begin
+                                                                      result := result + formatParseResults(parseWord(vWord));
+                                                                      expandArray(result);
+                                                                      result[length(result) - 1] := ''; end;end;
+end;
+
+function TLatin.parseEnclitics(const aWord: string): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  // overkill (see comment in parseWord) but pre-empting any possible future bugs
+
+  var vWord := cleanVJJ(aWord);
+
+
+
+
 end;
 
 function TLatin.parseRomanNumerals(const aWord: string): TArray<TParseResultRec>;
 begin
+  result := NIL;
+  // overkill (see comment in parseWord) but pre-empting any possible future bugs
+
   var vWord := lowercase(removeMacrons(aWord));
   case romanNumerals(vWord) of FALSE: EXIT; end;
 
@@ -242,12 +261,21 @@ end;
 
 function TLatin.parseWord(const aWord: string): TArray<TParseResultRec>;
 begin
+  result := NIL;
+  // otherwise the Delphi compiler optimises the following calls to
+  // use the same array reference pointer as the result in the functions themselves(!)
+  // and the result array here will keep getting duplicated each time!
+
   result := result + parseRomanNumerals(aWord);
   result := result + parseUniques(aWord);
+  result := result + parseEnclitics(aWord);
 end;
 
 function TLatin.parseUniques(const aWord: string): TArray<TParseResultRec>;
 begin
+  result := NIL;
+  // overkill (see comment in parseWord) but pre-empting any possible future bugs
+
   var vWord := lowerCase(removeMacrons(aWord));
 
   for var vUnique in FUniques do
