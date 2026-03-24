@@ -131,6 +131,7 @@ begin
   writeUnicode('Mood: '         + aEntry.mood);
   writeUnicode('Etymology: '    + aEntry.etymology);
   writeUnicode('Definition: '   + aEntry.definition);
+  writeUnicode('');
   aEntry.senseAsStrings(writeUnicode);
 
   //TTraverser.writeSenses(aEntry.senses);
