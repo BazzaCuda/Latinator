@@ -1,3 +1,22 @@
+{   Latinator
+    Copyright (C) 2019-2099 Baz Cuda
+    https://github.com/BazzaCuda/Latinator
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
+}
+
 unit latin.LewisAndShort;
 
 interface
@@ -13,18 +32,20 @@ uses
 
 type
 
+  TStringFunc = reference to function(const aValue: string): TVoid;
+
   ITEISense = interface
     function getDefinition:     string;
     function getID:             string;
     function getN:              string;
     function getLevel:          integer;
-    function getSubSenses:      TList<ITEISense>;
+
+    function iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
 
     property definition:        string                  read getDefinition;
     property ID:                string                  read getID;
     property N:                 string                  read getN;
     property level:             integer                 read getLevel;
-    property subSenses:         TList<ITEISense>        read getSubSenses;
   end;
 
   ILewisAndShortEntry = interface
@@ -41,7 +62,8 @@ type
     function getOrthography:    string;
     function getOrthography2:   string;
     function getPartOfSpeech:   string;
-    function getSenses:         TList<ITEISense>;
+
+    function senseAsStrings(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
 
     property caseCase:      string                  read getCase;
     property definition:    string                  read getDefinition;
@@ -56,7 +78,6 @@ type
     property orthography:   string                  read getOrthography;
     property orthography2:  string                  read getOrthography2;
     property partOfSpeech:  string                  read getPartOfSpeech;
-    property senses:        TList<ITEISense>        read getSenses;
   end;
 
   ILewisAndShort = interface
@@ -65,10 +86,10 @@ type
     function loadLewisAndShort(const aFileName: string): TVoid;
   end;
 
-  TTraverser = class
-  public
-    class function writeSenses(const aSenses: TList<ITEISense>; const aIndent: integer = 2): TVoid;
-  end;
+//  TTraverser = class
+//  public
+//    class function writeSenses(const aSenses: TList<ITEISense>; const aIndent: integer = 2): TVoid;
+//  end;
 
   function newLewisAndShort: ILewisAndShort;
 
@@ -94,6 +115,8 @@ type
     function getN:              string;
     function getLevel:          integer;
     function getSubSenses:      TList<ITEISense>;
+
+    function iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
 
     property ID:          string                  read getID            write FID;
     property n:           string                  read getFN            write FN;
@@ -135,6 +158,8 @@ type
     function getPartOfSpeech:   string;
     function getSenses:         TList<ITEISense>;
 
+    function senseAsStrings(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
+
   public
     constructor Create;
     destructor Destroy; override;
@@ -151,7 +176,7 @@ type
     property orthography:   string                  read getOrthography   write FOrthography;
     property orthography2:  string                  read getOrthography2  write FOrthography2;
     property partOfSpeech:  string                  read getPartOfSpeech  write FPartOfSpeech;
-    property senses:        TList<ITEISense>        read getSenses;
+    property senses:        TList<ITEISense>        read FSenses;
   end;
 
   TLewisAndShort = class(TInterfacedObject, ILewisAndShort)
@@ -214,6 +239,25 @@ end;
 function TTEISense.getSubSenses: TList<ITEISense>;
 begin
   result := FSubSenses;
+end;
+
+function TTEISense.iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
+begin
+var vPrefix := stringOfChar(' ', FLevel * aIndent) + '[' + FN + '] ';
+
+  case (FDefinition <> '') of  TRUE: aFunc(vPrefix + FDefinition);
+                              FALSE: aFunc(vPrefix); end;
+
+  debugInteger('FSubSenses.count', FSubSenses.count);
+
+  for var i: integer := 0 to FSubSenses.count - 1 do FSubSenses[i].iterateSenses(aFunc, aIndent);
+
+//  var vPrefix := stringOfChar(' ', aIndent * 2) + '[' + FN + '] ';
+//
+//  case (FDefinition <> '') of  TRUE: aFunc(vPrefix + FDefinition);
+//                              FALSE: aFunc(vPrefix); end;
+//
+//  for var i := 0 to FSubSenses.count - 1 do FSubSenses[i].iterateSenses(aFunc, aIndent + 2);
 end;
 
 constructor TTEIEntry.Create;
@@ -299,6 +343,11 @@ begin
   result := FSenses;
 end;
 
+function TTEIEntry.senseAsStrings(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
+begin
+  for var i := 0 to FSenses.count - 1 do FSenses[i].iterateSenses(aFunc, aIndent);
+end;
+
 constructor TLewisAndShort.Create;
 begin
   inherited create;
@@ -334,7 +383,7 @@ begin
   case assigned(vNodes) of   TRUE: for var i := 0 to vNodes.length - 1 do  begin
                                                                               var vSNode: IXMLDOMNode := vNodes.item[i];
                                                                               var vSense: TTEISense   := TTEISense.create;
-                                                                              var iSense: ITEISense   := vSense; // pin the reference count
+                                                                              var iSense: ITEISense   := vSense; // pin the reference count to 1
                                                                               aList.add(iSense);
                                                                               var vAttrs: IXMLDOMNamedNodeMap := vSNode.attributes;
                                                                               case Assigned(vAttrs) of   TRUE:  begin
@@ -348,7 +397,7 @@ begin
                                                                                                                   case Assigned(vLevelAttr) of TRUE: vSense.level := StrToIntDef(vLevelAttr.text, 0); end;
                                                                                                                 end;end;
                                                                               vSense.definition := vSNode.text;
-                                                                              parseSenses(vSNode, vSense.subSenses);
+                                                                              parseSenses(vSNode, vSense.FSubSenses);
                                                                             end;end;
 end;
 
@@ -423,15 +472,15 @@ begin
       end;end;end;
 end;
 
-class function TTraverser.writeSenses(const aSenses: TList<ITEISense>; const aIndent: integer = 2): TVoid;
-begin
-  case assigned(aSenses) of  TRUE:  for var i: integer := 0 to aSenses.count - 1 do begin
-                                                                                      var vSense: ITEISense := aSenses[i];
-                                                                                      var vPrefix: string   := stringOfChar(' ', aIndent * 2) + '[' + intToStr(i) + '] ';
-                                                                                      case (vSense.definition <> '') of  TRUE:  writeUnicode(vPrefix + vSense.definition);
-                                                                                                                         FALSE: writeUnicode(vPrefix); end;
-                                                                                      writeSenses(vSense.subSenses, aIndent + 2); end;end;
-end;
+//class function TTraverser.writeSenses(const aSenses: TList<ITEISense>; const aIndent: integer = 2): TVoid;
+//begin
+//  case assigned(aSenses) of  TRUE:  for var i: integer := 0 to aSenses.count - 1 do begin
+//                                                                                      var vSense: ITEISense := aSenses[i];
+//                                                                                      var vPrefix: string   := stringOfChar(' ', aIndent * 2) + '[' + intToStr(i) + '] ';
+//                                                                                      case (vSense.definition <> '') of  TRUE:  writeUnicode(vPrefix + vSense.definition);
+//                                                                                                                         FALSE: writeUnicode(vPrefix); end;
+//                                                                                      writeSenses(vSense.subSenses, aIndent + 2); end;end;
+//end;
 
 initialization
   coInitialize(NIL);

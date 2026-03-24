@@ -131,7 +131,9 @@ begin
   writeUnicode('Mood: '         + aEntry.mood);
   writeUnicode('Etymology: '    + aEntry.etymology);
   writeUnicode('Definition: '   + aEntry.definition);
-  TTraverser.writeSenses(aEntry.senses);
+  aEntry.senseAsStrings(writeUnicode);
+
+  //TTraverser.writeSenses(aEntry.senses);
 end;
 
 function loadXML(const aFilePath: string): ILewisAndShort;
