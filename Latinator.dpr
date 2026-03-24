@@ -77,10 +77,13 @@ var
     writeUnicode('orthography2: ' + aEntry.orthography2);
     writeUnicode('ID: '           + aEntry.id);
     writeUnicode('Key: '          + aEntry.key);
+    writeUnicode('Case: '         + aEntry.caseCase);
     writeUnicode('Type: '         + aEntry.entryType);
-    writeunicode('Language: '     + aEntry.language);
+    writeUnicode('Language: '     + aEntry.language);
+    writeUnicode('PartOfSpeech: ' + aEntry.partOfSpeech);
     writeUnicode('Gender: '       + aEntry.gender);
-    writeUnicode('Inflectin: '    + aEntry.inflection);
+    writeUnicode('Inflection: '   + aEntry.inflection);
+    writeUnicode('Mood: '         + aEntry.mood);
     writeUnicode('Etymology: '    + aEntry.etymology);
     writeUnicode('Definition: '   + aEntry.definition);
     TTraverser.writeSenses(aEntry.senses);

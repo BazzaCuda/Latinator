@@ -31,6 +31,7 @@ type
 
   TTEIEntry = class(TObject)
   private
+    FCase:          string;
     FDefinition:    string;
     FEntryType:     string;
     FEtymology:     string;
@@ -39,12 +40,15 @@ type
     FInflection:    string;
     FKey:           string;
     FLanguage:      string;
+    FMood:          string;
     FOrthography:   string;
     FOrthography2:  string;
+    FPartOfSpeech:  string;
     FSenses:        TObjectList<TTEISense>;
   public
     constructor create;
     destructor destroy; override;
+    property caseCase:      string                  read FCase          write FCase;
     property definition:    string                  read FDefinition    write FDefinition;
     property entryType:     string                  read FEntryType     write FEntryType;
     property etymology:     string                  read FEtymology     write FEtymology;
@@ -53,8 +57,10 @@ type
     property inflection:    string                  read FInflection    write FInflection;
     property key:           string                  read FKey           write FKey;
     property language:      string                  read FLanguage      write FLanguage;
+    property mood:          string                  read FMood          write FMood;
     property orthography:   string                  read FOrthography   write FOrthography;
     property orthography2:  string                  read FOrthography2  write FOrthography2;
+    property partOfSpeech:  string                  read FPartOfSpeech  write FPartOfSpeech;
     property senses:        TObjectList<TTEISense>  read FSenses;
   end;
 
@@ -197,6 +203,15 @@ begin
 
                                             var vEtym: IXMLDOMNode := vNode.selectSingleNode('etym');
                                             case assigned(vEtym) of True: vEntry.etymology := vEtym.text; end;
+
+                                            var vPos: IXMLDOMNode := vNode.selectSingleNode('pos');
+                                            case assigned(vPos) of TRUE: vEntry.partOfSpeech := vPos.text; end;
+
+                                            var vMood: IXMLDOMNode := vNode.selectSingleNode('mood');
+                                            case assigned(vMood) of TRUE: vEntry.mood := vMood.text; end;
+
+                                            var vCase: IXMLDOMNode := vNode.selectSingleNode('case');
+                                            case assigned(vCase) of TRUE: vEntry.caseCase := vCase.text; end;
 
                                             vEntry.definition := vNode.text;
                                             parseSenses(vNode, vEntry.senses);
