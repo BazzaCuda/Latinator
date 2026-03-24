@@ -21,8 +21,32 @@ program Latinator;
 
 //{$APPTYPE CONSOLE}
 
+// check if madExcept has left debugging options set in the Release configuration
+{$if defined(RELEASE)}
+  {$ifopt D+} {$MESSAGE ERROR 'Release Build: Debug Information     (D+) enabled' } {$endif}
+  {$ifopt C+} {$MESSAGE ERROR 'Release Build: Assertions            (C+) enabled' } {$endif}
+  {$ifopt L+} {$MESSAGE ERROR 'Release Build: Local Symbols         (L+) enabled' } {$endif}
+  {$ifopt W+} {$MESSAGE ERROR 'Release Build: Stack Frames          (W+) enabled' } {$endif}
+  {$ifopt Y+} {$MESSAGE ERROR 'Release Build: Symbol Reference Info (Y+) enabled' } {$endif}
+  {$ifopt O-} {$MESSAGE ERROR 'Release Build: Optimization          (O-) disabled'} {$endif}
+{$endif}
+
+{$ifopt D+}
+  {$define useMadExcept}
+{$endif}
+
+{$R *.res}
+
 uses
+  {$ifdef useMadExcept}
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
+  {$endif }
   winApi.windows,
+  system.sysUtils,
   Vcl.Forms,
   vcl.dialogs,
   view.formMain in 'view.formMain.pas' {,
@@ -46,10 +70,7 @@ uses
   latin.charUtils in 'latin.charUtils.pas',
   latin.miscUtils in 'latin.miscUtils.pas',
   system.generics.collections,
-//  latin.LewisAndShortJSON in 'latin.LewisAndShortJSON.pas',
-  latin.LewisAndShortXML in 'latin.LewisAndShortXML.pas';
-
-{$R *.res}
+  latin.LewisAndShort in 'latin.LewisAndShort.pas';
 
 var
   vAsGUI: boolean = FALSE;
@@ -70,35 +91,59 @@ var
 //    end;
 //  end;
 
-  function writeEntry(const aEntry: TTEIEntry): TVoid;
-  begin
-    case aEntry = NIL of TRUE: EXIT; end;
-    writeUnicode('orthography1: ' + aEntry.orthography);
-    writeUnicode('orthography2: ' + aEntry.orthography2);
-    writeUnicode('ID: '           + aEntry.id);
-    writeUnicode('Key: '          + aEntry.key);
-    writeUnicode('Case: '         + aEntry.caseCase);
-    writeUnicode('Type: '         + aEntry.entryType);
-    writeUnicode('Language: '     + aEntry.language);
-    writeUnicode('PartOfSpeech: ' + aEntry.partOfSpeech);
-    writeUnicode('Gender: '       + aEntry.gender);
-    writeUnicode('Inflection: '   + aEntry.inflection);
-    writeUnicode('Mood: '         + aEntry.mood);
-    writeUnicode('Etymology: '    + aEntry.etymology);
-    writeUnicode('Definition: '   + aEntry.definition);
-    TTraverser.writeSenses(aEntry.senses);
-  end;
+procedure setupRunMode;
+begin
+  {$if BazDebugWindow} debugClear; {$endif}
 
-  function loadXML(const aFilePath: string): TLSDictionary;
-  begin
-    writeUnicode('Loading Lewis & Short...');
-    result := TLSDictionary.create;
-    result.loadFromFile(aFilePath);
-    debugInteger('xml count', result.entries.count);
-  end;
+  {$ifndef useMadExcept}
+  reportMemoryLeaksOnShutdown := mmpEnvironmentVariable; // done already in mmpStackTrace initialization section - unless that unit has been commented out
+  {$if BazDebugWindow} debugBoolean('reportMemoryLeaksOnShutdown', reportMemoryLeaksOnShutdown); {$endif}
+  {$endif}
+
+  {$ifdef useMadExcept}
+//  madExcept.SetLeakReportFile(extractFilePath(paramStr(0)) + 'madExcept.log'); // this suppresses the dialog
+  madExcept.reportLeaks := TRUE;
+  madExcept.showNoLeaksWindow(TRUE);
+  madExcept.dontHookThreads;
+
+  var vThreadList := madExcept.getThreadList;
+
+  for var i := low(vThreadList) to high(vThreadList) do
+    madExcept.thisIsNoLeak(vThreadList[i]);
+
+//  madExcept.HookThreads;
+  {$endif}
+end;
+
+function writeEntry(const aEntry: ILewisAndShortEntry): TVoid;
+begin
+  case aEntry = NIL of TRUE: EXIT; end;
+  writeUnicode('orthography1: ' + aEntry.orthography);
+  writeUnicode('orthography2: ' + aEntry.orthography2);
+  writeUnicode('ID: '           + aEntry.id);
+  writeUnicode('Key: '          + aEntry.key);
+  writeUnicode('Case: '         + aEntry.caseCase);
+  writeUnicode('Type: '         + aEntry.entryType);
+  writeUnicode('Language: '     + aEntry.language);
+  writeUnicode('PartOfSpeech: ' + aEntry.partOfSpeech);
+  writeUnicode('Gender: '       + aEntry.gender);
+  writeUnicode('Inflection: '   + aEntry.inflection);
+  writeUnicode('Mood: '         + aEntry.mood);
+  writeUnicode('Etymology: '    + aEntry.etymology);
+  writeUnicode('Definition: '   + aEntry.definition);
+  TTraverser.writeSenses(aEntry.senses);
+end;
+
+function loadXML(const aFilePath: string): ILewisAndShort;
+begin
+  writeUnicode('Loading Lewis & Short...');
+//  result := newLewisAndShort;
+  result.loadLewisAndShort(aFilePath);
+  debugInteger('xml count', result.entryCount);
+end;
 
 begin
-  debugClear;
+  setupRunMode;
 
   var vLatin: ILatin := newLatin;
 
@@ -144,23 +189,25 @@ begin
     assignFile(output, '');
     rewrite(output);
 
-    writeLn('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
-    writeLn('Press ENTER to exit.');
+    writeUnicode('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
+    writeUnicode('Press ENTER to exit.');
 
     // accessFirstEntry('B:\Downloads\Latin\lewis-short-JSON-master\ls_A.json');
 
-    var vDictionary := loadXML('B:\Downloads\Latin\lat.ls.perseus-eng2.xml');
+    writeUnicode('Loading Lewis & Short...');
+    vLatin.loadLewisAndShort('B:\Downloads\Latin\lat.ls.perseus-eng2.xml');
+    writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
 
     var vLine: string;
     repeat
       write('> ');
       readLn(vLine);
       for var vString in vLatin.parse(vLine) do writeUnicode(vString);
-      writeEntry(vDictionary.findEntry(vLine));
+      writeEntry(vLatin.LewisAndShort.findEntry(vLine));
       // writeLn('');
     until vLine = '';
 
-    vDictionary.free;
+    //vDictionary.free;
   end;end;
 
 end.

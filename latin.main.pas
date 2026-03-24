@@ -23,19 +23,21 @@ interface
 
 uses
   system.sysUtils, system.classes, system.generics.collections {for TDictionary},
-  latin.types;
+  latin.LewisAndShort, latin.types;
 
 type
   ILatin = interface
-    function  loadDictionary  (const aFileName: string): TVoid;
-    function  loadEsse        (const aFileName: string): TVoid;
-    function  loadInflections (const aFileName: string): TVoid;
-    function  loadPrefixes    (const aFileName: string): TVoid;
-    function  loadSuffixes    (const aFileName: string): TVoid;
-    function  loadTackOns     (const aFileName: string): TVoid;
-    function  loadUniques     (const aFileName: string): TVoid;
-    function  parse           (const aLine:     string): TArray<string>;
-    function  setDataPath     (const aPath:     string): TVoid;
+    function  LewisAndShort:    ILewisAndShort;
+    function  loadDictionary    (const aFileName: string): TVoid;
+    function  loadEsse          (const aFileName: string): TVoid;
+    function  loadInflections   (const aFileName: string): TVoid;
+    function  loadLewisAndShort (const aFileName: string): TVoid;
+    function  loadPrefixes      (const aFileName: string): TVoid;
+    function  loadSuffixes      (const aFileName: string): TVoid;
+    function  loadTackOns       (const aFileName: string): TVoid;
+    function  loadUniques       (const aFileName: string): TVoid;
+    function  parse             (const aLine:     string): TArray<string>;
+    function  setDataPath       (const aPath:     string): TVoid;
   end;
 
 function newLatin: ILatin;
@@ -49,15 +51,16 @@ uses
 type
   TLatin = class(TInterfacedObject, ILatin)
   strict private
-    FDataPath:    string;
-    FDictLines:   TArray<TDictLineRec>;
-    FDictIx:      TDictionary<string, integer>;
-    FEsse:        TArray<TEsseRec>;
-    FInflections: TArray<TInflectionsRec>;
-    FPrefixes:    TArray<TPrefixRec>;
-    FSuffixes:    TArray<TSuffixRec>;
-    FTackOns:     TArray<TTackOnRec>;
-    FUniques:     TArray<TUniquesRec>;
+    FDataPath:      string;
+    FDictLines:     TArray<TDictLineRec>;
+    FDictIx:        TDictionary<string, integer>;
+    FEsse:          TArray<TEsseRec>;
+    FInflections:   TArray<TInflectionsRec>;
+    FLewisAndshort: ILewisAndShort;
+    FPrefixes:      TArray<TPrefixRec>;
+    FSuffixes:      TArray<TSuffixRec>;
+    FTackOns:       TArray<TTackOnRec>;
+    FUniques:       TArray<TUniquesRec>;
   private
     function  formatParseResults  (const aParseResults:   TArray<TParseResultRec>): TArray<string>;
 
@@ -69,15 +72,17 @@ type
   public
     constructor Create;
     destructor  Destroy; override;
-    function  loadDictionary  (const aFileName: string): TVoid;
-    function  loadEsse        (const aFileName: string): TVoid;
-    function  loadInflections (const aFileName: string): TVoid;
-    function  loadPrefixes    (const aFileName: string): TVoid;
-    function  loadSuffixes    (const aFileName: string): TVoid;
-    function  loadTackOns     (const aFileName: string): TVoid;
-    function  loadUniques     (const aFileName: string): TVoid;
-    function  parse           (const aLine:     string): TArray<string>;
-    function  setDataPath     (const aPath:     string): TVoid;
+    function  LewisAndShort:    ILewisAndShort;
+    function  loadDictionary    (const aFileName: string): TVoid;
+    function  loadEsse          (const aFileName: string): TVoid;
+    function  loadInflections   (const aFileName: string): TVoid;
+    function  loadLewisAndShort (const aFileName: string): TVoid;
+    function  loadPrefixes      (const aFileName: string): TVoid;
+    function  loadSuffixes      (const aFileName: string): TVoid;
+    function  loadTackOns       (const aFileName: string): TVoid;
+    function  loadUniques       (const aFileName: string): TVoid;
+    function  parse             (const aLine:     string): TArray<string>;
+    function  setDataPath       (const aPath:     string): TVoid;
   end;
 
 function newLatin: ILatin;
@@ -142,6 +147,11 @@ begin
                                               case vIxDelta = 2 of TRUE: result[length(result) - 1] := vParseResult.prExplanation; end;end;
 end;
 
+function TLatin.LewisAndShort: ILewisAndShort;
+begin
+  result := FLewisAndshort;
+end;
+
 function TLatin.loadDictionary(const aFileName: string): TVoid;
 begin
   FDictLines := latin.fileUtils.loadDictionary(FDataPath + aFileName, FDictIx);
@@ -168,6 +178,12 @@ begin
   {$if BazDebugWindow}
   debugInteger('FInflections', length(FInflections));
   {$endif}
+end;
+
+function TLatin.loadLewisAndShort(const aFileName: string): TVoid;
+begin
+  case FLewisAndshort = NIL of TRUE: FLewisAndshort := newLewisAndShort; end;
+  FLewisAndshort.loadLewisAndShort(aFileName);
 end;
 
 function TLatin.loadPrefixes(const aFileName: string): TVoid;
