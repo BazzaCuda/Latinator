@@ -106,7 +106,7 @@ type
 
   ILewisAndShort = interface
     function entryCount: integer;
-    function findEntry(const aKey: string): ILewisAndShortEntry;
+    function findEntry(aKey: string): ILewisAndShortEntry;
     function loadLewisAndShort(const aFileName: string): TVoid;
 
     function export(const aFileName: string): TVoid;
@@ -173,7 +173,6 @@ type
     property N:           string                  read getFN            write FN;
     property level:       integer                 read getLevel;
     property definition:  string                  read getDefinition    write FDefinition;
-//    property subSenses:   TList<ITEISense>        read getSubSenses;
   end;
 
   TTEIEntry = class(TinterfacedObject, ILewisAndShortEntry)
@@ -262,7 +261,7 @@ type
     constructor Create;
     destructor Destroy; override;
     function entryCount: integer;
-    function findEntry(const aKey: string): ILewisAndShortEntry;
+    function findEntry(aKey: string): ILewisAndShortEntry;
     function loadLewisAndShort(const aFileName: string): TVoid;
     property entries: TList<ILewisAndShortEntry> read FEntries;
 
@@ -340,7 +339,7 @@ end;
 
 function TTEISense.iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
 begin
-  var vPrefix := stringOfChar(' ', getLevel * aIndent) + '[' + FN + '] ';
+  var vPrefix := stringOfChar(' ', getLevel * aIndent) + '[' + trim(FN) + '] ';
 
   case (FDefinition <> '') of
     TRUE:  aFunc(vPrefix + FDefinition);
@@ -364,7 +363,7 @@ begin
 
     case vCitation.bibliography <> '' of TRUE: vCitationText := vCitationText + vCitationIndent + ' B: ' + trim(vCitation.bibliography); end;
 
-    case vCitation.n <> '' of TRUE: vCitationText := vCitationText + ' (' + vCitation.n + ')'; end;
+    case trim(vCitation.n) <> '' of TRUE: vCitationText := vCitationText + ' (' + trim(vCitation.n) + ')'; end;
 
     aFunc(vCitationText);
   end;
@@ -496,8 +495,9 @@ end;
 constructor TLewisAndShort.Create;
 begin
   inherited create;
-  FEntries  := TList<ILewisAndShortEntry>.create;
-  FIndex    := TDictionary<string, ILewisAndShortEntry>.Create;
+  FEntries          := TList<ILewisAndShortEntry>.create;
+  FEntries.capacity := 50000;
+  FIndex            := TDictionary<string, ILewisAndShortEntry>.Create(50000);
 
   FRegexEllipsisMask    := TRegEx.Create('\.\.\.\s?',           [roCompiled]);
   FRegexLeadingPunc     := TRegEx.Create('^\s*[.,;:?!]\s+',     [roCompiled]);
@@ -522,9 +522,22 @@ begin
   result := FEntries.count;
 end;
 
-function TLewisAndShort.findEntry(const aKey: string): ILewisAndShortEntry;
+function TLewisAndShort.findEntry(aKey: string): ILewisAndShortEntry;
 begin
-  case FIndex.tryGetValue(aKey, result) of FALSE: result := NIL; end;
+  for var vPass := 1 to 2 do begin
+    var vKey := aKey;
+    var i    := 0;
+
+    repeat
+      FIndex.tryGetValue(vKey, result);
+      inc(i);
+      vKey := format('%s%d', [aKey, i]);
+    until (result <> NIL) or (i > 9);
+
+    case result = NIL of FALSE: EXIT; end;
+
+    case vPass = 1 of TRUE: aKey[1] := char(ord(aKey[1]) xor 32); end; // toggle upperCase/lowerCase
+  end;
 end;
 
 function TLewisAndShort.getEntryPreamble(const aTarget: IXMLDOMNode): string;
@@ -708,7 +721,7 @@ begin
 
               parseSenses(vNode, vEntry.senses);
 
-              case (vEntry.key <> '') of TRUE: case FIndex.containsKey(vEntry.key) of FALSE: FIndex.add(vEntry.key, vEntry); end; end;
+              case (vEntry.key <> '') of TRUE: FIndex.tryAdd(vEntry.key, vEntry); end;
             end;
         end;
       end;
@@ -734,6 +747,8 @@ begin
 
   vRecord.wrRecType := 'W';
   vRecord.wrFiller  := ' ';
+
+  // case aEntry.key.indexOfAny(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']) <> -1 of TRUE: debugString('key', aEntry.key); end;
 
   copyToBuffer(aEntry.key,       vRecord.wrKey);
   copyToBuffer(aEntry.id,        vRecord.wrID);
@@ -900,15 +915,15 @@ begin
   result := TTEIEntry.Create;
   var iEntry: ILewisAndShortEntry := result;
 
-  result.key       := string(vRecord.wrKey);
+  result.key       := trim(string(vRecord.wrKey));
   result.id        := string(vRecord.wrID);
   result.entryType := string(vRecord.wrEntryType);
   result.language  := string(vRecord.wrLanguage);
 
-  fEntries.add(iEntry);
+  FEntries.add(iEntry);
 
-  case (result.key <> '') of TRUE:
-    case fIndex.containsKey(result.key) of FALSE: fIndex.add(result.key, iEntry); end; end; end;
+  case (result.key <> '') of TRUE: FIndex.tryAdd(result.key, iEntry); end;
+end;
 
 function TLewisAndShort.importMRecord(const aLine: string; const aEntry: TTEIEntry): tVoid;
 begin
@@ -958,8 +973,11 @@ function TLewisAndShort.import(const aFileName: string): TVoid;
 begin
   case not fileExists(aFileName) of TRUE: EXIT; end;
 
+  FEntries.clear;
+  FIndex.clear;
+
   var vStream          := TFileStream.create(aFileName, fmOpenRead or fmShareDenyWrite);
-  var vReader          := TStreamReader.create(vStream, TEncoding.UTF8);
+  var vReader          := TStreamReader.create(vStream, TEncoding.UTF8, FALSE, 131072); // 128K
   var vCurrentEntry    : TTEIEntry := NIL;
   var vCurrentSense    : ITEISense := NIL;
   var vCurrentCitation : TCitation := NIL;
@@ -978,13 +996,12 @@ begin
       'O': importORecord(vLine, vCurrentEntry);
       'E': vCurrentEntry.etymology := copy(vLine, 3, MaxInt);
       'D': vCurrentEntry.definition := copy(vLine, 3, MaxInt);
-      'S':
-        begin
-          vCurrentSense    := importSRecord(vLine, vCurrentEntry);
-          vCurrentCitation := NIL;
-        end;
-      'X': TTEISense(vCurrentSense).definition := copy(vLine, 3, MaxInt);
-      'C': vCurrentCitation := importCRecord(vLine, vCurrentSense);
+      'S':  begin
+              vCurrentSense    := importSRecord(vLine, vCurrentEntry);
+              vCurrentCitation := NIL;
+            end;
+      'X': TTEISense(vCurrentSense).definition  := copy(vLine, 3, MaxInt);
+      'C': vCurrentCitation                     := importCRecord(vLine, vCurrentSense);
       'A': vCurrentCitation.addAuthor(copy(vLine, 3, MaxInt));
       'B': vCurrentCitation.bibl := copy(vLine, 3, MaxInt);
       'Q': vCurrentCitation.quote := copy(vLine, 3, MaxInt);

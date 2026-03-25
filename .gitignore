@@ -61,7 +61,7 @@
 *bak*
 *.lnk
 *.htm
-*.xml
+# *.xml
 *WebView2*
 *.html
 LatinWords.txt
