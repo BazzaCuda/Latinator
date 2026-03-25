@@ -116,6 +116,17 @@ begin
 end;
 
 function writeEntry(const aEntry: ILewisAndShortEntry): TVoid;
+
+  function limitedDefinition: string;
+  begin
+    case aEntry.senseCount = 0 of  TRUE: result := aEntry.definition;
+                                  FALSE: begin
+                                            var vSenseStart := copy(aEntry.sense[0].definition, 1, 10); // use an arbitrary 10 characters for now
+                                            var vPos        := pos(vSenseStart, aEntry.definition);
+                                            case vPos > 0 of   TRUE: result := copy(aEntry.definition, 1, vPos - 1);
+                                                              FALSE: result := aEntry.definition; end;end;end;
+  end;
+
 begin
   case aEntry = NIL of TRUE: EXIT; end;
   writeUnicode('orthography1: ' + aEntry.orthography);
@@ -130,7 +141,7 @@ begin
   writeUnicode('Inflection: '   + aEntry.inflection);
   writeUnicode('Mood: '         + aEntry.mood);
   writeUnicode('Etymology: '    + aEntry.etymology);
-  writeUnicode('Definition: '   + aEntry.definition);
+  writeUnicode('Definition: '   + limitedDefinition);
   writeUnicode('');
   aEntry.senseAsStrings(writeUnicode);
 
@@ -198,7 +209,7 @@ begin
     // accessFirstEntry('B:\Downloads\Latin\lewis-short-JSON-master\ls_A.json');
 
     writeUnicode('Loading Lewis & Short...');
-    vLatin.loadLewisAndShort('B:\Downloads\Latin\lat.ls.perseus-eng2.xml');
+    vLatin.loadLewisAndShort('lat.ls.perseus-eng2.xml');
     writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
 
     var vLine: string;

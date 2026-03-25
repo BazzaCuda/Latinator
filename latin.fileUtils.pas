@@ -50,6 +50,7 @@ function loadDictionary(const aFilePath: string; var aDictIx: TDictionary<string
   end;
 
 begin
+  expandArray(result, 39338);
   var vFixedDataSize := (pByte(@TDictLineRec(nil^).dictTranslation) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   aDictIx.clear;
@@ -61,7 +62,7 @@ begin
       case (vLine = '') of TRUE: CONTINUE; end;
 
       inc(vLineCount);
-      expandArray(result);
+      case vLineCount > length(result) of TRUE: expandArray(result); end;
 
       //case length(vLine) < vFixedDataSize of TRUE: CONTINUE; end;
 
@@ -100,6 +101,7 @@ end;
 
 function loadEsse(const aFilePath: string): TArray<TEsseRec>;
 begin
+  expandArray(result, 60);
   var vFixedDataSize := sizeOf(TEsseRec) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -110,7 +112,7 @@ begin
       case (vLine = '') or (vLine[1] = '-') of TRUE: CONTINUE; end;
 
       inc(vLineCount);
-      expandArray(result);
+      case vLineCount > length(result) of TRUE: expandArray(result); end;
 
       //case length(vLine) < vFixedDataSize of TRUE: CONTINUE; end;
 
@@ -133,6 +135,7 @@ end;
 
 function loadInflections(const aFilePath: string): TArray<TInflectionsRec>;
 begin
+  expandArray(result, 1890);
   var vFixedDataSize := (pByte(@TInflectionsRec(nil^).irComment) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -143,7 +146,7 @@ begin
       case (vLine = '') or (vLine[1] = '-') of TRUE: CONTINUE; end;
 
       inc(vLineCount);
-      expandArray(result);
+      case vLineCount > length(result) of TRUE: expandArray(result); end;
 
       //case length(vLine) < vFixedDataSize of TRUE: CONTINUE; end;
 
@@ -177,6 +180,7 @@ end;
 
 function loadPrefixes(const aFilePath: string): TArray<TPrefixRec>;
 begin
+  expandArray(result, 135);
   var vFixedDataSize := (pByte(@TPrefixRec(nil^).prSenses) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -188,7 +192,7 @@ begin
       case                 (vLine[1] = 'P') of  FALSE: CONTINUE; end;
 
       inc(vLineCount);
-      expandArray(result);
+      case vLineCount > length(result) of TRUE: expandArray(result); end;
 
       move(vLine[1], result[vLineCount - 1], vFixedDataSize * sizeOf(char));
       case length(vLine) > vFixedDataSize of TRUE: result[vLineCount - 1].prSenses := copy(vLine, vFixedDataSize + 1, length(vLine)); end;
@@ -209,6 +213,7 @@ end;
 
 function loadSuffixes(const aFilePath: string): TArray<TSuffixRec>;
 begin
+  expandArray(result, 178);
   var vFixedDataSize := (pByte(@TSuffixRec(nil^).srSenses) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -220,7 +225,7 @@ begin
       case                 (vLine[1] = 'S') of  FALSE: CONTINUE; end;
 
       inc(vLineCount);
-      expandArray(result);
+      case vLineCount > length(result) of TRUE: expandArray(result); end;
 
       move(vLine[1], result[vLineCount - 1], vFixedDataSize * sizeOf(char));
       case length(vLine) > vFixedDataSize of TRUE: result[vLineCount - 1].srSenses := copy(vLine, vFixedDataSize + 1, length(vLine)); end;
@@ -250,6 +255,7 @@ end;
 
 function loadTackOns(const aFilePath: string): TArray<TTackOnRec>;
 begin
+  expandArray(result, 29);
   var vFixedDataSize := (pByte(@TTackOnRec(nil^).trSenses) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -261,7 +267,7 @@ begin
       case                 (vLine[1] = 'T') of  FALSE: CONTINUE; end;
 
       inc(vLineCount);
-      expandArray(result);
+      case vLineCount > length(result) of TRUE: expandArray(result); end;
 
       move(vLine[1], result[vLineCount - 1], vFixedDataSize * sizeOf(char));
       case length(vLine) > vFixedDataSize of TRUE: result[vLineCount - 1].trSenses := copy(vLine, vFixedDataSize + 1, length(vLine)); end;
@@ -285,6 +291,7 @@ end;
 
 function loadUniques(const aFilePath: string): TArray<TUniquesRec>;
 begin
+  expandArray(result, 74);
   var vFixedDataSize := (pByte(@TUniquesRec(nil^).urTranslation) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -295,7 +302,7 @@ begin
       case (vLine = '') of TRUE: CONTINUE; end;
 
       inc(vLineCount);
-      expandArray(result);
+      case vLineCount > length(result) of TRUE: expandArray(result); end;
 
       move(vLine[1], result[vLineCount - 1], vFixedDataSize * sizeOf(char));
       case length(vLine) > vFixedDataSize of TRUE: result[vLineCount - 1].urTranslation := copy(vLine, vFixedDataSize + 1, length(vLine)); end;

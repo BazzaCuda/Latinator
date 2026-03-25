@@ -95,7 +95,7 @@ end;
 constructor TLatin.Create;
 begin
   inherited create;
-  FDictIx := TDictionary<string, integer>.create;
+  FDictIx := TDictionary<string, integer>.create(48759);
 end;
 
 destructor TLatin.Destroy;
@@ -183,7 +183,7 @@ end;
 function TLatin.loadLewisAndShort(const aFileName: string): TVoid;
 begin
   case FLewisAndshort = NIL of TRUE: FLewisAndshort := newLewisAndShort; end;
-  FLewisAndshort.loadLewisAndShort(aFileName);
+  FLewisAndshort.loadLewisAndShort(FDataPath + aFileName);
 end;
 
 function TLatin.loadPrefixes(const aFileName: string): TVoid;
