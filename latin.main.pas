@@ -149,6 +149,7 @@ end;
 
 function TLatin.LewisAndShort: ILewisAndShort;
 begin
+  case FLewisAndshort = NIL of TRUE: FLewisAndshort := newLewisAndShort; end;
   result := FLewisAndshort;
 end;
 

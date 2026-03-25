@@ -258,6 +258,50 @@ type
     urTranslation:      string;
   end;
 
+
+{ Lewis & Short }
+
+  TWRecord = packed record
+    wrRecType:   char;
+    wrFiller:    char;
+    wrKey:       array[0..63] of char;
+    wrID:        array[0..47] of char;
+    wrEntryType: array[0..23] of char;
+    wrLanguage:  array[0..23] of char;
+  end;
+
+  TMRecord = packed record
+    mrRecType:      char;
+    mrFiller:       char;
+    mrGender:       array[0..11] of char;
+    mrInflection:   array[0..31] of char;
+    mrPartOfSpeech: array[0..23] of char;
+    mrMood:         array[0..23] of char;
+    mrCase:         array[0..23] of char;
+  end;
+
+  TORecord = packed record
+    orRecType:      char;
+    orFiller:       char;
+    orOrthography:  array[0..63] of char;
+    orOrthography2: array[0..63] of char;
+  end;
+
+  TSRecord = packed record
+    srRecType: char;
+    srFiller1: char;
+    srLevel:   char;
+    srFiller2: char;
+    srN:       array[0..15] of char;
+    srID:      array[0..47] of char;
+  end;
+
+  TCRecord = packed record
+    crRecType: char;
+    crFiller:  char;
+    crN:       array[0..15] of char;
+  end;
+
 implementation
 
 uses

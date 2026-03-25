@@ -141,7 +141,7 @@ begin
   writeUnicode('Inflection: '   + aEntry.inflection);
   writeUnicode('Mood: '         + aEntry.mood);
   writeUnicode('Etymology: '    + aEntry.etymology);
-  writeUnicode('Definition: '   + limitedDefinition);
+  writeUnicode('Definition: '   + aEntry.definition); //    limitedDefinition);
   writeUnicode('');
   aEntry.senseAsStrings(writeUnicode);
 
@@ -210,6 +210,13 @@ begin
 
     writeUnicode('Loading Lewis & Short...');
     vLatin.loadLewisAndShort('lat.ls.perseus-eng2.xml');
+    writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
+
+    writeUnicode('Exporting...');
+    vLatin.LewisAndShort.export('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
+
+    writeUnicode('Importing Lewis & Short...');
+    vLatin.LewisAndShort.import('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
     writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
 
     var vLine: string;

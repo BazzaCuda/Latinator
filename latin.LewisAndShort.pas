@@ -35,12 +35,14 @@ type
   TStringFunc = reference to function(const aValue: string): TVoid;
 
   ICitation = interface
-    function getAuthor:   string;
-    function getBibl:     string;
-    function getN:        string;
+    function getAuthor(const aIndex: integer): string;
+    function getAuthorCount: integer;
+    function getBibl:      string;
+    function getN:         string;
     function getQuote:    string;
 
-    property author:        string read getAuthor;
+    property author[const aIndex: integer]: string read getAuthor;
+    property authorCount:  integer read getAuthorCount;
     property bibliography:  string read getBibl;
     property N:             string read getN;
     property quote:         string read getQuote;
@@ -56,6 +58,7 @@ type
     function getCitationCount: integer;
     function iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
 
+    property citation[const aIndex: integer]: ICitation read getCitation;
     property citations[const aIndex: integer]: ICitation    read getCitation;
     property citationCount:     integer                     read getCitationCount;
     property definition:        string                      read getDefinition;
@@ -105,6 +108,9 @@ type
     function entryCount: integer;
     function findEntry(const aKey: string): ILewisAndShortEntry;
     function loadLewisAndShort(const aFileName: string): TVoid;
+
+    function export(const aFileName: string): TVoid;
+    function import(const aFileName: string): TVoid;
   end;
 
   function newLewisAndShort: ILewisAndShort;
@@ -112,24 +118,27 @@ type
 implementation
 
 uses
+  system.regularExpressions,
   system.strUtils,
   _debugWindow;
 
 type
   TCitation = class(TInterfacedObject, ICitation)
   strict private
-    FAuthor:  string;
+    FAuthors: TList<string>;
     FBibl:    string;
     FN:       string;
     FQuote:   string;
   private
     function getN: string;
     function getQuote: string;
-    function getAuthor: string;
+    function getAuthor(const aIndex: integer): string;
+    function getAuthorCount: integer;
     function getBibl: string;
   public
     constructor Create;
-    property author:    string read getAuthor write FAuthor;
+    destructor Destroy; override;
+    procedure addAuthor(const aValue: string);
     property bibl:      string read getBibl   write FBibl;
     property N:         string read getN      write FN;
     property quote:     string read getQuote  write FQuote;
@@ -139,12 +148,13 @@ type
   strict private
     FID:          string;
     FN:           string;
-    FLevel:       integer;
+    FLevel:       string;
     FDefinition:  string;
     FCitations:   TList<ICitation>;
   private
     function getFN: string;
-    function addCitation(const aAuthor: string; const aBibl: string; const aN: string; const aQuote: string): TVoid;
+    function addCitation(const aCitation: TCitation): TVoid; overload;
+    function addCitation(const aAuthor: string; const aBibl: string; const aN: string; const aQuote: string): TVoid; overload;
   public
     constructor Create;
     destructor Destroy; override;
@@ -152,14 +162,16 @@ type
     function getID:             string;
     function getN:              string;
     function getLevel:          integer;
+    procedure setLevel(const aValue: string);
 
     function getCitation(const aIndex: integer): ICitation;
     function getCitationCount: integer;
     function iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
 
+    property citation[const aIndex: integer]: ICitation read getCitation;
     property ID:          string                  read getID            write FID;
     property N:           string                  read getFN            write FN;
-    property level:       integer                 read getLevel         write FLevel;
+    property level:       integer                 read getLevel;
     property definition:  string                  read getDefinition    write FDefinition;
 //    property subSenses:   TList<ITEISense>        read getSubSenses;
   end;
@@ -224,6 +236,27 @@ type
   strict private
     FEntries: TList<ILewisAndShortEntry>;
     FIndex:   TDictionary<string, ILewisAndShortEntry>;
+
+    FRegexEllipsisMask:       TRegEx;
+    FRegexFloatingPunc:       TRegEx;
+    FRegexConsecutivePunc:    TRegEx;
+    FRegexMultiSpace:         TRegEx;
+    FRegexEllipsisUnmask:     TRegEx;
+    FRegexLeadingPunc:        TRegEx;
+
+  private
+    function cleanCrapData(const aInput: string): string;
+    function getEntryPreamble(const aTarget: IXMLDOMNode): string;
+    function exportCRecord(const aWriter: TStreamWriter; const aCitation: ICitation): TVoid;
+    function exportMRecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): TVoid;
+    function exportORecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): TVoid;
+    function exportSRecord(const aWriter: TStreamWriter; const aSense: ITEISense): TVoid;
+    function exportWRecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): TVoid;
+    function importCRecord(const aLine: string; const aSense: ITEISense): TCitation;
+    function importMRecord(const aLine: string; const aEntry: TTEIEntry): TVoid;
+    function importORecord(const aLine: string; const aEntry: TTEIEntry): TVoid;
+    function importSRecord(const aLine: string; const aEntry: TTEIEntry): TTEISense;
+    function importWRecord(const aLine: string): TTEIEntry;
     function parseSenses(const aNode: IXMLDOMNode; const aList: TList<ITEISense>): TVoid;
   public
     constructor Create;
@@ -232,6 +265,9 @@ type
     function findEntry(const aKey: string): ILewisAndShortEntry;
     function loadLewisAndShort(const aFileName: string): TVoid;
     property entries: TList<ILewisAndShortEntry> read FEntries;
+
+    function export(const aFileName: string): TVoid;
+    function import(const aFileName: string): TVoid;
   end;
 
 function newLewisAndShort: ILewisAndShort;
@@ -252,14 +288,19 @@ begin
   inherited Destroy;
 end;
 
+function TTEISense.addCitation(const aCitation: TCitation): TVoid;
+begin
+  FCitations.add(aCitation);
+end;
+
 function TTEISense.addCitation(const aAuthor: string; const aBibl: string; const aN: string; const aQuote: string): TVoid;
 begin
-  var vCit := TCitation.Create;
-  vCit.author := aAuthor;
-  vCit.bibl   := aBibl;
-  vCit.N      := aN;
-  vCit.quote  := aQuote;
-  FCitations.add(vCit);
+  var vCitation := TCitation.Create;
+  vCitation.addAuthor(aAuthor);
+  vCitation.bibl  := aBibl;
+  vCitation.N     := aN;
+  vCitation.quote := aQuote;
+  FCitations.add(vCitation);
 end;
 
 function TTEISense.getCitation(const aIndex: integer): ICitation;
@@ -289,7 +330,7 @@ end;
 
 function TTEISense.getLevel: integer;
 begin
-  result := FLevel;
+  result := strToIntDef(FLevel, 0);
 end;
 
 function TTEISense.getN: string;
@@ -297,87 +338,42 @@ begin
   result := FN;
 end;
 
-
 function TTEISense.iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
 begin
-  var vPrefix := stringOfChar(' ', FLevel * aIndent) + '[' + FN + '] ';
+  var vPrefix := stringOfChar(' ', getLevel * aIndent) + '[' + FN + '] ';
 
-  case (FDefinition <> '') of  TRUE: aFunc(vPrefix + FDefinition);
-                              FALSE: aFunc(vPrefix); end;
+  case (FDefinition <> '') of
+    TRUE:  aFunc(vPrefix + FDefinition);
+    FALSE: aFunc(vPrefix);
+  end;
 
-  for var i := 0 to FCitations.count - 1 do begin
-    var vCit       := FCitations[i];
-    var vCitIndent := stringOfChar(' ', (FLevel + 1) * aIndent); // + '> ';
-    var vCitText   := '';
+  for var i := 0 to FCitations.count - 1 do
+  begin
+    var vCitation       := FCitations[i];
+    var vCitationIndent := stringOfChar(' ', (getLevel + 1) * aIndent);
+    var vCitationText   := '';
 
-    case vCit.quote         <> '' of TRUE: vCitText := vCitText + vCitIndent + ' Q: "' + vCit.quote + '"' + #13#10; end;
-    case vCit.author        <> '' of TRUE: vCitText := vCitText + vCitIndent + ' A: ' + vCit.author + #13#10; end;
-    case vCit.bibliography  <> '' of TRUE: vCitText := vCitText + vCitIndent + ' W: ' + vCit.bibliography; end;
+    case vCitation.quote <> '' of TRUE: vCitationText := vCitationText + vCitationIndent + ' Q: "' + trim(vCitation.quote) + '"' + #13#10; end;
 
-    case vCit.n             <> '' of TRUE: vCitText := vCitText +              ' (' + vCit.n + ')'; end;
+    for var k := 0 to vCitation.authorCount - 1 do
+    begin
+      case vCitation.author[k] <> '' of
+        TRUE: vCitationText := vCitationText + vCitationIndent + ' A: ' + trim(vCitation.author[k]) + #13#10;
+      end;
+    end;
 
-    aFunc({vCitIndent + }vCitText);
+    case vCitation.bibliography <> '' of TRUE: vCitationText := vCitationText + vCitationIndent + ' B: ' + trim(vCitation.bibliography); end;
+
+    case vCitation.n <> '' of TRUE: vCitationText := vCitationText + ' (' + vCitation.n + ')'; end;
+
+    aFunc(vCitationText);
   end;
 end;
 
-
-
-
-
-//function TTEISense.iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
-//begin
-//  var vPrefix := stringOfChar(' ', FLevel * aIndent) + '[' + FN + '] ';
-//
-//  case (FDefinition <> '') of TRUE: aFunc(vPrefix + FDefinition);
-//                              FALSE: aFunc(vPrefix); end;
-//
-//  for var i := 0 to FCitations.count - 1 do begin
-//    var vCit       := FCitations[i];
-//    var vCitPrefix := stringOfChar(' ', (FLevel + 1) * aIndent) + '- ';
-//    var vCitText   := '';
-//
-//    case (vCit.author <> '') of TRUE: vCitText := vCit.author + ': ' + vCit.bibliography;
-//                                FALSE: vCitText := vCit.bibliography; end;
-//
-//    case (vCit.n <> '')     of TRUE: vCitText := vCitText + ' (' + vCit.n + ')'; end;
-//    case (vCit.quote <> '') of TRUE: vCitText := '"' + vCit.quote + '" ' + vCitText; end;
-//
-//    aFunc(vCitPrefix + vCitText);
-//  end;
-//end;
-
-//function TTEISense.iterateSenses(const aFunc: TStringFunc; const aIndent: integer = 2): TVoid;
-//begin
-//  var vPrefix := stringOfChar(' ', FLevel * aIndent) + '[' + FN + '] ';
-//
-//  case (FDefinition <> '') of  TRUE: aFunc(vPrefix + FDefinition);
-//                              FALSE: aFunc(vPrefix); end;
-//
-//for var i := 0 to FCitations.count - 1 do begin
-//    var vCit       := FCitations[i];
-//    var vCitPrefix := stringOfChar(' ', (FLevel + 1) * aIndent) + '- ';
-//    var vCitText   := '';
-//
-//    case (vCit.author <> '') of TRUE: vCitText := vCit.author + ': ' + vCit.bibliography;
-//                                FALSE: vCitText := vCit.bibliography; end;
-//
-//    case (vCit.n <> '')     of TRUE: vCitText := vCitText + ' (' + vCit.n + ')'; end;
-//    case (vCit.quote <> '') of TRUE: vCitText := vCitText + ' "' + vCit.quote + '"'; end;
-//
-//    aFunc(vCitPrefix + vCitText);
-//  end;
-
-  // debugInteger('FSubSenses.count', FSubSenses.count);
-
-  // for var i: integer := 0 to FSubSenses.count - 1 do FSubSenses[i].iterateSenses(aFunc, aIndent);
-
-//  var vPrefix := stringOfChar(' ', aIndent * 2) + '[' + FN + '] ';
-//
-//  case (FDefinition <> '') of  TRUE: aFunc(vPrefix + FDefinition);
-//                              FALSE: aFunc(vPrefix); end;
-//
-//  for var i := 0 to FSubSenses.count - 1 do FSubSenses[i].iterateSenses(aFunc, aIndent + 2);
-//end;
+procedure TTEISense.setLevel(const aValue: string);
+begin
+  FLevel := aValue;
+end;
 
 constructor TTEIEntry.Create;
 begin
@@ -478,11 +474,37 @@ begin
   for var i := 0 to FSenses.count - 1 do FSenses[i].iterateSenses(aFunc, aIndent);
 end;
 
+function TLewisAndShort.cleanCrapData(const aInput: string): string;
+const
+  MASK = '[[ELLIP]]';
+begin
+  result := aInput;
+  case result = '' of TRUE: EXIT; end;
+
+  result := FRegexEllipsisMask.replace(result, MASK);
+  result := FRegexLeadingPunc.replace(result, '');
+
+  while FRegexFloatingPunc.IsMatch(result) do result := FRegexFloatingPunc.Replace(result, '');
+
+  result := FRegexConsecutivePunc.replace(result, '$1');
+  result := FRegexMultiSpace.replace(result, ' ');
+  result := FRegexEllipsisUnmask.replace(result, '... ');
+
+  result := trim(result);
+end;
+
 constructor TLewisAndShort.Create;
 begin
   inherited create;
   FEntries  := TList<ILewisAndShortEntry>.create;
   FIndex    := TDictionary<string, ILewisAndShortEntry>.Create;
+
+  FRegexEllipsisMask    := TRegEx.Create('\.\.\.\s?',           [roCompiled]);
+  FRegexLeadingPunc     := TRegEx.Create('^\s*[.,;:?!]\s+',     [roCompiled]);
+  FRegexFloatingPunc    := TRegEx.Create('\s+[.,;:?!](?=\s+)',  [roCompiled]);
+  FRegexConsecutivePunc := TRegEx.Create('([.,;:?!])\s*\1+',    [roCompiled]);
+  FRegexMultiSpace      := TRegEx.Create('\s{2,}',              [roCompiled]);
+  FRegexEllipsisUnmask  := TRegEx.Create('\[\[ELLIP\]\]',       [roCompiled]);
 end;
 
 destructor TLewisAndShort.Destroy;
@@ -505,357 +527,501 @@ begin
   case FIndex.tryGetValue(aKey, result) of FALSE: result := NIL; end;
 end;
 
-function TLewisAndShort.parseSenses(const aNode: IXMLDOMNode; const aList: TList<ITEISense>): TVoid;
+function TLewisAndShort.getEntryPreamble(const aTarget: IXMLDOMNode): string;
+begin
+  result := '';
+  var vChildren := aTarget.childNodes;
+  case not assigned(vChildren) of TRUE: EXIT; end;
 
-  function limitedDefinition(const aDefinition: string; const aMarker: string): string;
+  var vFirstOrthFound := FALSE;
+  for var i := 0 to vChildren.length - 1 do
   begin
-    case aMarker = '' of TRUE: begin result := aDefinition; EXIT; end; end;
-    var vMarkerStart := copy(aMarker, 1, 15);
-    var vPos         := pos(vMarkerStart, aDefinition);
-    case vPos > 1 of   TRUE: result := trim(copy(aDefinition, 1, vPos - 1));
-                       FALSE: result := aDefinition; end;
+    var vChild := vChildren.item[i];
+    var vName  := vChild.nodeName;
+
+    case sameText(vName, 'sense') of TRUE: BREAK; end;
+    case sameText(vName, 'orth') and (not vFirstOrthFound) of TRUE: begin vFirstOrthFound := TRUE; CONTINUE; end; end;
+    case sameText(vName, 'etym') of TRUE: CONTINUE; end;
+
+    result := result + vChild.text;
+  end;
+  result := cleanCrapData(result);
+end;
+
+function TLewisAndShort.parseSenses(const aNode: IXMLDOMNode; const aList: TList<ITEISense>): TVoid;
+var
+  vQuoteText  : string;
+  vDefinition : string;
+  vSense      : TTEISense;
+
+  function getFilteredText(const aTarget: IXMLDOMNode; const aExcludeTags: array of string): string;
+  begin
+    result := '';
+    var vChildren := aTarget.childNodes;
+    case not assigned(vChildren) of TRUE: EXIT; end;
+
+    for var i := 0 to vChildren.length - 1 do
+    begin
+      var vChild := vChildren.item[i];
+      var vSkip  := FALSE;
+      case (vChild.nodeType = 1) of
+        TRUE:
+          for var vTag in aExcludeTags do
+            case sameText(vChild.nodeName, vTag) of TRUE: begin vSkip := TRUE; BREAK; end; end;
+      end;
+      case vSkip of FALSE: result := result + vChild.text; end;
+    end;
   end;
 
 begin
   var vSenseNodes: IXMLDOMNodeList := aNode.selectNodes('sense');
+  case assigned(vSenseNodes) of
+    TRUE:
+      for var i := 0 to vSenseNodes.length - 1 do
+      begin
+        var vSenseNode : IXMLDOMNode := vSenseNodes.item[i];
+        vSense := TTEISense.create;
+        var iSense : ITEISense := vSense;
+        aList.add(iSense);
 
-  case assigned(vSenseNodes) of TRUE: for var i := 0 to vSenseNodes.length - 1 do  begin
-    var vSenseNode: IXMLDOMNode := vSenseNodes.item[i];
-    var vSense: TTEISense       := TTEISense.create;
-    var iSense: ITEISense       := vSense;
-    aList.add(iSense);
-
-    var vAttrs: IXMLDOMNamedNodeMap := vSenseNode.attributes;
-    case assigned(vAttrs) of   TRUE:  begin
-      var vLevelAttr: IXMLDOMNode := vAttrs.getNamedItem('level');
-      case assigned(vLevelAttr) of TRUE: vSense.level := StrToIntDef(vLevelAttr.text, 0); end;
-
-      var vNAttr: IXMLDOMNode := vAttrs.getNamedItem('n');
-      case assigned(vNAttr) of TRUE: vSense.n := vNAttr.text; end;
-
-      var vIdAttr: IXMLDOMNode := vAttrs.getNamedItem('id');
-      case assigned(vIdAttr) of TRUE: vSense.id := vIdAttr.text; end;
-    end;end;
-
-    vSense.definition := vSenseNode.text;
-
-    var vCits: IXMLDOMNodeList := vSenseNode.selectNodes('.//cit | .//bibl');
-    case assigned(vCits) of TRUE: begin
-      for var j := 0 to vCits.length - 1 do begin
-        var vCurrentNode: IXMLDOMNode := vCits.item[j];
-
-        case (vCurrentNode.nodeName = 'bibl') and assigned(vCurrentNode.parentNode) and (vCurrentNode.parentNode.nodeName = 'cit') of
-          TRUE: CONTINUE; end;
-
-        var vQuote:     IXMLDOMNode := nil;
-        var vBibl:      IXMLDOMNode := nil;
-        var vQuoteText  := '';
-        var vMarker     := '';
-
-        case vCurrentNode.nodeName = 'cit' of
-          TRUE: begin
-            vQuote := vCurrentNode.selectSingleNode('quote');
-            vBibl  := vCurrentNode.selectSingleNode('bibl');
-            case assigned(vQuote) of TRUE: begin
-              vQuoteText := vQuote.text;
-              vMarker    := vQuoteText;
-            end; end;
-
-            case (vMarker = '') and assigned(vBibl) of TRUE: begin
-              var vAuthor: IXMLDOMNode := vBibl.selectSingleNode('author');
-//              case assigned(vAuthor) of TRUE: vMarker := vAuthor.text;
-//                                       FALSE: vMarker := vBibl.text; end;
-            end; end;
-          end;
-          FALSE: begin
-            vBibl := vCurrentNode;
-            var vAuthor: IXMLDOMNode := vBibl.selectSingleNode('author');
-//            case assigned(vAuthor) of TRUE: vMarker := vAuthor.text;
-//                                     FALSE: vMarker := vBibl.text; end;
-          end;
+        var vAttrs := vSenseNode.attributes;
+        case assigned(vAttrs) of
+          TRUE:
+            begin
+              var vLevelAttr := vAttrs.getNamedItem('level');
+              case assigned(vLevelAttr) of TRUE: vSense.setLevel(vLevelAttr.text); end;
+              var vNAttr := vAttrs.getNamedItem('n');
+              case assigned(vNAttr) of TRUE: vSense.n := vNAttr.text; end;
+              var vIdAttr := vAttrs.getNamedItem('id');
+              case assigned(vIdAttr) of TRUE: vSense.id := vIdAttr.text; end;
+            end;
         end;
 
-        case (j = 0) of TRUE: vSense.definition := limitedDefinition(vSense.definition, vMarker); end;
+        vDefinition := cleanCrapData(getFilteredText(vSenseNode, ['sense']));
 
-        var vAuthorName := '';
-        var vBiblText   := '';
-        var vNText      := '';
+        var vCitations := vSenseNode.selectNodes('.//cit | .//bibl');
+        case assigned(vCitations) of
+          TRUE:
+            for var j := 0 to vCitations.length - 1 do
+            begin
+              var vCurrentNode     := vCitations.item[j];
+              var vCurrentNodeName := vCurrentNode.nodeName;
+              case sameText(vCurrentNodeName, 'bibl') and assigned(vCurrentNode.parentNode) and sameText(vCurrentNode.parentNode.nodeName, 'cit') of TRUE: CONTINUE; end;
 
-        case assigned(vBibl) of TRUE: begin
-          var vAuthor: IXMLDOMNode := vBibl.selectSingleNode('author');
-          var vNAttr:  IXMLDOMNode := vBibl.attributes.getNamedItem('n');
-          case assigned(vAuthor) of TRUE: vAuthorName := vAuthor.text; end;
-          vBiblText := trim(vBibl.text);
-          var vPos := pos(vAuthorName, vBiblText);
-          case vPos = 1 of TRUE: vBiblText := trim(copy(vBiblText, length(vAuthorName) + 1, length(vBiblText))); end;
-          case assigned(vNAttr)  of TRUE: vNText      := vNAttr.text; end;
-        end; end;
+              var vQuote : IXMLDOMNode := NIL;
+              var vBibl  : IXMLDOMNode := NIL;
+              vQuoteText := '';
 
-        vSense.addCitation(vAuthorName, vBiblText, vNText, vQuoteText);
+              case sameText(vCurrentNodeName, 'cit') of
+                TRUE:
+                  begin
+                    vQuote := vCurrentNode.selectSingleNode('quote');
+                    vBibl  := vCurrentNode.selectSingleNode('bibl');
+                    case assigned(vQuote) of TRUE: vQuoteText := vQuote.text; end;
+                  end;
+                FALSE: vBibl := vCurrentNode;
+              end;
+
+              case assigned(vBibl) of
+                TRUE:
+                  begin
+                    var vCitation   := TCitation.create;
+                    vCitation.quote := vQuoteText;
+                    vCitation.bibl  := cleanCrapData(getFilteredText(vBibl, ['author']));
+                    var vNAttr      := vBibl.attributes.getNamedItem('n');
+                    case assigned(vNAttr) of TRUE: vCitation.N := vNAttr.text; end;
+                    var vAuthors := vBibl.selectNodes('author');
+                    case assigned(vAuthors) of TRUE: for var k := 0 to vAuthors.length - 1 do vCitation.addAuthor(vAuthors.item[k].text); end;
+                    vSense.addCitation(vCitation);
+                  end;
+              end;
+            end;
+        end;
+        vSense.definition := vDefinition;
       end;
-    end; end;
-  end;end;
+  end;
 end;
-
-// this seems ok but it doesn't limit Definition properly if there's no quote in the citation
-//function TLewisAndShort.parseSenses(const aNode: IXMLDOMNode; const aList: TList<ITEISense>): TVoid;
-//
-//  function limitedDefinition(const aDefinition: string; aQuote: string): string;
-//  begin
-//    case aQuote = '' of TRUE: begin result := aDefinition; EXIT; end; end;
-//    var vQuoteStart := copy(aQuote, 1, 10);
-//    var vPos        := pos(vQuoteStart, aDefinition);
-//    case vPos > 1 of   TRUE: result := copy(aDefinition, 1, vPos - 1);
-//                       FALSE: result := aDefinition; end;
-//  end;
-//
-//begin
-//  var vSenseNodes: IXMLDOMNodeList := aNode.selectNodes('sense');
-//
-//  case assigned(vSenseNodes) of TRUE: for var i := 0 to vSenseNodes.length - 1 do  begin
-//    var vSenseNode: IXMLDOMNode := vSenseNodes.item[i];
-//    var vSense: TTEISense       := TTEISense.create;
-//    var iSense: ITEISense       := vSense;
-//    aList.add(iSense);
-//
-//    var vAttrs: IXMLDOMNamedNodeMap := vSenseNode.attributes;
-//    case assigned(vAttrs) of   TRUE:  begin
-//      var vLevelAttr: IXMLDOMNode := vAttrs.getNamedItem('level');
-//      case assigned(vLevelAttr) of TRUE: vSense.level := StrToIntDef(vLevelAttr.text, 0); end;
-//
-//      var vNAttr: IXMLDOMNode := vAttrs.getNamedItem('n');
-//      case assigned(vNAttr) of TRUE: vSense.n := vNAttr.text; end;
-//
-//      var vIdAttr: IXMLDOMNode := vAttrs.getNamedItem('id');
-//      case assigned(vIdAttr) of TRUE: vSense.id := vIdAttr.text; end;
-//    end;end;
-//
-//    vSense.definition := vSenseNode.text;
-//
-//    var vCits: IXMLDOMNodeList := vSenseNode.selectNodes('.//cit | .//bibl');
-//    case assigned(vCits) of TRUE: begin
-//      for var j := 0 to vCits.length - 1 do begin
-//        var vCurrentNode: IXMLDOMNode := vCits.item[j];
-//
-//        case (vCurrentNode.nodeName = 'bibl') and assigned(vCurrentNode.parentNode) and (vCurrentNode.parentNode.nodeName = 'cit') of
-//          TRUE: CONTINUE; end;
-//
-//        var vQuote:     IXMLDOMNode := nil;
-//        var vBibl:      IXMLDOMNode := nil;
-//        var vQuoteText  := '';
-//
-//        case vCurrentNode.nodeName = 'cit' of
-//          TRUE: begin
-//            vQuote := vCurrentNode.selectSingleNode('quote');
-//            vBibl  := vCurrentNode.selectSingleNode('bibl');
-//            case assigned(vQuote) of TRUE: vQuoteText := vQuote.text; end;
-//            vSense.definition := limitedDefinition(vSense.definition, vQuoteText);
-//          end;
-//          FALSE: vBibl := vCurrentNode;
-//        end;
-//
-//        var vAuthorName := '';
-//        var vBiblText   := '';
-//        var vNText      := '';
-//
-//        case assigned(vBibl) of TRUE: begin
-//          var vAuthor: IXMLDOMNode := vBibl.selectSingleNode('author');
-//          var vNAttr:  IXMLDOMNode := vBibl.attributes.getNamedItem('n');
-//          case assigned(vAuthor) of TRUE: vAuthorName := vAuthor.text; end;
-//          vBiblText := trim(vBibl.text);
-//          var vPos := pos(vAuthorName, vBiblText);
-//          case vPos = 1 of TRUE: vBiblText := trim(copy(vBiblText, length(vAuthorName) + 1, length(vBiblText))); end;
-//          case assigned(vNAttr)  of TRUE: vNText      := vNAttr.text; end;
-//        end; end;
-//
-//        vSense.addCitation(vAuthorName, vBiblText, vNText, vQuoteText);
-//      end;
-//    end; end;
-//  end;end;
-//end;
-
-// this is fine but it doesn't allow for the non-citation bibl/author nodes
-//function TLewisAndShort.parseSenses(const aNode: IXMLDOMNode; const aList: TList<ITEISense>): TVoid;
-//
-//  function limitedDefinition(const aDefinition: string; aQuote: string): string;
-//  begin
-//    var vQuoteStart := copy(aQuote, 1, 10); // use an arbitrary 10 characters for now
-//    var vPos        := pos(vQuoteStart, aDefinition);
-//    case vPos > 1 of   TRUE: result := copy(aDefinition, 1, vPos - 1);
-//                      FALSE: result := aDefinition; end;
-//  end;
-//
-//begin
-//  var vSenseNodes: IXMLDOMNodeList := aNode.selectNodes('sense');
-//
-//  case assigned(vSenseNodes) of TRUE: for var i := 0 to vSenseNodes.length - 1 do  begin
-//                                                                              var vSenseNode: IXMLDOMNode := vSenseNodes.item[i];
-//                                                                              var vSense: TTEISense       := TTEISense.create;
-//                                                                              var iSense: ITEISense       := vSense; // pin the reference count to 1
-//                                                                              aList.add(iSense);
-//
-//                                                                              var vAttrs: IXMLDOMNamedNodeMap := vSenseNode.attributes;
-//                                                                              case assigned(vAttrs) of   TRUE:  begin
-//                                                                                                                  var vLevelAttr: IXMLDOMNode := vAttrs.getNamedItem('level');
-//                                                                                                                  case assigned(vLevelAttr) of TRUE: vSense.level := StrToIntDef(vLevelAttr.text, 0); end;
-//
-//                                                                                                                  var vNAttr: IXMLDOMNode := vAttrs.getNamedItem('n');
-//                                                                                                                  case assigned(vNAttr) of TRUE: vSense.n := vNAttr.text; end;
-//
-//                                                                                                                  var vIdAttr: IXMLDOMNode := vAttrs.getNamedItem('id');
-//                                                                                                                  case assigned(vIdAttr) of TRUE: vSense.id := vIdAttr.text; end;
-//                                                                                                                end;end;
-//
-//                                                                              vSense.definition := vSenseNode.text;
-//                                                                              //debugString('vSenseNode.text', vSenseNode.text);
-//
-//                                                                              var vCits: IXMLDOMNodeList := vSenseNode.selectNodes('.//cit');
-//                                                                              case assigned(vCits) of TRUE: begin
-//                                                                                for var j := 0 to vCits.length - 1 do begin
-//                                                                                  var vCitNode: IXMLDOMNode := vCits.item[j];
-//                                                                                  var vQuote:   IXMLDOMNode := vCitNode.selectSingleNode('quote');
-//                                                                                  var vBibl:    IXMLDOMNode := vCitNode.selectSingleNode('bibl');
-//
-//                                                                                  var vAuthorName := '';
-//                                                                                  var vQuoteText  := '';
-//                                                                                  var vBiblText   := '';
-//                                                                                  var vNText      := '';
-//
-//                                                                                  case assigned(vQuote) of TRUE: vQuoteText := vQuote.text; end;
-//                                                                                  //debugString('vQuoteText', vQuoteText);
-//                                                                                  vSense.definition := limitedDefinition(vSense.definition, vQuoteText);
-//                                                                                  //debugString('new', vSense.definition);
-//                                                                                  //EXIT;
-//                                                                                  case assigned(vBibl)  of TRUE: begin
-//                                                                                    var vAuthor: IXMLDOMNode := vBibl.selectSingleNode('author');
-//                                                                                    var vNAttr:  IXMLDOMNode := vBibl.attributes.getNamedItem('n');
-//                                                                                    case assigned(vAuthor) of TRUE: vAuthorName := vAuthor.text; end;
-//                                                                                    vBiblText := trim(vBibl.text);
-//                                                                                    var vPos := pos(vAuthorName, vBiblText);
-//                                                                                    case vPos = 1 of TRUE: vBiblText := trim(copy(vBiblText, length(vAuthorName) + 1, length(vBiblText))); end;
-//                                                                                    case assigned(vNAttr)  of TRUE: vNText      := vNAttr.text; end;
-//                                                                                  end; end;
-//
-//                                                                                  vSense.addCitation(vAuthorName, vBiblText, vNText, vQuoteText);
-//                                                                                end;
-//                                                                              end; end;
-//
-//
-////                                                                              var vBibls: IXMLDOMNodeList := vSenseNode.selectNodes('.//bibl');
-////                                                                              case assigned(vBibls) of TRUE:  begin
-////                                                                                                                for var j := 0 to vBibls.length - 1 do begin
-////                                                                                                                  var vBibl:    IXMLDOMNode := vBibls.item[j];
-////                                                                                                                  var vAuthor:  IXMLDOMNode := vBibl.selectSingleNode('author');
-////                                                                                                                  var vQuote: IXMLDOMNode  := vBibl.selectSingleNode('quote');
-////                                                                                                                  var vNAttr: IXMLDOMNode  := vBibl.attributes.getNamedItem('n');
-////
-////                                                                                                                  var vAuthorName := '';
-////                                                                                                                  var vQuoteText  := '';
-////                                                                                                                  var vNText      := '';
-////
-////                                                                                                                  case assigned(vAuthor)  of TRUE: vAuthorName  := vAuthor.text; end;
-////                                                                                                                  case assigned(vQuote)   of TRUE: vQuoteText   := vQuote.text; end;
-////                                                                                                                  case assigned(vNAttr)   of TRUE: vNText       := vNAttr.text; end;
-////                                                                                                                  vSense.addCitation(vAuthorName, vBibl.text, vNText, vQuoteText);
-////                                                                                                                end;end;end;
-//                                                                            end;end;
-//end;
 
 function TLewisAndShort.loadLewisAndShort(const aFileName: string): TVoid;
 begin
-  var vXML: IXMLDOMDocument2 := CreateComObject(CLASS_DOMDocument60) as IXMLDOMDocument2;
-
-  vXML.async              := FALSE;
-  vXML.resolveExternals   := FALSE;
-  vXML.validateOnParse    := FALSE;
-//  vXML.setProperty('ProhibitDTD', FALSE);
+  var vXML: IXMLDOMDocument2 := createComObject(CLASS_DOMDocument60) as IXMLDOMDocument2;
+  vXML.async := FALSE;
+  vXML.resolveExternals := FALSE;
+  vXML.validateOnParse := FALSE;
   vXML.setProperty('SelectionLanguage', 'XPath');
   vXML.preserveWhiteSpace := TRUE;
 
-  case vXml.load(aFileName) of   TRUE:  begin
-      var vEntries: IXMLDOMNodeList := vXML.selectNodes('/body/div0/entryFree');
+  case vXML.load(aFileName) of
+    TRUE:
+      begin
+        var vEntries := vXML.selectNodes('/body/div0/entryFree');
+        case assigned(vEntries) of
+          TRUE:
+            for var i := 0 to vEntries.length - 1 do
+            begin
+              var vNode  : IXMLDOMNode         := vEntries.item[i];
+              var vEntry : TTEIEntry           := TTEIEntry.create;
+              var iEntry : ILewisAndShortEntry := vEntry;
 
-      case assigned(vEntries) of   TRUE:  for var i := 0 to vEntries.length - 1 do  begin
-                                            var vNode: IXMLDOMNode          := vEntries.item[i];
-                                            var vEntry: TTEIEntry           := TTEIEntry.create;
-                                            var iEntry: ILewisAndShortEntry := vEntry;
+              FEntries.add(iEntry);
+              vEntry.definition := getEntryPreamble(vNode);
 
-                                            FEntries.add(iEntry);
+              var vAttrs := vNode.attributes;
+              case assigned(vAttrs) of
+                TRUE:
+                  begin
+                    var vIdAttr := vAttrs.getNamedItem('id');
+                    case assigned(vIdAttr) of TRUE: vEntry.id := vIdAttr.text; end;
+                    var vKeyAttr := vAttrs.getNamedItem('key');
+                    case assigned(vKeyAttr) of TRUE: vEntry.key := vKeyAttr.text; end;
+                    var vTypeAttr := vAttrs.getNamedItem('type');
+                    case assigned(vTypeAttr) of TRUE: vEntry.entryType := vTypeAttr.text; end;
+                  end;
+              end;
 
-                                            vEntry.definition := vNode.text;
+              var vOrthNodes := vNode.selectNodes('orth');
+              case (vOrthNodes.length > 0) of
+                TRUE:
+                  begin
+                    var vFirstOrth     := vOrthNodes.item[0];
+                    vEntry.orthography := vFirstOrth.text;
+                    var vOAttrs        := vFirstOrth.attributes;
+                    case assigned(vOAttrs) of
+                      TRUE:
+                        begin
+                          var vLangAttr := vOAttrs.getNamedItem('lang');
+                          case assigned(vLangAttr) of TRUE: vEntry.language := vLangAttr.text; end;
+                        end;
+                    end;
+                    case (vOrthNodes.length > 1) of TRUE: vEntry.orthography2 := vOrthNodes.item[1].text; end;
+                  end;
+              end;
 
-                                            var vAttrs: IXMLDOMNamedNodeMap := vNode.attributes;
+              var vGen := vNode.selectSingleNode('gen');
+              case assigned(vGen) of TRUE: vEntry.gender := vGen.text; end;
 
-                                            case assigned(vAttrs) of   TRUE:  begin
-                                                var vIdAttr: IXMLDOMNode := vAttrs.getNamedItem('id');
-                                                case assigned(vIdAttr) of TRUE: vEntry.id := vIdAttr.text; end;
+              var vIType := vNode.selectSingleNode('itype');
+              case assigned(vIType) of TRUE: vEntry.inflection := vIType.text; end;
 
-                                                var vKeyAttr: IXMLDOMNode := vAttrs.getNamedItem('key');
-                                                case assigned(vKeyAttr) of TRUE: vEntry.key := vKeyAttr.text; end;
+              var vEtym := vNode.selectSingleNode('etym');
+              case assigned(vEtym) of TRUE: vEntry.etymology := cleanCrapData(vEtym.text); end;
 
-                                                var vTypeAttr: IXMLDOMNode := vAttrs.getNamedItem('type');
-                                                case assigned(vTypeAttr) of TRUE: vEntry.entryType := vTypeAttr.text; end;
-                                            end;end;
+              parseSenses(vNode, vEntry.senses);
 
-                                            var vOrthNodes: IXMLDOMNodeList := vNode.selectNodes('orth');
-                                            case (vOrthNodes.length > 0) of  TRUE:  begin
-                                                                                      var vFirstOrth: IXMLDOMNode := vOrthNodes.item[0];
-                                                                                      vEntry.orthography := vFirstOrth.text;
-
-                                                                                      var vOAttrs: IXMLDOMNamedNodeMap := vFirstOrth.attributes;
-                                                                                      case assigned(vOAttrs) of  TRUE:  begin
-                                                                                                                          var vLangAttr: IXMLDOMNode := vOAttrs.getNamedItem('lang');
-                                                                                                                          case assigned(vLangAttr) of TRUE: vEntry.language := vLangAttr.text; end;end;end;
-                                                                                      case (vOrthNodes.length > 1) of TRUE: vEntry.orthography2 := vOrthNodes.item[1].text; end;end;end;
-
-                                            var vGen: IXMLDOMNode := vNode.selectSingleNode('gen');
-                                            case assigned(vGen) of TRUE: vEntry.gender := vGen.text; end;
-
-                                            var vIType: IXMLDOMNode := vNode.selectSingleNode('itype');
-                                            case assigned(vIType) of True: vEntry.inflection := vIType.text; end;
-
-                                            var vEtym: IXMLDOMNode := vNode.selectSingleNode('etym');
-                                            case assigned(vEtym) of True: vEntry.etymology := vEtym.text; end;
-
-                                            var vPos: IXMLDOMNode := vNode.selectSingleNode('pos');
-                                            case assigned(vPos) of TRUE: vEntry.partOfSpeech := vPos.text; end;
-
-                                            var vMood: IXMLDOMNode := vNode.selectSingleNode('mood');
-                                            case assigned(vMood) of TRUE: vEntry.mood := vMood.text; end;
-
-                                            var vCase: IXMLDOMNode := vNode.selectSingleNode('case');
-                                            case assigned(vCase) of TRUE: vEntry.caseCase := vCase.text; end;
-
-                                            vEntry.definition := vNode.text;
-                                            parseSenses(vNode, vEntry.senses);
-
-                                            case (vEntry.key <> '') of TRUE: case FIndex.containsKey(vEntry.key) of FALSE: FIndex.add(vEntry.key, vEntry); end;end;
-
-                                            vAttrs := NIL;
-                                          end;
-      end;end;end;
+              case (vEntry.key <> '') of TRUE: case FIndex.containsKey(vEntry.key) of FALSE: FIndex.add(vEntry.key, vEntry); end; end;
+            end;
+        end;
+      end;
+  end;
 end;
 
-//class function TTraverser.writeSenses(const aSenses: TList<ITEISense>; const aIndent: integer = 2): TVoid;
-//begin
-//  case assigned(aSenses) of  TRUE:  for var i: integer := 0 to aSenses.count - 1 do begin
-//                                                                                      var vSense: ITEISense := aSenses[i];
-//                                                                                      var vPrefix: string   := stringOfChar(' ', aIndent * 2) + '[' + intToStr(i) + '] ';
-//                                                                                      case (vSense.definition <> '') of  TRUE:  writeUnicode(vPrefix + vSense.definition);
-//                                                                                                                         FALSE: writeUnicode(vPrefix); end;
-//                                                                                      writeSenses(vSense.subSenses, aIndent + 2); end;end;
-//end;
+{ Export / Import }
+
+function TLewisAndShort.exportWRecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): tVoid;
+  function copyToBuffer(const aSource: string; var aDest: array of char): tVoid;
+  begin
+    var vLimit := length(aDest);
+    var vCount := length(aSource);
+    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
+    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end; end;
+begin
+  var vByteLength := sizeOf(TWRecord);
+  var vLineLength := vByteLength div sizeOf(char);
+  var vPadding    := stringOfChar(' ', vLineLength);
+  var vRecord     : TWRecord;
+
+  move(pointer(vPadding)^, vRecord, vByteLength);
+
+  vRecord.wrRecType := 'W';
+  vRecord.wrFiller  := ' ';
+
+  copyToBuffer(aEntry.key,       vRecord.wrKey);
+  copyToBuffer(aEntry.id,        vRecord.wrID);
+  copyToBuffer(aEntry.entryType, vRecord.wrEntryType);
+  copyToBuffer(aEntry.language,  vRecord.wrLanguage);
+
+  var vOutLine: string;
+  setLength(vOutLine, vLineLength);
+  move(vRecord, pointer(vOutLine)^, vByteLength);
+  aWriter.writeLine(vOutLine);
+end;
+
+function TLewisAndShort.exportMRecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): tVoid;
+  function copyToBuffer(const aSource: string; var aDest: array of char): tVoid;
+  begin
+    var vLimit := length(aDest);
+    var vCount := length(aSource);
+    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
+    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end; end;
+begin
+  var vByteLength := sizeOf(TMRecord);
+  var vLineLength := vByteLength div sizeOf(char);
+  var vPadding    := stringOfChar(' ', vLineLength);
+  var vRecord     : TMRecord;
+
+  move(pointer(vPadding)^, vRecord, vByteLength);
+
+  vRecord.mrRecType := 'M';
+  vRecord.mrFiller  := ' ';
+
+  copyToBuffer(aEntry.gender,       vRecord.mrGender);
+  copyToBuffer(aEntry.inflection,   vRecord.mrInflection);
+  copyToBuffer(aEntry.partOfSpeech, vRecord.mrPartOfSpeech);
+  copyToBuffer(aEntry.mood,         vRecord.mrMood);
+  copyToBuffer(aEntry.caseCase,     vRecord.mrCase);
+
+  var vOutLine: string;
+  setLength(vOutLine, vLineLength);
+  move(vRecord, pointer(vOutLine)^, vByteLength);
+  aWriter.writeLine(vOutLine);
+end;
+
+function TLewisAndShort.exportORecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): tVoid;
+  function copyToBuffer(const aSource: string; var aDest: array of char): tVoid;
+  begin
+    var vLimit := length(aDest);
+    var vCount := length(aSource);
+    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
+    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end; end;
+begin
+  var vByteLength := sizeOf(TORecord);
+  var vLineLength := vByteLength div sizeOf(char);
+  var vPadding    := stringOfChar(' ', vLineLength);
+  var vRecord     : TORecord;
+
+  move(pointer(vPadding)^, vRecord, vByteLength);
+
+  vRecord.orRecType := 'O';
+  vRecord.orFiller  := ' ';
+
+  copyToBuffer(aEntry.orthography,  vRecord.orOrthography);
+  copyToBuffer(aEntry.orthography2, vRecord.orOrthography2);
+
+  var vOutLine: string;
+  setLength(vOutLine, vLineLength);
+  move(vRecord, pointer(vOutLine)^, vByteLength);
+  aWriter.writeLine(vOutLine);
+end;
+
+function TLewisAndShort.exportSRecord(const aWriter: TStreamWriter; const aSense: ITEISense): TVoid;
+  function copyToBuffer(const aSource: string; var aDest: array of char): TVoid;
+  begin
+    var vLimit := length(aDest);
+    var vCount := length(aSource);
+    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
+    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end;
+  end;
+begin
+  var vByteLength := sizeOf(TSRecord);
+  var vLineLength := vByteLength div sizeOf(char);
+  var vPadding    := stringOfChar(' ', vLineLength);
+  var vRecord     : TSRecord;
+
+  move(pointer(vPadding)^, vRecord, vByteLength);
+
+  vRecord.srRecType := 'S';
+  vRecord.srFiller1 := ' ';
+  vRecord.srLevel   := intToStr(aSense.level)[1];
+  vRecord.srFiller2 := ' ';
+
+  copyToBuffer(aSense.n,  vRecord.srN);
+  copyToBuffer(aSense.id, vRecord.srID);
+
+  var vOutLine: string;
+  setLength(vOutLine, vLineLength);
+  move(vRecord, pointer(vOutLine)^, vByteLength);
+  aWriter.writeLine(vOutLine);
+
+  case (aSense.definition <> '') of TRUE: aWriter.writeLine('X ' + aSense.definition); end;
+end;
+
+function TLewisAndShort.exportCRecord(const aWriter: TStreamWriter; const aCitation: ICitation): TVoid;
+  function copyToBuffer(const aSource: string; var aDest: array of char): TVoid;
+  begin
+    var vLimit := length(aDest);
+    var vCount := length(aSource);
+    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
+    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end;
+  end;
+begin
+  var vByteLength := sizeOf(TCRecord);
+  var vLineLength := vByteLength div sizeOf(char);
+  var vPadding    := stringOfChar(' ', vLineLength);
+  var vRecord     : TCRecord;
+
+  move(pointer(vPadding)^, vRecord, vByteLength);
+  vRecord.crRecType := 'C';
+  vRecord.crFiller  := ' ';
+  copyToBuffer(aCitation.N, vRecord.crN);
+
+  var vOutLine: string;
+  setLength(vOutLine, vLineLength);
+  move(vRecord, pointer(vOutLine)^, vByteLength);
+  aWriter.writeLine(vOutLine);
+
+  for var i := 0 to aCitation.authorCount - 1 do aWriter.writeLine('A ' + aCitation.author[i]);
+  case (aCitation.bibliography <> '') of TRUE: aWriter.writeLine('B ' + aCitation.bibliography); end;
+  case (aCitation.quote <> '')        of TRUE: aWriter.writeLine('Q ' + aCitation.quote); end;
+end;
+
+function TLewisAndShort.export(const aFileName: string): TVoid;
+begin
+  var vStream := TFileStream.create(aFileName, fmCreate);
+  var vWriter := TStreamWriter.create(vStream, TEncoding.UTF8);
+
+  for var i := 0 to FEntries.count - 1 do
+  begin
+    var vEntry := FEntries[i];
+
+    exportWRecord(vWriter, vEntry);
+    exportMRecord(vWriter, vEntry);
+    exportORecord(vWriter, vEntry);
+
+    case (vEntry.etymology <> '') of TRUE: vWriter.writeLine('E ' + vEntry.etymology); end;
+    case (vEntry.definition <> '') of TRUE: vWriter.writeLine('D ' + vEntry.definition); end;
+
+    for var j := 0 to vEntry.senseCount - 1 do
+    begin
+      var vSense := vEntry.sense[j];
+      exportSRecord(vWriter, vSense);
+      for var k := 0 to vSense.citationCount - 1 do exportCRecord(vWriter, vSense.citations[k]);
+    end;
+  end;
+
+  vWriter.free;
+  vStream.free;
+end;
+
+function TLewisAndShort.importWRecord(const aLine: string): TTEIEntry;
+begin
+  var vRecord: TWRecord;
+  move(pointer(aLine)^, vRecord, sizeOf(TWRecord));
+
+  result := TTEIEntry.Create;
+  var iEntry: ILewisAndShortEntry := result;
+
+  result.key       := string(vRecord.wrKey);
+  result.id        := string(vRecord.wrID);
+  result.entryType := string(vRecord.wrEntryType);
+  result.language  := string(vRecord.wrLanguage);
+
+  fEntries.add(iEntry);
+
+  case (result.key <> '') of TRUE:
+    case fIndex.containsKey(result.key) of FALSE: fIndex.add(result.key, iEntry); end; end; end;
+
+function TLewisAndShort.importMRecord(const aLine: string; const aEntry: TTEIEntry): tVoid;
+begin
+  var vRecord: TMRecord;
+  move(pointer(aLine)^, vRecord, sizeOf(TMRecord));
+
+  aEntry.gender       := string(vRecord.mrGender);
+  aEntry.inflection   := string(vRecord.mrInflection);
+  aEntry.partOfSpeech := string(vRecord.mrPartOfSpeech);
+  aEntry.mood         := string(vRecord.mrMood);
+  aEntry.caseCase     := string(vRecord.mrCase); end;
+
+function TLewisAndShort.importORecord(const aLine: string; const aEntry: TTEIEntry): tVoid;
+begin
+  var vRecord: TORecord;
+  move(pointer(aLine)^, vRecord, sizeOf(TORecord));
+
+  aEntry.orthography  := string(vRecord.orOrthography);
+  aEntry.orthography2 := string(vRecord.orOrthography2); end;
+
+function TLewisAndShort.importSRecord(const aLine: string; const aEntry: TTEIEntry): TTEISense;
+var
+  vRecord: TSRecord;
+begin
+  move(pointer(aLine)^, vRecord, sizeOf(vRecord));
+  var vSense := TTEISense.create;
+  result := vSense;
+
+  vSense.setLevel(vRecord.srLevel);
+  vSense.n  := vRecord.srN;
+  vSense.id := vRecord.srID;
+
+  aEntry.senses.add(vSense);
+end;
+
+function TLewisAndShort.importCRecord(const aLine: string; const aSense: ITEISense): TCitation;
+begin
+  var vRecord: TCRecord;
+  move(pointer(aLine)^, vRecord, sizeOf(vRecord));
+
+  result := TCitation.create;
+  result.N := string(vRecord.crN);
+  TTEISense(aSense).addCitation(result);
+end;
+
+function TLewisAndShort.import(const aFileName: string): TVoid;
+begin
+  case not fileExists(aFileName) of TRUE: EXIT; end;
+
+  var vStream          := TFileStream.create(aFileName, fmOpenRead or fmShareDenyWrite);
+  var vReader          := TStreamReader.create(vStream, TEncoding.UTF8);
+  var vCurrentEntry    : TTEIEntry := NIL;
+  var vCurrentSense    : ITEISense := NIL;
+  var vCurrentCitation : TCitation := NIL;
+
+  while not vReader.endOfStream do
+  begin
+    var vLine := vReader.readLine;
+    case vLine[1] of
+      'W':
+        begin
+          vCurrentEntry    := importWRecord(vLine);
+          vCurrentSense    := NIL;
+          vCurrentCitation := NIL;
+        end;
+      'M': importMRecord(vLine, vCurrentEntry);
+      'O': importORecord(vLine, vCurrentEntry);
+      'E': vCurrentEntry.etymology := copy(vLine, 3, MaxInt);
+      'D': vCurrentEntry.definition := copy(vLine, 3, MaxInt);
+      'S':
+        begin
+          vCurrentSense    := importSRecord(vLine, vCurrentEntry);
+          vCurrentCitation := NIL;
+        end;
+      'X': TTEISense(vCurrentSense).definition := copy(vLine, 3, MaxInt);
+      'C': vCurrentCitation := importCRecord(vLine, vCurrentSense);
+      'A': vCurrentCitation.addAuthor(copy(vLine, 3, MaxInt));
+      'B': vCurrentCitation.bibl := copy(vLine, 3, MaxInt);
+      'Q': vCurrentCitation.quote := copy(vLine, 3, MaxInt);
+    end;
+  end;
+
+  vReader.free;
+  vStream.free;
+end;
 
 { TCitation }
 
 constructor TCitation.Create;
 begin
   inherited Create;
+  FAuthors := TList<string>.Create;
 end;
 
-function TCitation.getAuthor: string;
+destructor TCitation.Destroy;
 begin
-  result := FAuthor;
+  FAuthors.free;
+  inherited Destroy;
+end;
+
+procedure TCitation.addAuthor(const aValue: string);
+begin
+  FAuthors.add(aValue);
+end;
+
+function TCitation.getAuthor(const aIndex: integer): string;
+begin
+  result := FAuthors[aIndex];
+end;
+
+function TCitation.getAuthorCount: integer;
+begin
+  result := FAuthors.count;
 end;
 
 function TCitation.getBibl: string;
@@ -872,7 +1038,6 @@ function TCitation.getQuote: string;
 begin
   result := FQuote;
 end;
-
 initialization
   coInitialize(NIL);
 
