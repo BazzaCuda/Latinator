@@ -208,12 +208,12 @@ begin
 
     // accessFirstEntry('B:\Downloads\Latin\lewis-short-JSON-master\ls_A.json');
 
-//    writeUnicode('Loading Lewis & Short...');
-//    vLatin.loadLewisAndShort('lat.ls.perseus-eng2.xml');
-//    writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
-//
-//    writeUnicode('Exporting...');
-//    vLatin.LewisAndShort.export('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
+    writeUnicode('Loading Lewis & Short...');
+    vLatin.loadLewisAndShort('lat.ls.perseus-eng2.xml');
+    writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
+
+    writeUnicode('Exporting...');
+    vLatin.LewisAndShort.export('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
 
     writeUnicode('Importing Lewis & Short...');
     vLatin.LewisAndShort.import('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');

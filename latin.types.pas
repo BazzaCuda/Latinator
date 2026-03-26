@@ -296,12 +296,6 @@ type
     srID:      array[0..47] of char;
   end;
 
-  TCRecord = packed record
-    crRecType: char;
-    crFiller:  char;
-    crN:       array[0..15] of char;
-  end;
-
 implementation
 
 uses

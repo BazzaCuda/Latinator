@@ -855,8 +855,29 @@ begin
 end;
 
 function TLewisAndShort.exportCRecord(const aWriter: TStreamWriter; const aCitation: ICitation): TVoid;
+  function copyToBuffer(const aSource: string; var aDest: array of char): TVoid;
+  begin
+    var vLimit := length(aDest);
+    var vCount := length(aSource);
+    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
+    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end;
+  end;
 begin
-  aWriter.writeLine('C ' + aCitation.N);
+  var vByteLength := sizeOf(TCRecord);
+  var vLineLength := vByteLength div sizeOf(char);
+  var vPadding    := stringOfChar(' ', vLineLength);
+  var vRecord     : TCRecord;
+
+  move(pointer(vPadding)^, vRecord, vByteLength);
+  vRecord.crRecType := 'C';
+  vRecord.crFiller  := ' ';
+  copyToBuffer(aCitation.N, vRecord.crN);
+
+  var vOutLine: string;
+  setLength(vOutLine, vLineLength);
+  move(vRecord, pointer(vOutLine)^, vByteLength);
+  aWriter.writeLine(vOutLine);
+
   for var i := 0 to aCitation.authorCount - 1 do aWriter.writeLine('A ' + aCitation.author[i]);
   case (aCitation.bibliography <> '') of TRUE: aWriter.writeLine('B ' + aCitation.bibliography); end;
   case (aCitation.quote <> '')        of TRUE: aWriter.writeLine('Q ' + aCitation.quote); end;
@@ -944,8 +965,11 @@ end;
 
 function TLewisAndShort.importCRecord(const aLine: string; const aSense: ITEISense): TCitation;
 begin
-  result    := TCitation.create;
-  result.N  := copy(aLine, 3, MaxInt);
+  var vRecord: TCRecord;
+  move(pointer(aLine)^, vRecord, sizeOf(vRecord));
+
+  result := TCitation.create;
+  result.N := string(vRecord.crN);
   TTEISense(aSense).addCitation(result);
 end;
 
