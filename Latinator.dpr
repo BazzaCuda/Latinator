@@ -129,14 +129,64 @@ begin
   writeUnicode('Definition: '   + aEntry.definition); //    limitedDefinition);
   writeUnicode('');
   aEntry.senseAsStrings(writeUnicode);
-
-  //TTraverser.writeSenses(aEntry.senses);
 end;
 
-var
-  gClose:     boolean = FALSE;
-  gFinished:  boolean = FALSE;
-  vLatin:     ILatin;
+function findDataPath(const aStartPath: string; aDepth: integer = 2): string;
+begin
+  result := aStartPath;
+
+  for var i := 0 to aDepth do begin
+    case directoryExists(format('%s%s', [result, 'wwData\'])) of  TRUE: begin
+                                                                          result := format('%s%s', [result, 'wwData\']);
+                                                                          EXIT; end;
+                                                                 FALSE: result := extractFilePath(excludeTrailingPathDelimiter(result)); end;end;
+
+  result := '';
+end;
+
+function loadWhitakersWords(const aLatin: ILatin): TVoid;
+begin
+  aLatin.loadDictionary             ('DICTLINE.LAT');
+  aLatin.loadEsse                   ('ESSE.LAT');
+  aLatin.loadInflections            ('INFLECTS.LAT');
+  aLatin.loadUniques                ('UNIQUES.LAT');
+  aLatin.loadPrefixes               ('ADDONS.LAT');
+  aLatin.loadSuffixes               ('ADDONS.LAT');
+  aLatin.loadTackOns                ('ADDONS.LAT');
+end;
+
+function loadLewisAndShort(const aLatin: ILatin; const aPath: string): TVoid;
+begin
+  aLatin.LewisAndShort.setDataPath  (aPath);
+  writeUnicode                      ('Loading Lewis & Short...');
+  aLatin.loadLewisAndShort          ('lat.ls.perseus-eng2.xml');
+  writeUnicode                      (format('%d Entries', [aLatin.LewisAndShort.entryCount]));
+  writeUnicode                      ('');
+end;
+
+function exportLewisAndShort(const aLatin: ILatin; const aPath: string): TVoid;
+begin
+  aLatin.LewisAndShort.setDataPath  (aPath);
+  writeUnicode                      ('Exporting Lewis & Short...');
+  aLatin.LewisAndShort.export       ('Lewis&Short.txt');
+  writeUnicode                      ('');
+end;
+
+function importLewisAndShort(const aLatin: ILatin; const aPath: string): TVoid;
+begin
+  aLatin.LewisAndShort.setDataPath(aPath);
+  writeUnicode                      ('Importing Lewis & Short...');
+  aLatin.LewisAndShort.import       ('Lewis&Short.txt');
+  writeUnicode                      (format('%d Entries', [aLatin.LewisAndShort.entryCount]));
+  writeUnicode                      ('');
+end;
+
+function clearLewisAndShort(const aLatin: ILatin): TVoid;
+begin
+  aLatin.LewisAndShort.clear;
+  writeUnicode                      ('Cleared');
+  writeUnicode                      ('');
+end;
 
 function delay(const dwMilliseconds: cardinal): TVoid;
 // Used to delay an operation; "sleep()" would suspend the thread, which is not what is required
@@ -149,105 +199,73 @@ begin
   until ((iStop  -  iStart) >= dwMilliseconds);
 end;
 
-function handleConsoleClose(aCtrlType: DWORD): BOOL; stdcall;
-begin
-  result := aCtrlType in [CTRL_C_EVENT, CTRL_CLOSE_EVENT];
-  case result of   TRUE:  begin
-                            gClose := TRUE;
-                            vLatin.LewisAndShort.clear;
-                            vLatin.unload;
-                            vLatin := NIL;
-                            freeConsole;
-                            while gFinished = FALSE do delay(10); end;end;
-end;
+var
+  gClose:     boolean = FALSE;
+  gFinished:  boolean = FALSE;
 
-function loadLewisAndShort(const aLatin: ILatin): TVoid;
-begin
-  writeUnicode                ('Loading Lewis & Short...');
-  aLatin.loadLewisAndShort    ('lat.ls.perseus-eng2.xml');
-  writeUnicode                (format('%d Entries', [vLatin.LewisAndShort.entryCount]));
-  writeUnicode                ('');
-end;
-
-function exportLewisAndShort(const aLatin: ILatin): TVoid;
-begin
-  writeUnicode                ('Exporting Lewis & Short...');
-  aLatin.LewisAndShort.export ('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
-  writeUnicode                ('');
-end;
-
-function importLewisAndShort(const aLatin: ILatin): TVoid;
-begin
-  writeUnicode                ('Importing Lewis & Short...');
-  aLatin.LewisAndShort.import ('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
-  writeUnicode                (format('%d Entries', [vLatin.LewisAndShort.entryCount]));
-  writeUnicode                ('');
-end;
-
-function clearLewisAndShort(const aLatin: ILatin): TVoid;
-begin
-  aLatin.LewisAndShort.clear;
-  writeUnicode                ('Cleared');
-  writeUnicode                ('');
-end;
-
-function consoleLoop(const aLatin: ILatin): TVoid;
+function consoleLoop(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
     var vLine: string;
 
     try
-    repeat
-      write('> ');
+      repeat
+        write('> ');
 
-      readLn(vLine);
+        readLn(vLine);
 
-      case gClose of TRUE: BREAK; end;
+        case gClose of TRUE: BREAK; end;
 
-      case vLine = 'las'    of   TRUE:  begin
-                                          loadLewisAndShort(vLatin);
-                                          CONTINUE; end;end;
+        case vLine = 'las'    of   TRUE:  begin
+                                            loadLewisAndShort   (aLatin, aDataPath);
+                                            CONTINUE; end;end;
 
-      case vLine = 'export' of   TRUE:  begin
-                                          exportLewisAndShort(vLatin);
-                                          CONTINUE; end;end;
+        case vLine = 'export' of   TRUE:  begin
+                                            exportLewisAndShort (aLatin, aDataPath);
+                                            CONTINUE; end;end;
 
-      case vLine = 'import' of   TRUE:  begin
-                                          importLewisAndShort(vLatin);
-                                          CONTINUE; end;end;
+        case vLine = 'import' of   TRUE:  begin
+                                            importLewisAndShort (aLatin, aDataPath);
+                                            CONTINUE; end;end;
 
-      case vLine = 'clear'  of   TRUE:  begin
-                                          clearLewisAndShort(vLatin);
-                                          CONTINUE; end;end;
+        case vLine = 'clear'  of   TRUE:  begin
+                                            clearLewisAndShort  (aLatin);
+                                            CONTINUE; end;end;
 
-      case vLine <> ''      of   TRUE:  begin
-                                          for var vString in vLatin.parse(vLine) do writeUnicode(vString);
-                                          writeEntry(vLatin.LewisAndShort.findEntry(vLine)); end;end;
-    until vLine = '';
+        case vLine <> ''      of   TRUE:  begin
+                                            for var vString in aLatin.parse(vLine) do writeUnicode(vString);
+                                            writeEntry(aLatin.LewisAndShort.findEntry(vLine)); end;end;
+      until vLine = '';
 
     finally
       gFinished := TRUE;
     end;
 end;
 
+var
+  gLatin:     ILatin;
+
+function handleConsoleClose(aCtrlType: DWORD): BOOL; stdcall;
+// do a proper clean-up if the user hits Ctrl-C or the console window's X button
+begin
+  result := aCtrlType in [CTRL_C_EVENT, CTRL_CLOSE_EVENT];
+  case result of   TRUE:  begin
+                            gClose := TRUE;
+                            gLatin.LewisAndShort.clear;
+                            gLatin.unload;
+                            gLatin := NIL;
+                            freeConsole;
+                            while gFinished = FALSE do delay(10); end;end;
+end;
+
 begin
   setupRunMode;
 
-  vLatin := newLatin;
+  gLatin := newLatin;
 
-  {$ifopt D+}
-   vLatin.setDataPath('B:\Win64_Dev\Programs\Latinator\wwData\');
-  {$else}
-   vLatin.setDataPath(extractFilePath(paramStr(0));
-  {$endif}
+  var gDataPath := findDataPath(extractFilePath(paramStr(0)));
+  gLatin.setDataPath(gDataPath);
 
-  // Whitaker's Words
-  vLatin.loadDictionary   ('DICTLINE.LAT');
-  vLatin.loadEsse         ('ESSE.LAT');
-  vLatin.loadInflections  ('INFLECTS.LAT');
-  vLatin.loadUniques      ('UNIQUES.LAT');
-  vLatin.loadPrefixes     ('ADDONS.LAT');
-  vLatin.loadSuffixes     ('ADDONS.LAT');
-  vLatin.loadTackOns      ('ADDONS.LAT');
+  loadWhitakersWords(gLatin);
 
   vAsGUI := paramStr(1) = 'GUI';
 
@@ -277,11 +295,11 @@ begin
     // introductory messages from our sponsor
     writeUnicode('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
 
-    importLewisAndShort(vLatin);
+    importLewisAndShort(gLatin, gDataPath);
 
     writeUnicode('Press ENTER to exit.');
 
-    consoleLoop(vLatin);
+    consoleLoop(gLatin, gDataPath);
 
   end;end;
 

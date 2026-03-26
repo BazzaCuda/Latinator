@@ -108,6 +108,7 @@ type
     function entryCount: integer;
     function findEntry(aKey: string): ILewisAndShortEntry;
     function loadLewisAndShort(const aFileName: string): TVoid;
+    function setDataPath(const aFilePath: string): TVoid;
 
     function clear:                           TVoid;
     function export(const aFileName: string): TVoid;
@@ -237,6 +238,7 @@ type
   strict private
     FEntries: TList<ILewisAndShortEntry>;
     FIndex:   TDictionary<string, ILewisAndShortEntry>;
+    FDataPath: string;
 
     FRegexEllipsisMask:       TRegEx;
     FRegexFloatingPunc:       TRegEx;
@@ -265,6 +267,8 @@ type
     function entryCount: integer;
     function findEntry(aKey: string): ILewisAndShortEntry;
     function loadLewisAndShort(const aFilePath: string): TVoid;
+    function setDataPath(const aPath: string): TVoid;
+
     property entries: TList<ILewisAndShortEntry> read FEntries;
 
     function clear:                           TVoid;
@@ -497,7 +501,6 @@ end;
 
 function TLewisAndShort.clear: TVoid;
 begin
-  debug('TLewisAndShort.clear');
   FEntries.clear;
   FIndex.clear;
 end;
@@ -506,8 +509,8 @@ constructor TLewisAndShort.Create;
 begin
   inherited create;
   FEntries          := TList<ILewisAndShortEntry>.create;
-  FEntries.capacity := 50000;
-  FIndex            := TDictionary<string, ILewisAndShortEntry>.Create(50000);
+  FEntries.capacity := 52000;
+  FIndex            := TDictionary<string, ILewisAndShortEntry>.Create(52000);
 
   FRegexEllipsisMask    := TRegEx.Create('\.\.\.\s?',           [roCompiled]);
   FRegexLeadingPunc     := TRegEx.Create('^\s*[.,;:?!]\s+',     [roCompiled]);
@@ -519,7 +522,6 @@ end;
 
 destructor TLewisAndShort.Destroy;
 begin
-  debug('destroy');
   FEntries.clear;
   FIndex.clear;
   FEntries.free;
@@ -667,6 +669,11 @@ begin
         vSense.definition := vDefinition;
       end;
   end;
+end;
+
+function TLewisAndShort.setDataPath(const aPath: string): TVoid;
+begin
+  FDataPath := aPath;
 end;
 
 function TLewisAndShort.loadLewisAndShort(const aFilePath: string): TVoid;
@@ -860,7 +867,7 @@ end;
 
 function TLewisAndShort.export(const aFileName: string): TVoid;
 begin
-  var vStream := TFileStream.create(aFileName, fmCreate);
+  var vStream := TFileStream.create(FDataPath + aFileName, fmCreate);
   var vWriter := TStreamWriter.create(vStream, TEncoding.UTF8);
 
   for var i := 0 to FEntries.count - 1 do
@@ -947,12 +954,12 @@ end;
 
 function TLewisAndShort.import(const aFileName: string): TVoid;
 begin
-  case not fileExists(aFileName) of TRUE: EXIT; end;
+  case not fileExists(FDataPath + aFileName) of TRUE: EXIT; end;
 
   FEntries.clear;
   FIndex.clear;
 
-  var vStream                       := TFileStream.create(aFileName, fmOpenRead or fmShareDenyWrite);
+  var vStream                       := TFileStream.create(FDataPath + aFileName, fmOpenRead or fmShareDenyWrite);
   var vReader                       := TStreamReader.create(vStream, TEncoding.UTF8, FALSE, 131072); // 128K
   var vCurrentEntry    : TTEIEntry  := NIL;
   var vCurrentSense    : ITEISense  := NIL;

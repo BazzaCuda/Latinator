@@ -46,6 +46,7 @@ function newLatin: ILatin;
 implementation
 
 uses
+  system.strUtils,
   latin.charUtils, latin.fileUtils, latin.miscUtils, latin.stringUtils,
   _debugWindow;
 
@@ -97,7 +98,7 @@ end;
 constructor TLatin.Create;
 begin
   inherited create;
-  FDictIx := TDictionary<string, integer>.create(48759);
+  FDictIx := TDictionary<string, integer>.create(49000);
 end;
 
 destructor TLatin.Destroy;
@@ -109,7 +110,7 @@ end;
 function TLatin.formatParseResults(const aParseResults: TArray<TParseResultRec>): TArray<string>;
 begin
   // otherwise the Delphi compiler optimises all the calls in the "for var vWord in vWords" loop in TLatin.parse
-  // to use the same array reference pointer and the result array will get duplicated on each call here!
+  // to use the same array reference pointer, and the result array will get duplicated on each call here!
   result := NIL;
 
   for var vParseResult in aParseResults do  begin
@@ -120,32 +121,32 @@ begin
 
                                               expandArray(result, vIxDelta);
 
-                                              result[length(result) - vIxDelta] := format('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s',  [
-                                                                                                                                                vParseResult.prWord   + #9#9,
-                                                                                                                                                vParseResult.prPartOfSpeech,
-                                                                                                                                                vParseResult.prStem   + #9,
-                                                                                                                                                vParseResult.prEnding + #9,
-                                                                                                                                                vParseResult.prClass,
-                                                                                                                                                vParseResult.prVariant,
-                                                                                                                                                vParseResult.prCase,
-                                                                                                                                                vParseResult.prNumber1,
-                                                                                                                                                vParseResult.prGender,
-                                                                                                                                                vParseResult.prNounType,
-                                                                                                                                                vParseResult.prDegree,
-                                                                                                                                                vParseResult.prPronounType,
-                                                                                                                                                vParseResult.prTense,
-                                                                                                                                                vParseResult.prVoice,
-                                                                                                                                                vParseResult.prMood,
-                                                                                                                                                vParseResult.prPerson,
-                                                                                                                                                vParseResult.prNumber2,
-                                                                                                                                                vParseResult.prVerbType,
-                                                                                                                                                vParseResult.prAge,
-                                                                                                                                                vParseResult.prArea,
-                                                                                                                                                vParseResult.prGeography,
-                                                                                                                                                vParseResult.prFrequency,
-                                                                                                                                                vParseResult.prSource,
-                                                                                                                                                vParseResult.prNumKind
-                                                                                                                                              ]);
+                                              result[length(result) - vIxDelta] := format(dupeString('%s ', 24),  [
+                                                                                                                    vParseResult.prWord   + #9#9,
+                                                                                                                    vParseResult.prPartOfSpeech,
+                                                                                                                    vParseResult.prStem   + #9,
+                                                                                                                    vParseResult.prEnding + #9,
+                                                                                                                    vParseResult.prClass,
+                                                                                                                    vParseResult.prVariant,
+                                                                                                                    vParseResult.prCase,
+                                                                                                                    vParseResult.prNumber1,
+                                                                                                                    vParseResult.prGender,
+                                                                                                                    vParseResult.prNounType,
+                                                                                                                    vParseResult.prDegree,
+                                                                                                                    vParseResult.prPronounType,
+                                                                                                                    vParseResult.prTense,
+                                                                                                                    vParseResult.prVoice,
+                                                                                                                    vParseResult.prMood,
+                                                                                                                    vParseResult.prPerson,
+                                                                                                                    vParseResult.prNumber2,
+                                                                                                                    vParseResult.prVerbType,
+                                                                                                                    vParseResult.prAge,
+                                                                                                                    vParseResult.prArea,
+                                                                                                                    vParseResult.prGeography,
+                                                                                                                    vParseResult.prFrequency,
+                                                                                                                    vParseResult.prSource,
+                                                                                                                    vParseResult.prNumKind
+                                                                                                                  ]);
                                               case vIxDelta = 2 of TRUE: result[length(result) - 1] := vParseResult.prExplanation; end;end;
 end;
 

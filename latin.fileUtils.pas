@@ -50,7 +50,7 @@ function loadDictionary(const aFilePath: string; var aDictIx: TDictionary<string
   end;
 
 begin
-  expandArray(result, 39338);
+  expandArray(result, 50000);
   var vFixedDataSize := (pByte(@TDictLineRec(nil^).dictTranslation) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   aDictIx.clear;
