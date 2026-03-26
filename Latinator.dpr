@@ -238,34 +238,41 @@ begin
       until vLine = '';
 
     finally
+      aLatin.LewisAndShort.clear;
+      aLatin.unload;
       gFinished := TRUE;
     end;
 end;
 
-var
-  gLatin:     ILatin;
-
 function handleConsoleClose(aCtrlType: DWORD): BOOL; stdcall;
-// do a proper clean-up if the user hits Ctrl-C or the console window's X button
+// do a proper clean-up if the user hits Ctrl-C
 begin
   result := aCtrlType in [CTRL_C_EVENT, CTRL_CLOSE_EVENT];
   case result of   TRUE:  begin
                             gClose := TRUE;
-                            gLatin.LewisAndShort.clear;
-                            gLatin.unload;
-                            gLatin := NIL;
-                            freeConsole;
-                            while gFinished = FALSE do delay(10); end;end;
+                            freeConsole;  // kill the console loop
+                            while gFinished = FALSE do sleep(100); end;end;
+end;
+
+function disableConsoleCloseButton: TVoid;
+begin
+  var vConsoleWindow := getConsoleWindow;
+
+  case (vConsoleWindow <> 0) of  TRUE:  begin
+                                          var vSystemMenu := getSystemMenu(vConsoleWindow, FALSE);
+                                          case (vSystemMenu <> 0) of   TRUE:  begin
+                                                                                deleteMenu(vSystemMenu, SC_CLOSE, MF_BYCOMMAND);
+                                                                                drawMenuBar(vConsoleWindow); end;end;end;end;
 end;
 
 begin
   setupRunMode;
 
-  gLatin := newLatin;
+  var vLatin := newLatin;
 
-  var gDataPath := findDataPath(extractFilePath(paramStr(0)));
+  var vDataPath := findDataPath(extractFilePath(paramStr(0)));
 
-  loadWhitakersWords(gLatin, gDataPath);
+  loadWhitakersWords(vLatin, vDataPath);
 
   vAsGUI := paramStr(1) = 'GUI';
 
@@ -281,6 +288,7 @@ begin
 
   case vAsGUI of  FALSE: begin
     case attachConsole      (ATTACH_PARENT_PROCESS) of FALSE: allocConsole; end;
+    disableConsoleCloseButton;
     setConsoleCtrlHandler   (@handleConsoleClose, TRUE);
 
     setConsoleTitle         ('Latinator');
@@ -295,10 +303,12 @@ begin
     // introductory messages from our sponsor
     writeUnicode('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
 
-    importLewisAndShort(gLatin, gDataPath);
+    importLewisAndShort(vLatin, vDataPath);
 
-    writeUnicode('Press ENTER to exit.');
+    writeUnicode('Press ENTER to exit');
 
-    consoleLoop(gLatin, gDataPath);
+    consoleLoop(vLatin, vDataPath);
+
+    vLatin := NIL;
   end;end;
 end.
