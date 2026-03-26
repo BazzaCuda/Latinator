@@ -118,6 +118,7 @@ type
 implementation
 
 uses
+  system.math,
   system.regularExpressions,
   system.strUtils,
   _debugWindow;
@@ -262,7 +263,7 @@ type
     destructor Destroy; override;
     function entryCount: integer;
     function findEntry(aKey: string): ILewisAndShortEntry;
-    function loadLewisAndShort(const aFileName: string): TVoid;
+    function loadLewisAndShort(const aFilePath: string): TVoid;
     property entries: TList<ILewisAndShortEntry> read FEntries;
 
     function export(const aFileName: string): TVoid;
@@ -659,8 +660,13 @@ begin
   end;
 end;
 
-function TLewisAndShort.loadLewisAndShort(const aFileName: string): TVoid;
+function TLewisAndShort.loadLewisAndShort(const aFilePath: string): TVoid;
 begin
+  case fileExists(aFilePath) of FALSE: EXIT; end;
+
+  FEntries.clear;
+  FIndex.clear;
+
   var vXML: IXMLDOMDocument2 := createComObject(CLASS_DOMDocument60) as IXMLDOMDocument2;
   vXML.async := FALSE;
   vXML.resolveExternals := FALSE;
@@ -668,7 +674,7 @@ begin
   vXML.setProperty('SelectionLanguage', 'XPath');
   vXML.preserveWhiteSpace := TRUE;
 
-  case vXML.load(aFileName) of
+  case vXML.load(aFilePath) of
     TRUE:
       begin
         var vEntries := vXML.selectNodes('/body/div0/entryFree');
@@ -734,13 +740,13 @@ end;
 
 { Export / Import }
 
+function copyToBuffer(const aSource: string; var aDest: array of char): TVoid;
+begin
+  var vCount := min(length(aSource), length(aDest));
+  case (vCount > 0) of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end;
+end;
+
 function TLewisAndShort.exportWRecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): tVoid;
-  function copyToBuffer(const aSource: string; var aDest: array of char): tVoid;
-  begin
-    var vLimit := length(aDest);
-    var vCount := length(aSource);
-    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
-    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end; end;
 begin
   var vByteLength := sizeOf(TWRecord);
   var vLineLength := vByteLength div sizeOf(char);
@@ -766,12 +772,6 @@ begin
 end;
 
 function TLewisAndShort.exportMRecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): tVoid;
-  function copyToBuffer(const aSource: string; var aDest: array of char): tVoid;
-  begin
-    var vLimit := length(aDest);
-    var vCount := length(aSource);
-    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
-    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end; end;
 begin
   var vByteLength := sizeOf(TMRecord);
   var vLineLength := vByteLength div sizeOf(char);
@@ -796,12 +796,6 @@ begin
 end;
 
 function TLewisAndShort.exportORecord(const aWriter: TStreamWriter; const aEntry: ILewisAndShortEntry): tVoid;
-  function copyToBuffer(const aSource: string; var aDest: array of char): tVoid;
-  begin
-    var vLimit := length(aDest);
-    var vCount := length(aSource);
-    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
-    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end; end;
 begin
   var vByteLength := sizeOf(TORecord);
   var vLineLength := vByteLength div sizeOf(char);
@@ -823,13 +817,6 @@ begin
 end;
 
 function TLewisAndShort.exportSRecord(const aWriter: TStreamWriter; const aSense: ITEISense): TVoid;
-  function copyToBuffer(const aSource: string; var aDest: array of char): TVoid;
-  begin
-    var vLimit := length(aDest);
-    var vCount := length(aSource);
-    case (vCount > vLimit) of TRUE: vCount := vLimit; end;
-    case (vCount > 0)      of TRUE: move(pointer(aSource)^, aDest[0], vCount * sizeOf(char)); end;
-  end;
 begin
   var vByteLength := sizeOf(TSRecord);
   var vLineLength := vByteLength div sizeOf(char);
@@ -956,11 +943,11 @@ begin
   FEntries.clear;
   FIndex.clear;
 
-  var vStream          := TFileStream.create(aFileName, fmOpenRead or fmShareDenyWrite);
-  var vReader          := TStreamReader.create(vStream, TEncoding.UTF8, FALSE, 131072); // 128K
-  var vCurrentEntry    : TTEIEntry := NIL;
-  var vCurrentSense    : ITEISense := NIL;
-  var vCurrentCitation : TCitation := NIL;
+  var vStream                       := TFileStream.create(aFileName, fmOpenRead or fmShareDenyWrite);
+  var vReader                       := TStreamReader.create(vStream, TEncoding.UTF8, FALSE, 131072); // 128K
+  var vCurrentEntry    : TTEIEntry  := NIL;
+  var vCurrentSense    : ITEISense  := NIL;
+  var vCurrentCitation : TCitation  := NIL;
 
   while not vReader.endOfStream do
   begin
@@ -974,7 +961,7 @@ begin
         end;
       'M': importMRecord(vLine, vCurrentEntry);
       'O': importORecord(vLine, vCurrentEntry);
-      'E': vCurrentEntry.etymology := copy(vLine, 3, MaxInt);
+      'E': vCurrentEntry.etymology  := copy(vLine, 3, MaxInt);
       'D': vCurrentEntry.definition := copy(vLine, 3, MaxInt);
       'S':  begin
               vCurrentSense    := importSRecord(vLine, vCurrentEntry);

@@ -187,7 +187,7 @@ begin
     TStyleManager.TrySetStyle('Charcoal Dark Slate');
 
     Application.CreateForm(TFormMain, FormMain);
-  Application.Run;
+    Application.Run;
   end;end;
 
   case vAsGUI of  FALSE: begin
@@ -204,28 +204,38 @@ begin
     rewrite(output);
 
     writeUnicode('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
-    writeUnicode('Press ENTER to exit.');
-
-    // accessFirstEntry('B:\Downloads\Latin\lewis-short-JSON-master\ls_A.json');
-
-    writeUnicode('Loading Lewis & Short...');
-    vLatin.loadLewisAndShort('lat.ls.perseus-eng2.xml');
-    writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
-
-    writeUnicode('Exporting...');
-    vLatin.LewisAndShort.export('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
-
     writeUnicode('Importing Lewis & Short...');
     vLatin.LewisAndShort.import('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
     writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
+    writeUnicode('');
+    writeUnicode('Press ENTER to exit.');
 
     var vLine: string;
     repeat
       write('> ');
       readLn(vLine);
-      for var vString in vLatin.parse(vLine) do writeUnicode(vString);
-      writeEntry(vLatin.LewisAndShort.findEntry(vLine));
-      // writeLn('');
+
+      case vLine = 'las' of  TRUE:  begin
+                                      writeUnicode('Loading Lewis & Short...');
+                                      vLatin.loadLewisAndShort('lat.ls.perseus-eng2.xml');
+                                      writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount]));
+                                      writeUnicode('');
+                                      CONTINUE; end;end;
+
+      case vLine = 'export' of   TRUE:  begin
+                                          writeUnicode('Exporting Lewis & Short...');
+                                          vLatin.LewisAndShort.export('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
+                                          writeUnicode('');
+                                          CONTINUE; end;end;
+
+      case vLine = 'import' of   TRUE:  begin
+                                          writeUnicode('Importing Lewis & Short...');
+                                          vLatin.LewisAndShort.import('B:\Win64_Dev\Programs\Latinator\wwData\wRecords.txt');
+                                          writeUnicode(format('%d Entries', [vLatin.LewisAndShort.entryCount])); end;end;
+
+      case vLine <> '' of TRUE: begin
+                                  for var vString in vLatin.parse(vLine) do writeUnicode(vString);
+                                  writeEntry(vLatin.LewisAndShort.findEntry(vLine)); end;end;
     until vLine = '';
 
     //vDictionary.free;

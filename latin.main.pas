@@ -56,7 +56,7 @@ type
     FDictIx:        TDictionary<string, integer>;
     FEsse:          TArray<TEsseRec>;
     FInflections:   TArray<TInflectionsRec>;
-    FLewisAndshort: ILewisAndShort;
+    FLewisAndShort: ILewisAndShort;
     FPrefixes:      TArray<TPrefixRec>;
     FSuffixes:      TArray<TSuffixRec>;
     FTackOns:       TArray<TTackOnRec>;
@@ -149,8 +149,8 @@ end;
 
 function TLatin.LewisAndShort: ILewisAndShort;
 begin
-  case FLewisAndshort = NIL of TRUE: FLewisAndshort := newLewisAndShort; end;
-  result := FLewisAndshort;
+  case FLewisAndShort = NIL of TRUE: FLewisAndshort := newLewisAndShort; end;
+  result := FLewisAndShort;
 end;
 
 function TLatin.loadDictionary(const aFileName: string): TVoid;
@@ -183,8 +183,7 @@ end;
 
 function TLatin.loadLewisAndShort(const aFileName: string): TVoid;
 begin
-  case FLewisAndshort = NIL of TRUE: FLewisAndshort := newLewisAndShort; end;
-  FLewisAndshort.loadLewisAndShort(FDataPath + aFileName);
+  LewisAndshort.loadLewisAndShort(FDataPath + aFileName); // call the LewisAndShort function - don't use FLewisAndShort!
 end;
 
 function TLatin.loadPrefixes(const aFileName: string): TVoid;
