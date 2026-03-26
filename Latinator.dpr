@@ -144,8 +144,9 @@ begin
   result := '';
 end;
 
-function loadWhitakersWords(const aLatin: ILatin): TVoid;
+function loadWhitakersWords(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
+  aLatin.setDataPath                (aDataPath);
   aLatin.loadDictionary             ('DICTLINE.LAT');
   aLatin.loadEsse                   ('ESSE.LAT');
   aLatin.loadInflections            ('INFLECTS.LAT');
@@ -155,26 +156,26 @@ begin
   aLatin.loadTackOns                ('ADDONS.LAT');
 end;
 
-function loadLewisAndShort(const aLatin: ILatin; const aPath: string): TVoid;
+function loadLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
-  aLatin.LewisAndShort.setDataPath  (aPath);
+  aLatin.LewisAndShort.setDataPath  (aDataPath);
   writeUnicode                      ('Loading Lewis & Short...');
   aLatin.loadLewisAndShort          ('lat.ls.perseus-eng2.xml');
   writeUnicode                      (format('%d Entries', [aLatin.LewisAndShort.entryCount]));
   writeUnicode                      ('');
 end;
 
-function exportLewisAndShort(const aLatin: ILatin; const aPath: string): TVoid;
+function exportLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
-  aLatin.LewisAndShort.setDataPath  (aPath);
+  aLatin.LewisAndShort.setDataPath  (aDataPath);
   writeUnicode                      ('Exporting Lewis & Short...');
   aLatin.LewisAndShort.export       ('Lewis&Short.txt');
   writeUnicode                      ('');
 end;
 
-function importLewisAndShort(const aLatin: ILatin; const aPath: string): TVoid;
+function importLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
-  aLatin.LewisAndShort.setDataPath(aPath);
+  aLatin.LewisAndShort.setDataPath(aDataPath);
   writeUnicode                      ('Importing Lewis & Short...');
   aLatin.LewisAndShort.import       ('Lewis&Short.txt');
   writeUnicode                      (format('%d Entries', [aLatin.LewisAndShort.entryCount]));
@@ -263,9 +264,8 @@ begin
   gLatin := newLatin;
 
   var gDataPath := findDataPath(extractFilePath(paramStr(0)));
-  gLatin.setDataPath(gDataPath);
 
-  loadWhitakersWords(gLatin);
+  loadWhitakersWords(gLatin, gDataPath);
 
   vAsGUI := paramStr(1) = 'GUI';
 
@@ -300,7 +300,5 @@ begin
     writeUnicode('Press ENTER to exit.');
 
     consoleLoop(gLatin, gDataPath);
-
   end;end;
-
 end.
