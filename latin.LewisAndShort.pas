@@ -109,6 +109,7 @@ type
     function findEntry(aKey: string): ILewisAndShortEntry;
     function loadLewisAndShort(const aFileName: string): TVoid;
 
+    function clear:                           TVoid;
     function export(const aFileName: string): TVoid;
     function import(const aFileName: string): TVoid;
   end;
@@ -266,6 +267,7 @@ type
     function loadLewisAndShort(const aFilePath: string): TVoid;
     property entries: TList<ILewisAndShortEntry> read FEntries;
 
+    function clear:                           TVoid;
     function export(const aFileName: string): TVoid;
     function import(const aFileName: string): TVoid;
   end;
@@ -491,6 +493,13 @@ begin
   result := FRegexEllipsisUnmask.replace(result, '... ');
 
   result := trim(result);
+end;
+
+function TLewisAndShort.clear: TVoid;
+begin
+  debug('TLewisAndShort.clear');
+  FEntries.clear;
+  FIndex.clear;
 end;
 
 constructor TLewisAndShort.Create;

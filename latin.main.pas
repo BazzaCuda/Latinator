@@ -38,6 +38,7 @@ type
     function  loadUniques       (const aFileName: string): TVoid;
     function  parse             (const aLine:     string): TArray<string>;
     function  setDataPath       (const aPath:     string): TVoid;
+    function  unload:                                      TVoid;
   end;
 
 function newLatin: ILatin;
@@ -83,6 +84,7 @@ type
     function  loadUniques       (const aFileName: string): TVoid;
     function  parse             (const aLine:     string): TArray<string>;
     function  setDataPath       (const aPath:     string): TVoid;
+    function  unload:                                      TVoid;
   end;
 
 function newLatin: ILatin;
@@ -325,6 +327,11 @@ end;
 function TLatin.setDataPath(const aPath: string): TVoid;
 begin
   FDataPath := aPath;
+end;
+
+function TLatin.unload: TVoid;
+begin
+  FLewisAndShort := NIL;
 end;
 
 //function TLatin.stripEnclitic(var aWord: string): TArray<string>;
