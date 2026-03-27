@@ -129,6 +129,7 @@ begin
   writeUnicode('Definition: '   + aEntry.definition); //    limitedDefinition);
   writeUnicode('');
   aEntry.senseAsStrings(writeUnicode);
+  writeUnicode('');
 end;
 
 function findDataPath(const aStartPath: string; aDepth: integer = 2): string;
@@ -175,10 +176,10 @@ end;
 
 function importLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
-  aLatin.LewisAndShort.setDataPath(aDataPath);
+  aLatin.LewisAndShort.setDataPath  (aDataPath);
   writeUnicode                      ('Importing Lewis & Short...');
   aLatin.LewisAndShort.import       ('Lewis&Short.txt');
-  writeUnicode                      (format('%d Entries', [aLatin.LewisAndShort.entryCount]));
+  writeUnicode                      (format('%d entries', [aLatin.LewisAndShort.entryCount]));
   writeUnicode                      ('');
 end;
 
@@ -281,11 +282,10 @@ end;
 begin
   setupRunMode;
 
-  var vLatin := newLatin;
-
+  var vLatin    := newLatin;
   var vDataPath := findDataPath(extractFilePath(paramStr(0)));
 
-  loadWhitakersWords(vLatin, vDataPath);
+  loadWhitakersWords  (vLatin, vDataPath);
 
   vAsGUI := paramStr(1) = 'GUI';
 
@@ -293,9 +293,9 @@ begin
     freeConsole;
     Application.Initialize;
     Application.MainFormOnTaskbar := True;
-    TStyleManager.TrySetStyle('Charcoal Dark Slate');
+    TStyleManager.TrySetStyle ('Charcoal Dark Slate');
 
-    Application.CreateForm(TFormMain, FormMain);
+    Application.CreateForm    (TFormMain, FormMain);
     Application.Run;
   end;end;
 
@@ -316,7 +316,7 @@ begin
     // introductory messages from our sponsor
     writeUnicode('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
 
-    importLewisAndShort(vLatin, vDataPath);
+    importLewisAndShort (vLatin, vDataPath); // have to do this after the banner and console setup because it emits console messages
 
     writeUnicode('Press ENTER to exit');
 
