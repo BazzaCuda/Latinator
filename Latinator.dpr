@@ -225,9 +225,10 @@ begin
       repeat
         write('> ');
 
+        // readLine (instead of readLn) is the only way to make this block of code possible
         setLastError(0);
         readLine(vLine);
-        case (getLastError > 0) of TRUE: EXIT; end;
+        case (getLastError > 0) of TRUE: EXIT; end; // user probably hit Ctrl-C and handleConsoleClose called freeConsole
         case (getLastError = 0) and (vLine = '') of  TRUE:  begin
                                                               writeUnicode('Bene Vale!');
                                                               BREAK; end;end;
@@ -273,10 +274,13 @@ end;
 
 function handleConsoleClose(aCtrlType: DWORD): BOOL; stdcall;
 // do a proper clean-up if the user hits Ctrl-C
-// The X window button is disabled
+// rather than allowing the OS to simply terminate the console process
+// without us freeing-up all the memory used by TLatin and TLewisAndShort
 begin
   result := aCtrlType in [CTRL_C_EVENT, CTRL_CLOSE_EVENT];
   case result of   TRUE:  begin
+                            writeLn(#13#10'Bene Vale!');
+                            sleep(500); // otherwise the above is never seen
                             freeConsole;  // kill the console loop
                             while gFinished = FALSE do sleep(100); end;end;
 end;
@@ -288,8 +292,8 @@ begin
   case (vConsoleWindow <> 0) of  TRUE:  begin
                                           var vSystemMenu := getSystemMenu(vConsoleWindow, FALSE);
                                           case (vSystemMenu <> 0) of   TRUE:  begin
-                                                                                deleteMenu(vSystemMenu, SC_CLOSE, MF_BYCOMMAND);
-                                                                                drawMenuBar(vConsoleWindow); end;end;end;end;
+                                                                                deleteMenu  (vSystemMenu, SC_CLOSE, MF_BYCOMMAND);
+                                                                                drawMenuBar (vConsoleWindow); end;end;end;end;
 end;
 
 begin
@@ -314,7 +318,7 @@ begin
 
   case vAsGUI of  FALSE: begin
     case attachConsole      (ATTACH_PARENT_PROCESS) of FALSE: allocConsole; end;
-    disableConsoleCloseButton;
+    //disableConsoleCloseButton;
     setConsoleCtrlHandler   (@handleConsoleClose, TRUE);
 
     setConsoleTitle         ('Latinator');
@@ -331,9 +335,9 @@ begin
 
     importLewisAndShort (vLatin, vDataPath); // have to do this after the banner and console setup because it emits console messages
 
-    writeUnicode('Press ENTER to exit');
+    writeUnicode        ('Press ENTER to exit');
 
-    consoleLoop(vLatin, vDataPath);
+    consoleLoop         (vLatin, vDataPath);
 
     vLatin := NIL;
   end;end;

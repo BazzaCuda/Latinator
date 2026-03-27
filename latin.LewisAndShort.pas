@@ -522,7 +522,7 @@ end;
 
 destructor TLewisAndShort.Destroy;
 begin
-//  debug('TLewisAndShort.Destroy');
+  debug('TLewisAndShort.Destroy');
   FEntries.clear;
   FIndex.clear;
   FEntries.free;
