@@ -214,7 +214,8 @@ begin
 
         readLn(vLine);
 
-        case gClose of TRUE: BREAK; end;
+        case gClose     of TRUE: BREAK; end;
+        case vLine = '' of TRUE: BREAK; end;
 
         case vLine = 'las'    of   TRUE:  begin
                                             loadLewisAndShort   (aLatin, aDataPath);
@@ -232,9 +233,20 @@ begin
                                             clearLewisAndShort  (aLatin);
                                             CONTINUE; end;end;
 
-        case vLine <> ''      of   TRUE:  begin
-                                            for var vString in aLatin.parse(vLine) do writeUnicode(vString);
-                                            writeEntry(aLatin.LewisAndShort.findEntry(vLine)); end;end;
+        var vWhitakersWords := TRUE;                  // the default is to do both
+        var vLewisAndShort  := TRUE;
+
+        case (pos('ww ', vLine) = 1) of TRUE: begin   // the user can override the default
+                                                delete(vLine, 1, 3);
+                                                vLewisAndShort := FALSE; end;end;
+
+        case (pos('ls ', vLine) = 1) of TRUE: begin
+                                                delete(vLine, 1, 3);
+                                                vWhitakersWords := FALSE; end;end;
+
+       case vWhitakersWords of TRUE: for var vString in aLatin.parse(vLine) do writeUnicode(vString); end;
+       case vLewisAndShort  of TRUE: writeEntry(aLatin.LewisAndShort.findEntry(vLine)); end;
+
       until vLine = '';
 
     finally
@@ -246,6 +258,7 @@ end;
 
 function handleConsoleClose(aCtrlType: DWORD): BOOL; stdcall;
 // do a proper clean-up if the user hits Ctrl-C
+// The X window button is disabled
 begin
   result := aCtrlType in [CTRL_C_EVENT, CTRL_CLOSE_EVENT];
   case result of   TRUE:  begin

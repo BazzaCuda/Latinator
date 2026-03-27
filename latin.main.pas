@@ -98,7 +98,7 @@ end;
 constructor TLatin.Create;
 begin
   inherited create;
-  FDictIx := TDictionary<string, integer>.create(49000);
+  FDictIx := TDictionary<string, integer>.create(48750); // less than the [currently-known] 48759 so we get an accurate entry count
 end;
 
 destructor TLatin.Destroy;

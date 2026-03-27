@@ -50,7 +50,7 @@ function loadDictionary(const aFilePath: string; var aDictIx: TDictionary<string
   end;
 
 begin
-  expandArray(result, 50000);
+  expandArray(result, 39300); // less than the [currently-known] 39338 so we get an accurate entry count
   var vFixedDataSize := (pByte(@TDictLineRec(nil^).dictTranslation) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   aDictIx.clear;
@@ -135,7 +135,7 @@ end;
 
 function loadInflections(const aFilePath: string): TArray<TInflectionsRec>;
 begin
-  expandArray(result, 1890);
+  expandArray(result, 1800); // less than the [currently-known] 1890 so we get an accurate entry count
   var vFixedDataSize := (pByte(@TInflectionsRec(nil^).irComment) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -180,7 +180,7 @@ end;
 
 function loadPrefixes(const aFilePath: string): TArray<TPrefixRec>;
 begin
-  expandArray(result, 135);
+  expandArray(result, 130); // less than the [currently-known] 135 so we get an accurate entry count
   var vFixedDataSize := (pByte(@TPrefixRec(nil^).prSenses) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -213,7 +213,7 @@ end;
 
 function loadSuffixes(const aFilePath: string): TArray<TSuffixRec>;
 begin
-  expandArray(result, 178);
+  expandArray(result, 170); // less than the [currently-known] 178 so we get an accurate entry count
   var vFixedDataSize := (pByte(@TSuffixRec(nil^).srSenses) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
