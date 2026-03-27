@@ -45,43 +45,48 @@ uses
   madListProcesses,
   madListModules,
   {$endif }
+
+//
   winApi.windows,
+//
   system.classes,
+  system.generics.collections,
+  system.syncObjs,
   system.sysUtils,
+//
   Vcl.Forms,
   vcl.dialogs,
-  view.formMain in 'view.formMain.pas' {,
-  Vcl.Themes,
   Vcl.Styles,
-  latin.main in 'latin.main.pas',
-  latin.types in 'latin.types.pas',
-  _debugWindow in '_debugWindow\_debugWindow.pas',
-  latin.fileUtils in 'latin.fileUtils.pas',
-  latin.consoleUtils in 'latin.consoleUtils.pas';
-
-{$R *.res},
   Vcl.Themes,
-  Vcl.Styles,
-  latin.main in 'latin.main.pas',
-  latin.types in 'latin.types.pas',
-  _debugWindow in '_debugWindow\_debugWindow.pas',
-  latin.fileUtils in 'latin.fileUtils.pas',
-  latin.consoleUtils in 'latin.consoleUtils.pas',
-  latin.stringUtils in 'latin.stringUtils.pas',
-  latin.charUtils in 'latin.charUtils.pas',
-  latin.miscUtils in 'latin.miscUtils.pas',
-  system.generics.collections,
+//
+  _debugWindow        in '_debugWindow\_debugWindow.pas',
+//
+  view.formMain       in 'view.formMain.pas',
+  latin.main          in 'latin.main.pas',
+  latin.types         in 'latin.types.pas',
+  latin.fileUtils     in 'latin.fileUtils.pas',
+  latin.consoleUtils  in 'latin.consoleUtils.pas',
+  latin.stringUtils   in 'latin.stringUtils.pas',
+  latin.charUtils     in 'latin.charUtils.pas',
+  latin.miscUtils     in 'latin.miscUtils.pas',
   latin.LewisAndShort in 'latin.LewisAndShort.pas';
 
 var
   vAsGUI: boolean = FALSE;
+
+{$ifndef useMadExcept}
+procedure shhh(const aExceptIntf: IMEException; var aHandled: boolean);
+begin
+  aHandled := True;
+end;
+{$endif}
 
 procedure setupRunMode;
 begin
   {$if BazDebugWindow} debugClear; {$endif}
 
   {$ifndef useMadExcept}
-  reportMemoryLeaksOnShutdown := mmpEnvironmentVariable; // done already in mmpStackTrace initialization section - unless that unit has been commented out
+  reportMemoryLeaksOnShutdown := mmpEnvironmentVariable;
   {$if BazDebugWindow} debugBoolean('reportMemoryLeaksOnShutdown', reportMemoryLeaksOnShutdown); {$endif}
   {$endif}
 
@@ -95,6 +100,10 @@ begin
 
   for var i := low(vThreadList) to high(vThreadList) do
     madExcept.thisIsNoLeak(vThreadList[i]);
+
+  {$ifndef useMadExcept}
+  registerExceptionHandler(shhh, stDontSync);
+  {$endif}
 
 //  madExcept.HookThreads;
   {$endif}
@@ -190,20 +199,23 @@ begin
   writeUnicode                      ('');
 end;
 
-function delay(const dwMilliseconds: cardinal): TVoid;
-// Used to delay an operation; "sleep()" would suspend the thread, which is not what is required
-var
-  iStart, iStop: cardinal;
+function readLine(var aLine: string): TVoid;
 begin
-  iStart  := getTickCount;
-  repeat
-    iStop := getTickCount;
-  until ((iStop  -  iStart) >= dwMilliseconds);
+  var vHandle                 :  THANDLE := getStdHandle(STD_INPUT_HANDLE);
+  var vRead                   :  DWORD;
+  var vBuffer                 :  array [0..1023] of char;
+
+  aLine := '';
+  case readConsole(vHandle, @vBuffer, length(vBuffer), vRead, NIL) of FALSE: EXIT; end;
+
+  setLength(aLine, vRead);
+  case  (vRead > 0) of   TRUE:  begin
+                                  move (vBuffer[0], aLine[1], vRead * sizeOf(char));
+                                  case (vRead >= 2) and (aLine[vRead - 1] = #13) and (aLine[vRead] = #10) of  TRUE: begin setLength(aLine, vRead - 2); end;end;end;end;
 end;
 
 var
-  gClose:     boolean = FALSE;
-  gFinished:  boolean = FALSE;
+  gFinished : boolean = FALSE;
 
 function consoleLoop(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
@@ -213,10 +225,12 @@ begin
       repeat
         write('> ');
 
-        readLn(vLine);
-
-        case gClose     of TRUE: BREAK; end;
-        case vLine = '' of TRUE: BREAK; end;
+        setLastError(0);
+        readLine(vLine);
+        case (getLastError > 0) of TRUE: EXIT; end;
+        case (getLastError = 0) and (vLine = '') of  TRUE:  begin
+                                                              writeUnicode('Bene Vale!');
+                                                              BREAK; end;end;
 
         case vLine = 'las'    of   TRUE:  begin
                                             loadLewisAndShort   (aLatin, aDataPath);
@@ -263,7 +277,6 @@ function handleConsoleClose(aCtrlType: DWORD): BOOL; stdcall;
 begin
   result := aCtrlType in [CTRL_C_EVENT, CTRL_CLOSE_EVENT];
   case result of   TRUE:  begin
-                            gClose := TRUE;
                             freeConsole;  // kill the console loop
                             while gFinished = FALSE do sleep(100); end;end;
 end;
@@ -291,12 +304,12 @@ begin
 
   case vAsGUI of   TRUE: begin
     freeConsole;
-    Application.Initialize;
-    Application.MainFormOnTaskbar := True;
-    TStyleManager.TrySetStyle ('Charcoal Dark Slate');
+    application.initialize;
+    application.mainFormOnTaskbar := TRUE;
+    TStyleManager.trySetStyle ('Charcoal Dark Slate');
 
-    Application.CreateForm    (TFormMain, FormMain);
-    Application.Run;
+    application.createForm    (TFormMain, FormMain);
+    application.run;
   end;end;
 
   case vAsGUI of  FALSE: begin

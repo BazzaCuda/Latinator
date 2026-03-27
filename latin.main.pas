@@ -22,7 +22,7 @@ unit latin.main;
 interface
 
 uses
-  system.sysUtils, system.classes, system.generics.collections {for TDictionary},
+  system.math, system.sysUtils, system.classes, system.generics.collections {for TDictionary},
   latin.LewisAndShort, latin.types;
 
 type
@@ -242,18 +242,6 @@ begin
                                                                       result[length(result) - 1] := ''; end;end;
 end;
 
-function TLatin.parseEnclitics(const aWord: string): TArray<TParseResultRec>;
-begin
-  result := NIL;
-  // overkill (see comment in parseWord) but pre-empting any possible future bugs
-
-  var vWord := cleanVJJ(aWord);
-
-
-
-
-end;
-
 function TLatin.parseRomanNumerals(const aWord: string): TArray<TParseResultRec>;
 begin
   result := NIL;
@@ -333,6 +321,35 @@ end;
 function TLatin.unload: TVoid;
 begin
   FLewisAndShort := NIL;
+end;
+
+function TLatin.parseEnclitics(const aWord: string): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  var vWord := cleanVJJ(lowerCase(removeMacrons(aWord)));
+
+  for var i := 0 to min(3, high(FTackOns)) do begin
+    var vTackOn := FTackOns[i];
+    var vEnding := cleanVJJ(trim(vTackOn.trTackOn));
+
+    case (length(vWord) > length(vEnding)) and (vWord.endsWith(vEnding)) of   TRUE: begin
+      var vStem := copy(vWord, 1, length(vWord) - length(vEnding));
+
+      case (vEnding = 'que') and (length(vStem) < 2) of   TRUE: CONTINUE; end;
+
+      result := result + parseUniques(vStem);
+
+      var vEnclitic := default(TParseResultRec);
+      vEnclitic.prWord         := trim(vTackOn.trTackOn);
+      vEnclitic.prPartOfSpeech := trim(vTackOn.trTargetPartOfSpeech);
+      vEnclitic.prClass        := vTackOn.trTargetClass;
+      vEnclitic.prVariant      := vTackOn.trTargetVariant;
+      vEnclitic.prDegree       := trim(vTackOn.trDegree);
+      vEnclitic.prGender       := vTackOn.trNounGender;
+      vEnclitic.prNumber1      := vTackOn.trNounNumber;
+      vEnclitic.prExplanation  := trim(vTackOn.trSenses);
+
+      result := result + [vEnclitic]; end;end;end;
 end;
 
 //function TLatin.stripEnclitic(var aWord: string): TArray<string>;
