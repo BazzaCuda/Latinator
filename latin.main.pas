@@ -353,7 +353,7 @@ end;
 
 function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
 
-function restorePronominalM(const aStrippedCore: string; const aTackOn: string): string;
+  function restorePronominalM(const aStrippedCore: string; const aTackOn: string): string;
   begin
     result := aStrippedCore;
     case aTackOn.startsWith('dam') and (result[result.length] = 'n') of TRUE: result[result.length] := 'm'; end;
