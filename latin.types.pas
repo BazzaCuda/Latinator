@@ -307,6 +307,13 @@ type
     pmStemType:     TStemType;
   end;
 
+  TPronominalContext = record
+    pcFullWord: string;
+    pcPrefix:   string;
+    pcTackOn:   string;
+    prSenses:   string;
+  end;
+
 implementation
 
 end.

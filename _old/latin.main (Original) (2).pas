@@ -74,7 +74,7 @@ type
     function  findPronominalPackon(const aCore: string): TTackOnRec;
     function  findPronominalStem(const aWord: string; var aPrefix: string; var aStemType: TStemType; var aCore: string): boolean;
     function  matchPronominalInflections(const aCore: string; const aStemType: TStemType): TArray<TParseResultRec>;
-    function  enrichPronominalResults(const aResultRecs: TArray<TParseResultRec>; const aFullWord: string; const aPrefix: string; const aTackOn: string; const aTackOnSenses: string): TArray<TParseResultRec>;
+    function  enrichPronominalResults(const aMatches: TArray<TParseResultRec>; const aFullWord: string; const aPrefix: string; const aTackOn: string; const aTackOnSenses: string): TArray<TParseResultRec>;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -231,24 +231,21 @@ end;
 
 //===== PARSING =====
 
-function TLatin.enrichPronominalResults(const aResultRecs: TArray<TParseResultRec>; const aFullWord: string; const aPrefix: string; const aTackOn: string; const aTackOnSenses: string): TArray<TParseResultRec>;
+function TLatin.enrichPronominalResults(const aMatches: TArray<TParseResultRec>; const aFullWord: string; const aPrefix: string; const aTackOn: string; const aTackOnSenses: string): TArray<TParseResultRec>;
 begin
-  result  := aResultRecs;
-  var i   := -1;
-
-  for var vRec in result do begin
-    inc(i);
-
-    result[i].prWord := aFullWord;
+  result := aMatches;
+  for var vIndex := 0 to length(result) - 1 do
+  begin
+    result[vIndex].prWord := aFullWord;
 
     var vExplanation := 'Pronominal: ';
     case (aPrefix <> '') of TRUE: vExplanation := vExplanation + '[' + aPrefix + '-] + '; end;
 
-    vExplanation := vExplanation + '[' + result[i].prStem + '] + [-' + result[i].prEnding + ']';
+    vExplanation := vExplanation + '[' + result[vIndex].prStem + '] + [-' + result[vIndex].prEnding + ']';
 
     case (aTackOn <> '') of TRUE: vExplanation := vExplanation + ' + [-' + aTackOn + '] (' + aTackOnSenses + ')'; end;
 
-    result[i].prExplanation := vExplanation;
+    result[vIndex].prExplanation := vExplanation;
   end;
 end;
 
@@ -290,21 +287,23 @@ const
   STEM_STRING_QU   = 'qu';
   STEM_STRING_CU   = 'cu';
 begin
-  result          := NIL;
+  result := NIL;
   var vStemString := '';
   var vTargetID   := #0;
 
   case aStemType of
-    stQu:   begin vStemString := STEM_STRING_QU; vTargetID := STEM_ID_QU; end;
-    stCu:   begin vStemString := STEM_STRING_CU; vTargetID := STEM_ID_CU; end;
-    stNone: EXIT;
+    stQu: begin vStemString := STEM_STRING_QU; vTargetID := STEM_ID_QU; end;
+    stCu: begin vStemString := STEM_STRING_CU; vTargetID := STEM_ID_CU; end;
+    else  EXIT;
   end;
 
   for var vInflection in FInflections do begin
     var vInflectionPartOfSpeech := string(vInflection.irPartOfSpeech).trim;
-    case (vInflectionPartOfSpeech = PRON_POS) and (vInflection.irClass = PRON_CLASS) and (vInflection.irStemID = vTargetID) of TRUE: begin
+    case (vInflectionPartOfSpeech = PRON_POS) and (vInflection.irClass = PRON_CLASS) and (vInflection.irStemID = vTargetID) of
+      TRUE: begin
         var vEnding := string(vInflection.irSuffix).trim;
-        case aCore = (vStemString + vEnding) of TRUE: begin
+        case aCore = (vStemString + vEnding) of
+          TRUE: begin
             var vParseResult: TParseResultRec;
             vParseResult.prPartOfSpeech := PRON_POS;
             vParseResult.prClass        := vInflection.irClass;
@@ -317,7 +316,7 @@ begin
             vParseResult.prAge          := vInflection.irAge;
             vParseResult.prFrequency    := vInflection.irFrequency;
             result := result + [vParseResult];
-         end;end;end;end;end;
+          end; end; end; end; end;
 end;
 
 function TLatin.parse(const aLine: string): TArray<string>;
@@ -353,11 +352,21 @@ end;
 
 function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
 
-  function identifyPronominalStem(var vCore: string): TStemType;
+  function identifyPronominalStem(var vCore: string; var vDetectedPrefix: string; const bLastPassPass: Boolean): TStemType;
   begin
     result := stNone;
-    case vCore.startsWith('qu') of TRUE: result := stQu; end;
-    case vCore.startsWith('cu') of TRUE: result := stCu; end;
+    if (vCore.length >= 3) and (vCore.startsWith('qu') or vCore.startsWith('cu')) then begin
+      case vCore.startsWith('qu') of  TRUE: result := stQu;
+                                     FALSE: result := stCu; end;
+      EXIT;
+    end;
+
+    case bLastPassPass and (vCore.length >= 5) and (vCore.startsWith('aliqu') or vCore.startsWith('alicu')) of TRUE: begin
+      case vCore.startsWith('aliqu') of  TRUE: result := stQu;
+                                        FALSE: result := stCu; end;
+      vDetectedPrefix := 'ali';
+      vCore           := vCore.substring(3);
+    end; end;
   end;
 
   function restorePronominalM(const aStrippedCore: string; const aTackOn: string): string;
@@ -371,12 +380,12 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
     result := aCore.substring(0, aCore.length - aTackOn.length);
   end;
 
-  function tryPronominalMatch(const aCore: string; const aPrefix: string; const aPrefixSenses: string): TArray<TParseResultRec>;
+  function tryPronominalMatch(const aCore: string; const aPrefix: string; const aPrefixSenses: string; const bLastPass: Boolean): TArray<TParseResultRec>;
   begin
     result          := NIL;
     var vLocalCore  := aCore;
     var vPrefix     := aPrefix;
-    var vStemType   := identifyPronominalStem(vLocalCore);
+    var vStemType   := identifyPronominalStem(vLocalCore, vPrefix, bLastPass);
 
     case (vStemType = stNone) of TRUE: EXIT; end;
 
@@ -391,25 +400,26 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
 
     case (length(vInflections) > 0) of TRUE: begin
       case (vPrefix <> '') of TRUE: begin
-        var vPrefixEntry            :   TParseResultRec;
-        vPrefixEntry.prWord         :=  aWord;
-        vPrefixEntry.prStem         :=  vPrefix;
-        vPrefixEntry.prExplanation  :=  aPrefixSenses;
-        result                      :=  result + [vPrefixEntry];
+        var vPrefixEntry : TParseResultRec;
+        vPrefixEntry.prWord        := aWord;
+        vPrefixEntry.prStem        := vPrefix;
+        vPrefixEntry.prExplanation := aPrefixSenses;
+        case (vPrefix = 'ali') and (vPrefixEntry.prExplanation = '') of TRUE: vPrefixEntry.prExplanation := '(prefix) some/any'; end;
+        result                     := result + [vPrefixEntry];
       end; end;
 
       var vTackOnSenses := string(vTackOnRec.trSenses).trim;
       result            := result + enrichPronominalResults(vInflections, aWord, vPrefix, vTackOn, vTackOnSenses);
 
       case (vTackOn <> '') of TRUE: begin
-        var vTackonEntry            :   TParseResultRec;
-        vTackonEntry.prWord         :=  aWord;
-        vTackonEntry.prStem         :=  vTackOn;
-        vTackonEntry.prPartOfSpeech :=  trim(vTackOnRec.trTargetPartOfSpeech);
-        vTackonEntry.prClass        :=  vTackOnRec.trTargetClass;
-        vTackonEntry.prVariant      :=  vTackOnRec.trTargetVariant;
-        vTackonEntry.prExplanation  :=  vTackOnSenses;
-        result                      :=  result + [vTackonEntry];
+        var vTackonEntry : TParseResultRec;
+        vTackonEntry.prWord         := aWord;
+        vTackonEntry.prStem         := vTackOn;
+        vTackonEntry.prPartOfSpeech := trim(vTackOnRec.trTargetPartOfSpeech);
+        vTackonEntry.prClass        := vTackOnRec.trTargetClass;
+        vTackonEntry.prVariant      := vTackOnRec.trTargetVariant;
+        vTackonEntry.prExplanation  := vTackOnSenses;
+        result                      := result + [vTackonEntry];
       end; end;
     end; end;
   end;
@@ -419,16 +429,15 @@ begin
 
   for var vPrefixRec in FPrefixes do begin
     case (string(vPrefixRec.prSourcePartOfSpeech).trim = 'PACK') of TRUE: begin
-      var vPrefix := string(vPrefixRec.prPrefix).trim;
-      case aWord.startsWith(vPrefix) of TRUE: begin
-        var vSenses := string(vPrefixRec.prSenses).trim;
-        result := result + tryPronominalMatch(aWord.substring(vPrefix.length), vPrefix, vSenses);
+      var vPrefixText := string(vPrefixRec.prPrefix).trim;
+      case aWord.startsWith(vPrefixText) of TRUE: begin
+        result := result + tryPronominalMatch(aWord.substring(vPrefixText.length), vPrefixText, string(vPrefixRec.prSenses).trim, FALSE);
         case (length(result) > 0) of TRUE: EXIT; end;
       end; end;
     end; end;
   end;
 
-  case (length(result) = 0) of TRUE: result := tryPronominalMatch(aWord, '', ''); end;
+  case (length(result) = 0) of TRUE: result := tryPronominalMatch(aWord, '', '', TRUE); end;
 end;
 
 function TLatin.parseRomanNumerals(const aWord: string): TArray<TParseResultRec>;

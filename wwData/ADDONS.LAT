@@ -227,6 +227,10 @@ PREFIX uni                     ADJ   ADJ   one-; having (only/but) one ~; (being
 PREFIX ve                      ADJ   ADJ   not- (vegrandis => small), without; very (vepallidus => very pale);
 PREFIX V                       N     N     five-; fifth; (Roman numeral for 5);  
 PREFIX X                       N     N     ten-; tenth; (Roman numeral for 10);
+
+-- BAZ ADDITIONS TO THE ORIGINAL WHITAKER DATA
+PREFIX ali                     PACK  PRON  (prefix) some, any, someone, anything;
+--
   
 --
 --
