@@ -34,6 +34,8 @@ const
     (pmSearchString: 'cu';    pmPrefix: '';    pmStemType: stCu)
   );
 
+  MAX_STEM_SIZE = 18;
+
 implementation
 
 end.

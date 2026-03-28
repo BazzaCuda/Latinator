@@ -130,6 +130,7 @@ type
     prCase:         string;
     prNumber1:      char;
     prGender:       char;
+    prStemID:       char;
     prNounType:     char;
     prDegree:       string;
     prPronounType:  string;

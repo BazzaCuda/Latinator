@@ -66,15 +66,17 @@ type
   private
     function  formatParseResults  (const aParseResults:   TArray<TParseResultRec>): TArray<string>;
 
-    function  parseEnclitics      (const aWord: string):                                                    TArray<TParseResultRec>;
-    function  parsePronominals    (const aWord: string):                                                    TArray<TParseResultRec>;
-    function  parseRomanNumerals  (const aWord: string):                                                    TArray<TParseResultRec>;
-    function  parseUniques        (const aWord: string):                                                    TArray<TParseResultRec>;
-    function  parseWord           (const aWord: string; const aNextWord: string; var bNextUsed: boolean):   TArray<TParseResultRec>;
-    function  findPronominalPackon(const aCore: string): TTackOnRec;
-    function  findPronominalStem(const aWord: string; var aPrefix: string; var aStemType: TStemType; var aCore: string): boolean;
-    function  matchPronominalInflections(const aCore: string; const aStemType: TStemType; const aContext: TPronominalContext): TArray<TParseResultRec>;
-    function  enrichPronominalResults(const aResultRecs: TArray<TParseResultRec>; const aFullWord: string; const aPrefix: string; const aTackOn: string; const aTackOnSenses: string): TArray<TParseResultRec>;
+    function  findInflections             (const aWord: string):                                                                    TArray<TParseResultRec>;
+    function  findPronominalInflections   (const aCore: string; const aStemType: TStemType; const aContext: TPronominalContext):    TArray<TParseResultRec>;
+    function  findPronominalPackon        (const aCore: string):                                                                    TTackOnRec;
+    function  findPronominalStem          (const aWord: string; var aPrefix: string; var aStemType: TStemType; var aCore: string):  boolean;
+    function  mapInflectionToResult       (const aInflection: TInflectionsRec; var aResult: TParseResultRec):                       TVoid;
+    function  parseEnclitics              (const aWord: string):                                                                    TArray<TParseResultRec>;
+    function  parseInflections            (const aWord: string):                                                                    TArray<TParseResultRec>;
+    function  parsePronominals            (const aWord: string):                                                                    TArray<TParseResultRec>;
+    function  parseRomanNumerals          (const aWord: string):                                                                    TArray<TParseResultRec>;
+    function  parseUniques                (const aWord: string):                                                                    TArray<TParseResultRec>;
+    function  parseWord                   (const aWord: string; const aNextWord: string; var bNextUsed: boolean):                   TArray<TParseResultRec>;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -125,7 +127,7 @@ begin
 
                                               expandArray(result, vIxDelta);
 
-                                              result[length(result) - vIxDelta] := format(dupeString('%s ', 24),  [
+                                              result[length(result) - vIxDelta] := format('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s ',  [
                                                                                                                     vParseResult.prWord   + #9#9,
                                                                                                                     vParseResult.prPartOfSpeech,
                                                                                                                     vParseResult.prStem   + #9,
@@ -231,40 +233,28 @@ end;
 
 //===== PARSING =====
 
-function TLatin.enrichPronominalResults(const aResultRecs: TArray<TParseResultRec>; const aFullWord: string; const aPrefix: string; const aTackOn: string; const aTackOnSenses: string): TArray<TParseResultRec>;
+function TLatin.findInflections(const aWord: string): TArray<TParseResultRec>;
 begin
-  result  := aResultRecs;
-  var i   := -1;
+  result := NIL;
 
-  for var vRec in result do begin
-    inc(i);
+  for var vInflection in FInflections do begin
+    var vSuffix := string(vInflection.irSuffix).trim;
+    var vStem   := '';
 
-    result[i].prWord := aFullWord;
+    case (vSuffix = '') of   TRUE:  vStem := aWord;
+                            FALSE:  case aWord.endsWith(vSuffix) of TRUE: vStem := aWord.substring(0, aWord.length - vSuffix.length); end;end;
 
-    var vExplanation := 'Pronominal: ';
-    case (aPrefix <> '') of TRUE: vExplanation := vExplanation + '[' + aPrefix + '-] + '; end;
+    case (vStem <> '') and (vStem.length <= MAX_STEM_SIZE) of TRUE: begin
+      var vResult       := default(TParseResultRec);
+      vResult.prWord    := aWord;
+      vResult.prStem    := vStem;
+      vResult.prEnding  := string(vInflection.irSuffix);
+      vResult.prStemID  := vInflection.irStemID;
 
-    vExplanation := vExplanation + '[' + result[i].prStem + '] + [-' + result[i].prEnding + ']';
+      mapInflectionToResult(vInflection, vResult);
 
-    case (aTackOn <> '') of TRUE: vExplanation := vExplanation + ' + [-' + aTackOn + '] (' + aTackOnSenses + ')'; end;
-
-    result[i].prExplanation := vExplanation;
-  end;
-end;
-
-function TLatin.findPronominalStem(const aWord: string; var aPrefix: string; var aStemType: TStemType; var aCore: string): boolean;
-begin
-  result := FALSE;
-  for var vMap in PRONOMINAL_MAPS do
-  begin
-    case aWord.startsWith(vMap.pmSearchString) of
-      TRUE: begin
-        aPrefix   := vMap.pmPrefix;
-        aStemType := vMap.pmStemType;
-        aCore     := aWord.substring(length(aPrefix));
-        EXIT(TRUE);
-      end;
-    end;
+      result := result + [vResult];
+    end; end;
   end;
 end;
 
@@ -281,7 +271,7 @@ begin
   end;
 end;
 
-function TLatin.matchPronominalInflections(const aCore: string; const aStemType: TStemType; const aContext: TPronominalContext): TArray<TParseResultRec>;
+function TLatin.findPronominalInflections(const aCore: string; const aStemType: TStemType; const aContext: TPronominalContext): TArray<TParseResultRec>;
 const
   PRON_POS       = 'PRON';
   PRON_CLASS     = '1';
@@ -307,12 +297,12 @@ begin
       case aCore = (vStemString + vEnding) of TRUE: begin
         var vParseResult: TParseResultRec;
         vParseResult.prWord         := aContext.pcFullWord;
-        vParseResult.prPartOfSpeech := PRON_POS;
+        vParseResult.prPartOfSpeech := string(vInflection.irPartOfSpeech);;
         vParseResult.prClass        := vInflection.irClass;
         vParseResult.prVariant      := vInflection.irVariant;
         vParseResult.prStem         := vStemString;
-        vParseResult.prEnding       := vEnding;
-        vParseResult.prCase         := string(vInflection.irCase).trim;
+        vParseResult.prEnding       := string(vInflection.irSuffix);
+        vParseResult.prCase         := string(vInflection.irCase);
         vParseResult.prNumber1      := vInflection.irNumber1;
         vParseResult.prGender       := vInflection.irGender;
         vParseResult.prAge          := vInflection.irAge;
@@ -328,6 +318,43 @@ begin
         vParseResult.prExplanation := vExplanation;
         result := result + [vParseResult];
       end; end; end; end; end;
+end;
+
+function TLatin.findPronominalStem(const aWord: string; var aPrefix: string; var aStemType: TStemType; var aCore: string): boolean;
+begin
+  result := FALSE;
+  for var vMap in PRONOMINAL_MAPS do
+  begin
+    case aWord.startsWith(vMap.pmSearchString) of
+      TRUE: begin
+        aPrefix   := vMap.pmPrefix;
+        aStemType := vMap.pmStemType;
+        aCore     := aWord.substring(length(aPrefix));
+        EXIT(TRUE);
+      end;
+    end;
+  end;
+end;
+
+function TLatin.mapInflectionToResult(const aInflection: TInflectionsRec; var aResult: TParseResultRec): TVoid;
+begin
+  aResult.prPartOfSpeech  := string(aInflection.irPartOfSpeech);
+  aResult.prClass         := aInflection.irClass;
+  aResult.prVariant       := aInflection.irVariant;
+  aResult.prCase          := string(aInflection.irCase);
+  aResult.prNumber1       := aInflection.irNumber1;
+  aResult.prGender        := aInflection.irGender;
+
+  aResult.prDegree        := string(aInflection.irDegreeTense);
+  aResult.prTense         := string(aInflection.irDegreeTense);
+
+  aResult.prVoice         := string(aInflection.irVoice);
+  aResult.prMood          := string(aInflection.irMood);
+  aResult.prPerson        := aInflection.irPerson;
+  aResult.prNumber2       := aInflection.irNumber2;
+
+  aResult.prAge           := aInflection.irAge;
+  aResult.prFrequency     := aInflection.irFrequency;
 end;
 
 function TLatin.parse(const aLine: string): TArray<string>;
@@ -381,53 +408,53 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
     result := aCore.substring(0, aCore.length - aTackOn.length);
   end;
 
-function tryPronominalMatch(const aCore: string; const aPrefix: string; const aPrefixSenses: string): TArray<TParseResultRec>;
-begin
-  result         := NIL;
-  var vLocalCore := aCore;
-  var vStemType  := identifyPronominalStem(vLocalCore);
+  function findPronominal(const aCore: string; const aPrefix: string; const aPrefixSenses: string): TArray<TParseResultRec>;
+  begin
+    result         := NIL;
+    var vLocalCore := aCore;
+    var vStemType  := identifyPronominalStem(vLocalCore);
 
-  case (vStemType = stNone) of TRUE: EXIT; end;
+    case (vStemType = stNone) of TRUE: EXIT; end;
 
-  var vTackOnRec := findPronominalPackon(vLocalCore);
-  var vTackOn    := string(vTackOnRec.trTackOn).trim;
-  var vContext   :  TPronominalContext;
+    var vTackOnRec := findPronominalPackon(vLocalCore);
+    var vTackOn    := string(vTackOnRec.trTackOn).trim;
+    var vContext   :  TPronominalContext;
 
-  vContext.pcFullWord := aWord;
-  vContext.pcPrefix   := aPrefix;
-  vContext.pcTackOn   := vTackOn;
-  vContext.prSenses   := string(vTackOnRec.trSenses).trim;
+    vContext.pcFullWord := aWord;
+    vContext.pcPrefix   := aPrefix;
+    vContext.pcTackOn   := string(vTackOnRec.trTackOn);
+    vContext.prSenses   := string(vTackOnRec.trSenses);
 
-  var vInflections := matchPronominalInflections(vLocalCore, vStemType, vContext);
+    var vInflections := findPronominalInflections(vLocalCore, vStemType, vContext);
 
-  case (length(vInflections) = 0) and (vTackOn <> '') of TRUE: begin
-    var vStripped := stripPronominalPackon(vLocalCore, vTackOn);
-    vInflections  := matchPronominalInflections(restorePronominalM(vStripped, vTackOn), vStemType, vContext);
-  end; end;
-
-  case (length(vInflections) > 0) of TRUE: begin
-    case (aPrefix <> '') of TRUE: begin
-      var vPrefixEntry : TParseResultRec;
-      vPrefixEntry.prWord        := aWord;
-      vPrefixEntry.prStem        := aPrefix;
-      vPrefixEntry.prExplanation := aPrefixSenses;
-      result                     := result + [vPrefixEntry];
+    case (length(vInflections) = 0) and (vTackOn <> '') of TRUE: begin
+      var vStripped := stripPronominalPackon(vLocalCore, vTackOn);
+      vInflections  := findPronominalInflections(restorePronominalM(vStripped, vTackOn), vStemType, vContext);
     end; end;
 
-    result := result + vInflections;
+    case (length(vInflections) > 0) of TRUE: begin
+      case (aPrefix <> '') of TRUE: begin
+        var vPrefixEntry : TParseResultRec;
+        vPrefixEntry.prWord        := aWord;
+        vPrefixEntry.prStem        := aPrefix;
+        vPrefixEntry.prExplanation := aPrefixSenses;
+        result                     := result + [vPrefixEntry];
+      end; end;
 
-    case (vTackOn <> '') of TRUE: begin
-      var vTackonEntry : TParseResultRec;
-      vTackonEntry.prWord           := aWord;
-      vTackonEntry.prStem           := vTackOn;
-      vTackonEntry.prPartOfSpeech   := trim(vTackOnRec.trTargetPartOfSpeech);
-      vTackonEntry.prClass          := vTackOnRec.trTargetClass;
-      vTackonEntry.prVariant        := vTackOnRec.trTargetVariant;
-      vTackonEntry.prExplanation    := vContext.prSenses;
-      result                        := result + [vTackonEntry];
+      result := result + vInflections;
+
+      case (vTackOn <> '') of TRUE: begin
+        var vTackonEntry              :  TParseResultRec;
+        vTackonEntry.prWord           := aWord;
+        vTackonEntry.prStem           := string(vTackOnRec.trTackOn);
+        vTackonEntry.prPartOfSpeech   := string(vTackOnRec.trTargetPartOfSpeech);
+        vTackonEntry.prClass          := vTackOnRec.trTargetClass;
+        vTackonEntry.prVariant        := vTackOnRec.trTargetVariant;
+        vTackonEntry.prExplanation    := vContext.prSenses;
+        result                        := result + [vTackonEntry];
+      end; end;
     end; end;
-  end; end;
-end;
+  end;
 
 begin
   result := NIL;
@@ -437,13 +464,13 @@ begin
       var vPrefix := string(vPrefixRec.prPrefix).trim;
       case aWord.startsWith(vPrefix) of TRUE: begin
         var vSenses := string(vPrefixRec.prSenses).trim;
-        result := result + tryPronominalMatch(aWord.substring(vPrefix.length), vPrefix, vSenses);
+        result := result + findPronominal(aWord.substring(vPrefix.length), vPrefix, vSenses);
         case (length(result) > 0) of TRUE: EXIT; end;
       end; end;
     end; end;
   end;
 
-  case (length(result) = 0) of TRUE: result := tryPronominalMatch(aWord, '', ''); end;
+  case (length(result) = 0) of TRUE: result := findPronominal(aWord, '', ''); end;
 end;
 function TLatin.parseRomanNumerals(const aWord: string): TArray<TParseResultRec>;
 begin
@@ -478,6 +505,7 @@ begin
 
   result := result + parseUniques(aWord);
   result := result + parsePronominals(aWord);
+  result := result + parseInflections(aWord);
   case length(result) = 0 of TRUE: result := result + parseEnclitics(aWord); end;
 end;
 
@@ -542,17 +570,22 @@ begin
 
       result := result + parseUniques(vStem);
 
-      var vEnclitic := default(TParseResultRec);
-      vEnclitic.prWord         := trim(vTackOn.trTackOn);
-      vEnclitic.prPartOfSpeech := trim(vTackOn.trTargetPartOfSpeech);
-      vEnclitic.prClass        := vTackOn.trTargetClass;
-      vEnclitic.prVariant      := vTackOn.trTargetVariant;
-      vEnclitic.prDegree       := trim(vTackOn.trDegree);
-      vEnclitic.prGender       := vTackOn.trNounGender;
-      vEnclitic.prNumber1      := vTackOn.trNounNumber;
-      vEnclitic.prExplanation  := trim(vTackOn.trSenses);
+      var vEnclitic             := default(TParseResultRec);
+      vEnclitic.prWord          := string(vTackOn.trTackOn);
+      vEnclitic.prPartOfSpeech  := string(vTackOn.trTargetPartOfSpeech);
+      vEnclitic.prClass         := vTackOn.trTargetClass;
+      vEnclitic.prVariant       := vTackOn.trTargetVariant;
+      vEnclitic.prDegree        := string(vTackOn.trDegree);
+      vEnclitic.prGender        := vTackOn.trNounGender;
+      vEnclitic.prNumber1       := vTackOn.trNounNumber;
+      vEnclitic.prExplanation   := vTackOn.trSenses;
 
       result := result + [vEnclitic]; end;end;end;
+end;
+
+function TLatin.parseInflections(const aWord: string): TArray<TParseResultRec>;
+begin
+  result := findInflections(aWord);
 end;
 
 end.
