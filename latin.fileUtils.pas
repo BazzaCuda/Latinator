@@ -36,6 +36,7 @@ function loadUniques      (const aFilePath: string): TArray<TUniquesRec>;
 implementation
 
 uses
+  system.generics.defaults,
   latin.miscUtils,
   _debugWindow;
 
@@ -50,7 +51,7 @@ function loadDictionary(const aFilePath: string; var aDictIx: TDictionary<string
   end;
 
 begin
-  expandArray(result, 39300); // less than the [currently-known] 39338 so we get an accurate entry count
+  expandArray(result, 40000);
   var vFixedDataSize := (pByte(@TDictLineRec(nil^).dictTranslation) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   aDictIx.clear;
@@ -94,6 +95,8 @@ begin
       addIndexEntry(result[vLineCount - 1].dictStem3, vLineCount - 1);
       addIndexEntry(result[vLineCount - 1].dictStem4, vLineCount - 1);
     end;
+
+    setLength(result, vLineCount);
   finally
     vReader.free;
   end;
@@ -101,7 +104,7 @@ end;
 
 function loadEsse(const aFilePath: string): TArray<TEsseRec>;
 begin
-  expandArray(result, 60);
+  expandArray(result, 100);
   var vFixedDataSize := sizeOf(TEsseRec) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -128,6 +131,8 @@ begin
 //                                      debugString('number',       string(result[vLineCount - 1].erNumber));
 //                                    end;end;
     end;
+
+    setLength(result, vLineCount);
   finally
     vReader.free;
   end;
@@ -135,7 +140,7 @@ end;
 
 function loadInflections(const aFilePath: string): TArray<TInflectionsRec>;
 begin
-  expandArray(result, 1800); // less than the [currently-known] 1890 so we get an accurate entry count
+  expandArray(result, 2000);
   var vFixedDataSize := (pByte(@TInflectionsRec(nil^).irComment) - pByte(NIL)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -174,6 +179,8 @@ begin
 //                                      debugString('comment',      string(result[vLineCount - 1].irComment));
 //                                    end;end;
     end;
+
+    setLength(result, vLineCount);
   finally
     vReader.free;
   end;
@@ -181,7 +188,7 @@ end;
 
 function loadPrefixes(const aFilePath: string): TArray<TPrefixRec>;
 begin
-  expandArray(result, 130); // less than the [currently-known] 135 so we get an accurate entry count
+  expandArray(result, 200);
   var vFixedDataSize := (pByte(@TPrefixRec(nil^).prSenses) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -207,6 +214,8 @@ begin
 //                                      debugString('senses',          string(result[vLineCount - 1].prSenses));
 //                                    end;end;
     end;
+
+    setLength(result, vLineCount);
   finally
     vReader.free;
   end;
@@ -214,7 +223,7 @@ end;
 
 function loadSuffixes(const aFilePath: string): TArray<TSuffixRec>;
 begin
-  expandArray(result, 170); // less than the [currently-known] 178 so we get an accurate entry count
+  expandArray(result, 200);
   var vFixedDataSize := (pByte(@TSuffixRec(nil^).srSenses) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -249,6 +258,14 @@ begin
 //                                      debugString('senses',          string(result[vLineCount - 1].srSenses));
 //                                    end;end;
     end;
+
+    setLength(result, vLineCount);
+    TArray.sort<TSuffixRec>(result, TComparer<TSuffixRec>.construct(
+      function(const aLeft: TSuffixRec; const aRight: TSuffixRec): integer
+      begin
+        result := string(aRight.srSuffix).trim.length - string(aLeft.srSuffix).trim.length;
+      end));
+
   finally
     vReader.free;
   end;
@@ -256,7 +273,7 @@ end;
 
 function loadTackOns(const aFilePath: string): TArray<TTackOnRec>;
 begin
-  expandArray(result, 29);
+  expandArray(result, 50);
   var vFixedDataSize := (pByte(@TTackOnRec(nil^).trSenses) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -285,6 +302,15 @@ begin
 //                                      debugString('senses',          string(result[vLineCount - 1].trSenses));
 //                                    end;end;
     end;
+
+    setLength(result, vLineCount);
+    TArray.sort<TTackOnRec>(result, TComparer<TTackOnRec>.construct(
+      function(const aLeft: TTackOnRec; const aRight: TTackOnRec): integer
+      begin
+        result := string(aRight.trTackOn).trim.length - string(aLeft.trTackOn).trim.length;
+      end));
+
+
   finally
     vReader.free;
   end;
@@ -292,7 +318,7 @@ end;
 
 function loadUniques(const aFilePath: string): TArray<TUniquesRec>;
 begin
-  expandArray(result, 74);
+  expandArray(result, 100);
   var vFixedDataSize := (pByte(@TUniquesRec(nil^).urTranslation) - pByte(nil)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
@@ -333,6 +359,8 @@ begin
 //                                      debugString('translation',  string(result[vLineCount - 1].urTranslation));
 //                                    end;end;
     end;
+
+    setLength(result, vLineCount);
   finally
     vReader.free;
   end;
