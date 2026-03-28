@@ -66,10 +66,10 @@ type
   private
     function  formatParseResults  (const aParseResults:   TArray<TParseResultRec>): TArray<string>;
 
-    function  parseEnclitics      (const aWord: string):  TArray<TParseResultRec>;
-    function  parseRomanNumerals  (const aWord: string):  TArray<TParseResultRec>;
-    function  parseUniques        (const aWord: string):  TArray<TParseResultRec>;
-    function  parseWord           (const aWord: string):  TArray<TParseResultRec>;
+    function  parseEnclitics      (const aWord: string):                                                    TArray<TParseResultRec>;
+    function  parseRomanNumerals  (const aWord: string):                                                    TArray<TParseResultRec>;
+    function  parseUniques        (const aWord: string):                                                    TArray<TParseResultRec>;
+    function  parseWord           (const aWord: string; const aNextWord: string; var bNextUsed: boolean):   TArray<TParseResultRec>;
 //    function  stripEnclitic(var aWord: string): TArray<string>;
   public
     constructor Create;
@@ -232,14 +232,26 @@ begin
 //      vLine       := vLine.replace('v', 'u').replace('j', 'i');
   var vLine       := cleanSentences   (aLine);
   var vSentences  := extractSentences (vLine);
+  var i           := -1;
+  var vNextUsed   :  boolean;
 
   for var vSentence in vSentences do  begin
                                         var vWords := vSentence.split([' '], TStringSplitOptions.ExcludeEmpty);
 
                                         for var vWord in vWords do  begin
-                                                                      result := result + formatParseResults(parseWord(vWord));
+                                                                      inc(i);
+
+                                                                      case vNextUsed of TRUE: begin
+                                                                                                vNextUsed := FALSE;
+                                                                                                CONTINUE; end;end;
+
+                                                                      var vNextWord := '';
+                                                                      case i < length(vWords) of   TRUE: vNextWord := vWords[i]; end;
+
+                                                                      result := result + formatParseResults(parseWord(vWord, vNextWord, vNextUsed));
+
                                                                       expandArray(result);
-                                                                      result[length(result) - 1] := ''; end;end;
+                                                                      result[high(result)] := ''; end;end;
 end;
 
 function TLatin.parseRomanNumerals(const aWord: string): TArray<TParseResultRec>;
@@ -266,7 +278,7 @@ begin
   result[0].prExplanation   := format('%s as a ROMAN NUMERAL;', [result[0].prNumValue]);
 end;
 
-function TLatin.parseWord(const aWord: string): TArray<TParseResultRec>;
+function TLatin.parseWord(const aWord: string; const aNextWord: string; var bNextUsed: boolean): TArray<TParseResultRec>;
 begin
   result := NIL;
   // otherwise the Delphi compiler optimises the following calls to
