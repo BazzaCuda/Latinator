@@ -74,7 +74,7 @@ type
     function  findPronominalPackon(const aCore: string): TTackOnRec;
     function  findPronominalStem(const aWord: string; var aPrefix: string; var aStemType: TStemType; var aCore: string): boolean;
     function  matchPronominalInflections(const aCore: string; const aStemType: TStemType): TArray<TParseResultRec>;
-    procedure enrichPronominalResults(var aResults: TArray<TParseResultRec>; const aFullWord, aPrefix: string; const aPackon: TTackOnRec);
+    function  enrichPronominalResults(const aResults: TArray<TParseResultRec>; const aFullWord, aPrefix: string; const aPackon: TTackOnRec): TArray<TParseResultRec>;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -231,26 +231,27 @@ end;
 
 //===== PARSING =====
 
-procedure TLatin.enrichPronominalResults(var aResults: TArray<TParseResultRec>; const aFullWord, aPrefix: string; const aPackon: TTackOnRec);
+function TLatin.enrichPronominalResults(const aResults: TArray<TParseResultRec>; const aFullWord, aPrefix: string; const aPackon: TTackOnRec): TArray<TParseResultRec>;
 begin
-  for var vIndex := low(aResults) to high(aResults) do begin
-    aResults[vIndex].prWord := aFullWord;
+  result := aResults;
+  var vIndex := -1;
+  for var vMatch in aResults do begin
+    inc(vIndex);
+    result[vIndex].prWord := aFullWord;
 
     var vExplanation := 'Pronominal: ';
-    case aPrefix <> '' of
-      TRUE: vExplanation := vExplanation + '[' + aPrefix + '-] + ';
-    end;
+    case aPrefix <> '' of TRUE: vExplanation := vExplanation + '[' + aPrefix + '-] + '; end;
 
-    vExplanation := vExplanation + '[' + aResults[vIndex].prStem + '] + [-' + aResults[vIndex].prEnding + ']';
+    vExplanation := vExplanation + '[' + vMatch.prStem + '] + [-' + vMatch.prEnding + ']';
 
-    case aPackon.trTackOn[1] <> #0 of
+    case string(aPackon.trTackOn).trim <> '' of
       TRUE: begin
         var vTackOn := string(aPackon.trTackOn).trim;
         vExplanation := vExplanation + ' + [-' + vTackOn + '] (' + string(aPackon.trSenses).trim + ')';
       end;
     end;
 
-    aResults[vIndex].prExplanation := vExplanation;
+    result[vIndex].prExplanation := vExplanation;
   end;
 end;
 
@@ -371,17 +372,14 @@ begin
   case findPronominalStem(aWord, vPrefix, vStemType, vCore) of FALSE: EXIT; end;
 
   var vMatches := matchPronominalInflections(vCore, vStemType);
-  var vPackon := findPronominalPackon(vCore);
+  var vPackon  := findPronominalPackon(vCore);
 
-  case (length(vMatches) = 0) and (vPackon.trTackOn[1] <> #0) of
+  case (length(vMatches) = 0) and (string(vPackon.trTackOn).trim <> '') of
     TRUE: vMatches := matchPronominalInflections(stripPronominalPackon(vCore, vPackon), vStemType);
   end;
 
   case length(vMatches) > 0 of
-    TRUE: begin
-      enrichPronominalResults(vMatches, aWord, vPrefix, vPackon);
-      result := vMatches;
-    end;
+    TRUE: result := enrichPronominalResults(vMatches, aWord, vPrefix, vPackon);
   end;
 end;
 
