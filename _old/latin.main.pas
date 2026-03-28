@@ -71,10 +71,10 @@ type
     function  parseRomanNumerals  (const aWord: string):                                                    TArray<TParseResultRec>;
     function  parseUniques        (const aWord: string):                                                    TArray<TParseResultRec>;
     function  parseWord           (const aWord: string; const aNextWord: string; var bNextUsed: boolean):   TArray<TParseResultRec>;
-    function  findPronominalPackon(const aCore: string): TTackOnRec;
-    function  findPronominalStem(const aWord: string; var aPrefix: string; var aStemType: TStemType; var aCore: string): boolean;
-    function  matchPronominalInflections(const aCore: string; const aStemType: TStemType): TArray<TParseResultRec>;
-    procedure enrichPronominalResults(var aResults: TArray<TParseResultRec>; const aFullWord, aPrefix: string; const aPackon: TTackOnRec);
+    function findPronominalPackon(const aCore: string; var aPackon: TSuffixRec): boolean;
+    function findPronominalStem(const aWord: string; var aPrefix: string; var aStemType: TStemType; var aCore: string): boolean;
+    function matchPronominalInflections(const aCore: string; const aStemType: TStemType): TArray<TParseResultRec>;
+    procedure enrichPronominalResults(var aResults: TArray<TParseResultRec>; const aFullWord, aPrefix: string; const aPackon: TSuffixRec; const aHasPackon: boolean);
   public
     constructor Create;
     destructor  Destroy; override;
@@ -230,8 +230,7 @@ begin
 end;
 
 //===== PARSING =====
-
-procedure TLatin.enrichPronominalResults(var aResults: TArray<TParseResultRec>; const aFullWord, aPrefix: string; const aPackon: TTackOnRec);
+procedure TLatin.enrichPronominalResults(var aResults: TArray<TParseResultRec>; const aFullWord, aPrefix: string; const aPackon: TSuffixRec; const aHasPackon: boolean);
 begin
   for var vIndex := low(aResults) to high(aResults) do begin
     aResults[vIndex].prWord := aFullWord;
@@ -243,10 +242,10 @@ begin
 
     vExplanation := vExplanation + '[' + aResults[vIndex].prStem + '] + [-' + aResults[vIndex].prEnding + ']';
 
-    case aPackon.trTackOn[1] <> #0 of
+    case aHasPackon of
       TRUE: begin
-        var vTackOn := string(aPackon.trTackOn).trim;
-        vExplanation := vExplanation + ' + [-' + vTackOn + '] (' + string(aPackon.trSenses).trim + ')';
+        var vSuffix := string(aPackon.srSuffix).trim;
+        vExplanation := vExplanation + ' + [-' + vSuffix + '] (' + string(aPackon.srSenses).trim + ')';
       end;
     end;
 
@@ -270,15 +269,19 @@ begin
   end;
 end;
 
-function TLatin.findPronominalPackon(const aCore: string): TTackOnRec;
+function TLatin.findPronominalPackon(const aCore: string; var aPackon: TSuffixRec): boolean;
 begin
-  fillChar(result, sizeOf(result), 0);
-  for var vTackOn in FTackOns do begin
-    var vTargetPartOfSpeech := string(vTackOn.trTargetPartOfSpeech).trim;
-    var vTackOnString := string(vTackOn.trTackOn).trim;
+  result := FALSE;
+  for var vSuffixRec in FSuffixes do
+  begin
+    var vTargetPOS := string(vSuffixRec.srTargetPartOfSpeech).trim;
+    var vSuffix    := string(vSuffixRec.srSuffix).trim;
 
-    case (vTargetPartOfSpeech = 'PACK') and aCore.endsWith(vTackOnString) of
-      TRUE: EXIT(vTackOn);
+    case (vTargetPOS = 'PACK') and aCore.endsWith(vSuffix) of
+      TRUE: begin
+        aPackon := vSuffixRec;
+        EXIT(TRUE);
+      end;
     end;
   end;
 end;
@@ -302,13 +305,12 @@ begin
     else  EXIT;
   end;
 
-  for var vInflection in FInflections do begin
-    var vInflectionPartOfSpeech := string(vInflection.irPartOfSpeech).trim;
-    case (vInflectionPartOfSpeech = PRON_POS) and (vInflection.irClass = PRON_CLASS) and (vInflection.irStemID = vTargetID) of
-      TRUE: begin
+  for var vInflection in FInflections do
+  begin
+    var vInflectionPartOfSpeech := trim(string(vInflection.irPartOfSpeech));
+    case (vInflectionPartOfSpeech = PRON_POS) and (vInflection.irClass = PRON_CLASS) and (vInflection.irStemID = vTargetID) of  TRUE: begin
         var vEnding := string(vInflection.irSuffix).trim;
-        case aCore = (vStemString + vEnding) of
-          TRUE: begin
+        case aCore = (vStemString + vEnding) of TRUE: begin
             var vParseResult: TParseResultRec;
             vParseResult.prPartOfSpeech := PRON_POS;
             vParseResult.prClass        := vInflection.irClass;
@@ -321,7 +323,7 @@ begin
             vParseResult.prAge          := vInflection.irAge;
             vParseResult.prFrequency    := vInflection.irFrequency;
             result := result + [vParseResult];
-          end; end; end; end; end;
+        end; end; end; end; end;
 end;
 
 function TLatin.parse(const aLine: string): TArray<string>;
@@ -356,10 +358,10 @@ end;
 
 function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
 
-  function stripPronominalPackon(const aCore: string; const aPackon: TTackOnRec): string;
+  function stripPronominalSuffix(const aCore: string; const aPackon: TSuffixRec): string;
   begin
-    var vTackOnLength := string(aPackon.trTackOn).trim.length;
-    result := aCore.substring(0, aCore.length - vTackOnLength);
+    var vSuffixLength := string(aPackon.srSuffix).trim.length;
+    result := aCore.substring(0, aCore.length - vSuffixLength);
   end;
 
 begin
@@ -371,15 +373,21 @@ begin
   case findPronominalStem(aWord, vPrefix, vStemType, vCore) of FALSE: EXIT; end;
 
   var vMatches := matchPronominalInflections(vCore, vStemType);
-  var vPackon := findPronominalPackon(vCore);
+  var vPackon: TSuffixRec;
+  var vHasPackon := FALSE;
 
-  case (length(vMatches) = 0) and (vPackon.trTackOn[1] <> #0) of
-    TRUE: vMatches := matchPronominalInflections(stripPronominalPackon(vCore, vPackon), vStemType);
+  case length(vMatches) = 0 of
+    TRUE: begin
+      vHasPackon := findPronominalPackon(vCore, vPackon);
+      case vHasPackon of
+        TRUE: vMatches := matchPronominalInflections(stripPronominalSuffix(vCore, vPackon), vStemType);
+      end;
+    end;
   end;
 
   case length(vMatches) > 0 of
     TRUE: begin
-      enrichPronominalResults(vMatches, aWord, vPrefix, vPackon);
+      enrichPronominalResults(vMatches, aWord, vPrefix, vPackon, vHasPackon);
       result := vMatches;
     end;
   end;

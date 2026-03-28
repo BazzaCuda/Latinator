@@ -24,6 +24,8 @@ interface
 type
   TVoid = record end;
 
+{ Whitaker's Words Data }
+
   TVerbNounAdjAdvRec = packed record
     case integer of
       0: (dictVNA:        array[1..12] of char;); // the variable fields at columns
@@ -258,7 +260,6 @@ type
     urTranslation:      string;
   end;
 
-
 { Lewis & Short }
 
   TWRecord = packed record
@@ -296,9 +297,16 @@ type
     srID:      array[0..47] of char;
   end;
 
-implementation
+{ Latin-English Parsing }
 
-uses
-  system.sysUtils;
+  TStemType = (stNone, stQu, stCu);
+
+  TPronominalMap = record
+    pmSearchString: string;
+    pmPrefix:       string;
+    pmStemType:     TStemType;
+  end;
+
+implementation
 
 end.

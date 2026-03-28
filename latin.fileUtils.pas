@@ -136,7 +136,7 @@ end;
 function loadInflections(const aFilePath: string): TArray<TInflectionsRec>;
 begin
   expandArray(result, 1800); // less than the [currently-known] 1890 so we get an accurate entry count
-  var vFixedDataSize := (pByte(@TInflectionsRec(nil^).irComment) - pByte(nil)) div sizeOf(char);
+  var vFixedDataSize := (pByte(@TInflectionsRec(nil^).irComment) - pByte(NIL)) div sizeOf(char);
   var vLineCount := 0;
   var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
   try
@@ -154,23 +154,24 @@ begin
       case length(vLine) > vFixedDataSize of TRUE: result[vLineCount - 1].irComment := copy(vLine, vFixedDataSize + 1, length(vLine)); end;
 
 //      case vLineCount < 44 of TRUE: begin
-//                                      debugString('partOfSpeech', string(FInflections[vLineCount - 1].irPartOfSpeech));
-//                                      debugString('class',        string(FInflections[vLineCount - 1].irClass));
-//                                      debugString('variant',      string(FInflections[vLineCount - 1].irVariant));
-//                                      debugString('case',         string(FInflections[vLineCount - 1].irCase));
-//                                      debugString('number',       string(FInflections[vLineCount - 1].irNumber1));
-//                                      debugString('gender',       string(FInflections[vLineCount - 1].irGender));
-//                                      debugString('degree/tense', string(FInflections[vLineCount - 1].irDegreeTense));
-//                                      debugString('voice',        string(FInflections[vLineCount - 1].irVoice));
-//                                      debugString('mood',         string(FInflections[vLineCount - 1].irMood));
-//                                      debugString('person',       string(FInflections[vLineCount - 1].irPerson));
-//                                      debugString('number2',      string(FInflections[vLineCount - 1].irNumber2));
-//                                      debugString('stemID',       string(FInflections[vLineCount - 1].irStemID));
-//                                      debugString('suffix len',   string(FInflections[vLineCount - 1].irSuffixLength));
-//                                      debugString('suffix',       string(FInflections[vLineCount - 1].irSuffix));
-//                                      debugString('age',          string(FInflections[vLineCount - 1].irAge));
-//                                      debugString('frequency',    string(FInflections[vLineCount - 1].irFrequency));
-//                                      debugString('comment',      string(FInflections[vLineCount - 1].irComment));
+//      case string(result[vLineCount - 1].irPartOfSpeech).trim = 'PRON' of TRUE: begin
+//                                      debugString('partOfSpeech', string(result[vLineCount - 1].irPartOfSpeech));
+//                                      debugString('class',        string(result[vLineCount - 1].irClass));
+//                                      debugString('variant',      string(result[vLineCount - 1].irVariant));
+//                                      debugString('case',         string(result[vLineCount - 1].irCase));
+//                                      debugString('number',       string(result[vLineCount - 1].irNumber1));
+//                                      debugString('gender',       string(result[vLineCount - 1].irGender));
+//                                      debugString('degree/tense', string(result[vLineCount - 1].irDegreeTense));
+//                                      debugString('voice',        string(result[vLineCount - 1].irVoice));
+//                                      debugString('mood',         string(result[vLineCount - 1].irMood));
+//                                      debugString('person',       string(result[vLineCount - 1].irPerson));
+//                                      debugString('number2',      string(result[vLineCount - 1].irNumber2));
+//                                      debugString('stemID',       string(result[vLineCount - 1].irStemID));
+//                                      debugString('suffix len',   string(result[vLineCount - 1].irSuffixLength));
+//                                      debugString('suffix',       string(result[vLineCount - 1].irSuffix));
+//                                      debugString('age',          string(result[vLineCount - 1].irAge));
+//                                      debugString('frequency',    string(result[vLineCount - 1].irFrequency));
+//                                      debugString('comment',      string(result[vLineCount - 1].irComment));
 //                                    end;end;
     end;
   finally
@@ -307,30 +308,30 @@ begin
       move(vLine[1], result[vLineCount - 1], vFixedDataSize * sizeOf(char));
       case length(vLine) > vFixedDataSize of TRUE: result[vLineCount - 1].urTranslation := copy(vLine, vFixedDataSize + 1, length(vLine)); end;
 
-      case vLineCount = 17 of TRUE: begin
-                                      debugString('word',         string(result[vLineCount - 1].urWord));
-                                      debugString('partOfSpeech', string(result[vLineCount - 1].urPartOfSpeech));
-                                      debugString('class',        string(result[vLineCount - 1].urClass));
-                                      debugString('variant',      string(result[vLineCount - 1].urVariant));
-                                      debugString('case',         string(result[vLineCount - 1].urCase));
-                                      debugString('number1',      string(result[vLineCount - 1].urNumber1));
-                                      debugString('nounGender',   string(result[vLineCount - 1].urNounGender));
-                                      debugString('nounType',     string(result[vLineCount - 1].urNounType));
-                                      debugString('Degree',       string(result[vLineCount - 1].urDegree));
-                                      debugString('pronounType',  string(result[vLineCount - 1].urPronounType));
-                                      debugString('tense',        string(result[vLineCount - 1].urTense));
-                                      debugString('voice',        string(result[vLineCount - 1].urVoice));
-                                      debugString('mood',         string(result[vLineCount - 1].urMood));
-                                      debugString('person',       string(result[vLineCount - 1].urPerson));
-                                      debugString('number2',      string(result[vLineCount - 1].urNumber2));
-                                      debugString('verbType',     string(result[vLineCount - 1].urVerbType));
-                                      debugString('age',          string(result[vLineCount - 1].urAge));
-                                      debugString('area',         string(result[vLineCount - 1].urArea));
-                                      debugString('geography',    string(result[vLineCount - 1].urGeography));
-                                      debugString('frequency',    string(result[vLineCount - 1].urFrequency));
-                                      debugString('source',       string(result[vLineCount - 1].urSource));
-                                      debugString('translation',  string(result[vLineCount - 1].urTranslation));
-                                    end;end;
+//      case vLineCount = 17 of TRUE: begin
+//                                      debugString('word',         string(result[vLineCount - 1].urWord));
+//                                      debugString('partOfSpeech', string(result[vLineCount - 1].urPartOfSpeech));
+//                                      debugString('class',        string(result[vLineCount - 1].urClass));
+//                                      debugString('variant',      string(result[vLineCount - 1].urVariant));
+//                                      debugString('case',         string(result[vLineCount - 1].urCase));
+//                                      debugString('number1',      string(result[vLineCount - 1].urNumber1));
+//                                      debugString('nounGender',   string(result[vLineCount - 1].urNounGender));
+//                                      debugString('nounType',     string(result[vLineCount - 1].urNounType));
+//                                      debugString('Degree',       string(result[vLineCount - 1].urDegree));
+//                                      debugString('pronounType',  string(result[vLineCount - 1].urPronounType));
+//                                      debugString('tense',        string(result[vLineCount - 1].urTense));
+//                                      debugString('voice',        string(result[vLineCount - 1].urVoice));
+//                                      debugString('mood',         string(result[vLineCount - 1].urMood));
+//                                      debugString('person',       string(result[vLineCount - 1].urPerson));
+//                                      debugString('number2',      string(result[vLineCount - 1].urNumber2));
+//                                      debugString('verbType',     string(result[vLineCount - 1].urVerbType));
+//                                      debugString('age',          string(result[vLineCount - 1].urAge));
+//                                      debugString('area',         string(result[vLineCount - 1].urArea));
+//                                      debugString('geography',    string(result[vLineCount - 1].urGeography));
+//                                      debugString('frequency',    string(result[vLineCount - 1].urFrequency));
+//                                      debugString('source',       string(result[vLineCount - 1].urSource));
+//                                      debugString('translation',  string(result[vLineCount - 1].urTranslation));
+//                                    end;end;
     end;
   finally
     vReader.free;

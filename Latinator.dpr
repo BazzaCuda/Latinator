@@ -45,31 +45,26 @@ uses
   madListProcesses,
   madListModules,
   {$endif }
-
-//
   winApi.windows,
-//
   system.classes,
   system.generics.collections,
   system.syncObjs,
   system.sysUtils,
-//
   Vcl.Forms,
   vcl.dialogs,
   Vcl.Styles,
   Vcl.Themes,
-//
-  _debugWindow        in '_debugWindow\_debugWindow.pas',
-//
-  view.formMain       in 'view.formMain.pas',
-  latin.main          in 'latin.main.pas',
-  latin.types         in 'latin.types.pas',
-  latin.fileUtils     in 'latin.fileUtils.pas',
-  latin.consoleUtils  in 'latin.consoleUtils.pas',
-  latin.stringUtils   in 'latin.stringUtils.pas',
-  latin.charUtils     in 'latin.charUtils.pas',
-  latin.miscUtils     in 'latin.miscUtils.pas',
-  latin.LewisAndShort in 'latin.LewisAndShort.pas';
+  _debugWindow in '_debugWindow\_debugWindow.pas',
+  view.formMain in 'view.formMain.pas',
+  latin.main in 'latin.main.pas',
+  latin.types in 'latin.types.pas',
+  latin.fileUtils in 'latin.fileUtils.pas',
+  latin.consoleUtils in 'latin.consoleUtils.pas',
+  latin.stringUtils in 'latin.stringUtils.pas',
+  latin.charUtils in 'latin.charUtils.pas',
+  latin.miscUtils in 'latin.miscUtils.pas',
+  latin.LewisAndShort in 'latin.LewisAndShort.pas',
+  latin.consts in 'latin.consts.pas';
 
 var
   vAsGUI: boolean = FALSE;
@@ -312,8 +307,8 @@ begin
     application.mainFormOnTaskbar := TRUE;
     TStyleManager.trySetStyle ('Charcoal Dark Slate');
 
-    application.createForm    (TFormMain, FormMain);
-    application.run;
+    Application.CreateForm(TFormMain, FormMain);
+  application.run;
   end;end;
 
   case vAsGUI of  FALSE: begin
