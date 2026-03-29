@@ -25,6 +25,10 @@ uses
   latin.types;
 
 const
+  MAX_STEM_SIZE = 18;
+
+  ENCLITIC_TACKONS: array[0..3] of string = ('que', 'ne', 've', 'est');
+
   PRONOMINAL_MAPS: array[0..5] of TPronominalMap = (
     (pmSearchString: 'aliqu'; pmPrefix: 'ali'; pmStemType: stQu),
     (pmSearchString: 'alicu'; pmPrefix: 'ali'; pmStemType: stCu),
@@ -34,7 +38,6 @@ const
     (pmSearchString: 'cu';    pmPrefix: '';    pmStemType: stCu)
   );
 
-  MAX_STEM_SIZE = 18;
 
 implementation
 

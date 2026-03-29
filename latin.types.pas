@@ -36,6 +36,8 @@ type
           dictNounType:   char;
          );
       3: (dictDegree:     array[1..12] of char;);
+      4: (dictNumKind:    array[1..4] of char;
+          dictNumValue:   array[1..8] of char;);
   end;
 
   { Primary Part-of-Speech record mapping the DictLine.Lat file structure }

@@ -55,7 +55,7 @@ type
   strict private
     FDataPath:      string;
     FDictLines:     TArray<TDictLineRec>;
-    FDictIx:        TDictionary<string, integer>;
+    FDictIx:        TDictionary<string, TArray<integer>>;
     FEsse:          TArray<TEsseRec>;
     FInflections:   TArray<TInflectionsRec>;
     FLewisAndShort: ILewisAndShort;
@@ -66,7 +66,7 @@ type
   private
     function  formatParseResults  (const aParseResults:   TArray<TParseResultRec>): TArray<string>;
 
-    function   findDictStems              (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
+    function  findDictStems               (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
     function  findInflections             (const aWord: string):                                                                    TArray<TParseResultRec>;
     function  findPronominalInflections   (const aCore: string; const aStemType: TStemType; const aContext: TPronominalContext):    TArray<TParseResultRec>;
     function  findPronominalPackon        (const aCore: string):                                                                    TTackOnRec;
@@ -105,7 +105,7 @@ end;
 constructor TLatin.Create;
 begin
   inherited create;
-  FDictIx := TDictionary<string, integer>.create(48750); // less than the [currently-known] 48759 so we get an accurate entry count
+  FDictIx := TDictionary<string, TArray<integer>>.create(50000); // less than the [currently-known] 48759 so we get an accurate entry count
 end;
 
 destructor TLatin.Destroy;
@@ -128,7 +128,7 @@ begin
 
                                               expandArray(result, vIxDelta);
 
-                                              result[length(result) - vIxDelta] := format('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s ',  [
+                                              result[length(result) - vIxDelta] := format('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s',  [
                                                                                                                     vParseResult.prWord   + #9#9,
                                                                                                                     vParseResult.prPartOfSpeech,
                                                                                                                     vParseResult.prStem   + #9,
@@ -147,12 +147,13 @@ begin
                                                                                                                     vParseResult.prPerson,
                                                                                                                     vParseResult.prNumber2,
                                                                                                                     vParseResult.prVerbType,
+                                                                                                                    vParseResult.prNumKind,
+                                                                                                                    vParseResult.prNumValue,
                                                                                                                     vParseResult.prAge,
                                                                                                                     vParseResult.prArea,
                                                                                                                     vParseResult.prGeography,
                                                                                                                     vParseResult.prFrequency,
-                                                                                                                    vParseResult.prSource,
-                                                                                                                    vParseResult.prNumKind
+                                                                                                                    vParseResult.prSource
                                                                                                                   ]);
                                               case vIxDelta = 2 of TRUE: result[length(result) - 1] := vParseResult.prExplanation; end;end;
 end;
@@ -239,61 +240,64 @@ begin
   result := NIL;
 
   for var vParseResult in aParseResults do begin
-    var vTrimmedStem := vParseResult.prStem.trim;
-    var vIx: integer;
+    var vTrimmedStem := lowerCase(vParseResult.prStem.trim);
+    var vIndices: TArray<integer>;
 
-    case FDictIx.tryGetValue(vTrimmedStem, vIx) of TRUE: begin
-      while (vIx < length(FDictLines)) do begin
+    case FDictIx.tryGetValue(vTrimmedStem, vIndices) of TRUE: begin
+      for var vIx in vIndices do begin
         var vDictLine := FDictLines[vIx];
         var vDictStem := '';
-
-        case vParseResult.prStemID of
-          '1': vDictStem := string(vDictLine.dictStem1).trim;
-          '2': vDictStem := string(vDictLine.dictStem2).trim;
-          '3': vDictStem := string(vDictLine.dictStem3).trim;
-          '4': vDictStem := string(vDictLine.dictStem4).trim;
-        end;
-
-        case (vDictStem <> vTrimmedStem) of TRUE: BREAK; end;
 
         var vDictPOS := string(vDictLine.dictPartOfSpeech).trim;
         var vTargetPOS := vParseResult.prPartOfSpeech.trim;
 
-        case (vTargetPOS = 'VPAR') or (vTargetPOS = 'SUPI') of TRUE: vTargetPOS := 'V'; end;
-        case (vTargetPOS = 'PACK') of TRUE: vTargetPOS := 'PRON'; end;
+        case vParseResult.prStemID of
+          '1': vDictStem := string(vDictLine.dictStem1).trim;
+          '2': begin
+                 vDictStem := string(vDictLine.dictStem2).trim;
+                 case (vDictStem = '') and (vDictPOS = 'V') or (vDictPOS = 'N') or (vDictPOS = 'ADJ') or (vDictPOS = 'NUM') of TRUE: vDictStem := string(vDictLine.dictStem1).trim; end;
+               end;
+          '3': vDictStem := string(vDictLine.dictStem3).trim;
+          '4': vDictStem := string(vDictLine.dictStem4).trim;
+        end;
 
-        case (vDictPOS = vTargetPOS) of TRUE: begin
-          case (vDictLine.dictClass = vParseResult.prClass) or (vDictLine.dictClass = '0') of TRUE: begin
-            case (vDictLine.dictVariant = vParseResult.prVariant) or (vDictLine.dictVariant = '0') of TRUE: begin
+        case (vDictStem <> vTrimmedStem) of TRUE: CONTINUE; end;
+
+        case (vTargetPOS = 'VPAR') or (vTargetPOS = 'SUPI') of TRUE: vTargetPOS := 'V';     end;
+        case (vTargetPOS = 'PACK')                          of TRUE: vTargetPOS := 'PRON';  end;
+        case (vTargetPOS = 'ADJ') and (vDictPOS = 'NUM')    of TRUE: vTargetPOS := 'NUM';   end;
+
+        case (vDictPOS = vTargetPOS)
+          and ((vDictLine.dictClass   = vParseResult.prClass)   or (vDictLine.dictClass   = '0')  or (vParseResult.prClass    = '0'))
+          and ((vDictLine.dictVariant = vParseResult.prVariant) or (vDictLine.dictVariant = '0')  or (vParseResult.prVariant  = '0')) of TRUE: begin
+
               var vResult := vParseResult;
 
-              vResult.prAge := vDictLine.dictAge;
-              vResult.prArea := vDictLine.dictArea;
-              vResult.prGeography := vDictLine.dictGeography;
-              vResult.prFrequency := vDictLine.dictFrequency;
-              vResult.prSource := vDictLine.dictSource;
+              vResult.prAge         := vDictLine.dictAge;
+              vResult.prArea        := vDictLine.dictArea;
+              vResult.prGeography   := vDictLine.dictGeography;
+              vResult.prFrequency   := vDictLine.dictFrequency;
+              vResult.prSource      := vDictLine.dictSource;
 
               case (vDictPOS = 'N') of TRUE: begin
-                vResult.prGender := vDictLine.dictVNARec.dictNounGender;
-                vResult.prNounType := vDictLine.dictVNARec.dictNounType;
-              end; end;
+                vResult.prGender    := vDictLine.dictVNARec.dictNounGender;
+                vResult.prNounType  := vDictLine.dictVNARec.dictNounType;
+              end;end;
 
-              case (vDictPOS = 'V') of TRUE: vResult.prVerbType := string(vDictLine.dictVNARec.dictCaseType); end;
-              case (vDictPOS = 'ADJ') of TRUE: vResult.prDegree := string(vDictLine.dictVNARec.dictDegree); end;
-              case (vDictPOS = 'PREP') of TRUE: vResult.prCase := string(vDictLine.dictVNARec.dictCaseType); end;
-              case (vDictPOS = 'ADV') of TRUE: vResult.prDegree := string(vDictLine.dictVNARec.dictCaseType); end;
-              case (vDictPOS = 'PRON') of TRUE: vResult.prPronounType := string(vDictLine.dictVNARec.dictCaseType); end;
-              case (vDictPOS = 'NUM') of TRUE: vResult.prNumKind := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'V')     of TRUE:  vResult.prVerbType    := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'ADJ')   of TRUE:  vResult.prDegree      := string(vDictLine.dictVNARec.dictDegree);   end;
+              case (vDictPOS = 'PREP')  of TRUE:  vResult.prCase        := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'ADV')   of TRUE:  vResult.prDegree      := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'PRON')  of TRUE:  vResult.prPronounType := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'NUM')   of TRUE:  begin
+                                                    vResult.prNumKind   := string(vDictLine.dictVNARec.dictNumKind);
+                                                    vResult.prNumValue  := string(vDictline.dictVNARec.dictNumValue); end;end;
 
               vResult.prExplanation := string(vDictLine.dictTranslation);
               result := result + [vResult];
-            end; end;
-          end; end;
-        end; end;
-
-        inc(vIx);
+        end;end;
       end;
-    end; end;
+    end;end;
   end;
 end;
 
@@ -314,6 +318,9 @@ begin
       vResult.prStem    := vStem;
       vResult.prEnding  := string(vInflection.irSuffix);
       vResult.prStemID  := vInflection.irStemID;
+
+      if (vResult.prEnding.trim = 'it') then
+        debugString('Suffix -it found with StemID', '[' + vResult.prStemID + ']');
 
       mapInflectionToResult(vInflection, vResult);
 
@@ -409,8 +416,13 @@ begin
   aResult.prNumber1       := aInflection.irNumber1;
   aResult.prGender        := aInflection.irGender;
 
-  aResult.prDegree        := string(aInflection.irDegreeTense);
-  aResult.prTense         := string(aInflection.irDegreeTense);
+  var vPOS := trim(aResult.prPartOfSpeech);
+
+  aResult.prDegree  := '';
+  aResult.prTense   := '';
+
+  case (vPOS = 'ADJ') or (vPOS = 'ADV') or (vPOS = 'NUM') of TRUE: aResult.prDegree := string(aInflection.irDegreeTense); end;
+  case (vPOS = 'V')   or (vPOS = 'VPAR')                  of TRUE: aResult.prTense  := string(aInflection.irDegreeTense); end;
 
   aResult.prVoice         := string(aInflection.irVoice);
   aResult.prMood          := string(aInflection.irMood);
@@ -621,30 +633,43 @@ end;
 function TLatin.parseEnclitics(const aWord: string): TArray<TParseResultRec>;
 begin
   result := NIL;
-  var vWord := cleanVJJ(lowerCase(removeMacrons(aWord)));
+//  var vWord := cleanVJJ(lowerCase(removeMacrons(aWord)));
+  var vWord := lowerCase(removeMacrons(aWord));
 
-  for var i := 0 to min(3, high(FTackOns)) do begin
-    var vTackOn := FTackOns[i];
-    var vEnding := cleanVJJ(trim(vTackOn.trTackOn));
+  for var vTackOn in FTackOns do begin
+//    var vEnding := cleanVJJ(string(vTackOn.trTackOn).trim);
+    var vEnding := string(vTackOn.trTackOn).trim;
 
-    case (length(vWord) > length(vEnding)) and (vWord.endsWith(vEnding)) of   TRUE: begin
-      var vStem := copy(vWord, 1, length(vWord) - length(vEnding));
+    var vEnclitic := FALSE;
+    for var vEncliticString in ENCLITIC_TACKONS do
+      case (vEncliticString = vEnding) of TRUE: begin vEnclitic := TRUE; BREAK; end;end;
 
-      case (vEnding = 'que') and (length(vStem) < 2) of   TRUE: CONTINUE; end;
+    case vEnclitic of TRUE: begin
+      case (vWord.length > vEnding.length) and (vWord.endsWith(vEnding)) of TRUE: begin
+        var vStem := vWord.substring(0, vWord.length - vEnding.length);
 
-      result := result + parseUniques(vStem);
+        case (vEnding = 'que') and (vStem.length < 2) of TRUE: CONTINUE; end;
 
-      var vEnclitic             := default(TParseResultRec);
-      vEnclitic.prWord          := string(vTackOn.trTackOn);
-      vEnclitic.prPartOfSpeech  := string(vTackOn.trTargetPartOfSpeech);
-      vEnclitic.prClass         := vTackOn.trTargetClass;
-      vEnclitic.prVariant       := vTackOn.trTargetVariant;
-      vEnclitic.prDegree        := string(vTackOn.trDegree);
-      vEnclitic.prGender        := vTackOn.trNounGender;
-      vEnclitic.prNumber1       := vTackOn.trNounNumber;
-      vEnclitic.prExplanation   := vTackOn.trSenses;
+        var vNextUsed := FALSE;
+        result := result + parseWord(vStem, '', vNextUsed);
 
-      result := result + [vEnclitic]; end;end;end;
+        case (length(result) > 0) of TRUE: begin
+          var vEncliticRec            := default(TParseResultRec);
+          vEncliticRec.prWord         := string(vTackOn.trTackOn);
+          vEncliticRec.prPartOfSpeech := string(vTackOn.trTargetPartOfSpeech);
+          vEncliticRec.prClass        := vTackOn.trTargetClass;
+          vEncliticRec.prVariant      := vTackOn.trTargetVariant;
+          vEncliticRec.prDegree       := string(vTackOn.trDegree);
+          vEncliticRec.prGender       := vTackOn.trNounGender;
+          vEncliticRec.prNumber1      := vTackOn.trNounNumber;
+          vEncliticRec.prExplanation  := vTackOn.trSenses;
+
+          result := result + [vEncliticRec];
+          EXIT;
+        end;end;
+      end;end;
+    end;end;
+  end;
 end;
 
 function TLatin.parseInflections(const aWord: string): TArray<TParseResultRec>;

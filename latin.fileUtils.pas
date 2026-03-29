@@ -25,7 +25,7 @@ uses
   system.sysUtils, system.classes, system.generics.collections,
   latin.types;
 
-function loadDictionary   (const aFilePath: string; var aDictIx: TDictionary<string, integer>): TArray<TDictLineRec>;
+function loadDictionary   (const aFilePath: string; var aDictIx: TDictionary<string, TArray<integer>>): TArray<TDictLineRec>;
 function loadEsse         (const aFilePath: string): TArray<TEsseRec>;
 function loadInflections  (const aFilePath: string): TArray<TInflectionsRec>;
 function loadPrefixes     (const aFilePath: string): TArray<TPrefixRec>;
@@ -40,14 +40,19 @@ uses
   latin.miscUtils,
   _debugWindow;
 
-function loadDictionary(const aFilePath: string; var aDictIx: TDictionary<string, integer>): TArray<TDictLineRec>;
+function loadDictionary(const aFilePath: string; var aDictIx: TDictionary<string, TArray<integer>>): TArray<TDictLineRec>;
 
   function addIndexEntry(const aStem: array of char; aIndex: integer): TVoid;
   var
     vStemKey: string;
+    vIndices: TArray<integer>;
   begin
-    vStemKey := trim(aStem);
-    case (vStemKey <> '') and (vStemKey <> 'zzz') of TRUE: aDictIx.addOrSetValue(vStemKey, aIndex); end;
+    vStemKey := lowerCase(trim(aStem));
+    case (vStemKey <> '') and (vStemKey <> 'zzz') of TRUE: begin
+      case aDictIx.tryGetValue(vStemKey, vIndices) of  TRUE:  begin
+                                                                for var vExisting in vIndices do case (vExisting = aIndex) of TRUE: EXIT; end;
+                                                                aDictIx.addOrSetValue(vStemKey, vIndices + [aIndex]); end;
+                                                      FALSE: aDictIx.add(vStemKey, [aIndex]); end;end;end;
   end;
 
 begin
@@ -97,6 +102,7 @@ begin
     end;
 
     setLength(result, vLineCount);
+    aDictIx.trimExcess;
   finally
     vReader.free;
   end;
