@@ -291,6 +291,24 @@ begin
                                                                                 drawMenuBar (vConsoleWindow); end;end;end;end;
 end;
 
+function setConsoleWidth(aWidth: integer): TVoid;
+begin
+  var vHandle := getStdHandle(STD_OUTPUT_HANDLE);
+  case (vHandle = INVALID_HANDLE_VALUE) of TRUE: EXIT; end;
+
+  var vBuffer: TCoord;
+  vBuffer.X := aWidth;
+  vBuffer.Y := 9000;
+  case setConsoleScreenBufferSize(vHandle, vBuffer) of FALSE: EXIT; end;
+
+  var vRect: TSmallRect;
+  vRect.Left   := 0;
+  vRect.Top    := 0;
+  vRect.Right  := aWidth - 1;
+  vRect.Bottom := 40;
+  setConsoleWindowInfo(vHandle, TRUE, vRect);
+end;
+
 begin
   setupRunMode;
 
@@ -316,6 +334,7 @@ begin
     //disableConsoleCloseButton;
     setConsoleCtrlHandler   (@handleConsoleClose, TRUE);
 
+    setConsoleWidth (130);
     setConsoleTitle         ('Latinator');
     centerWindow            (getConsoleWindow);
     applyUserConsoleColors  (getStdHandle(STD_OUTPUT_HANDLE));
