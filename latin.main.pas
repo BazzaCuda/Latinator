@@ -66,6 +66,7 @@ type
   private
     function  formatParseResults  (const aParseResults:   TArray<TParseResultRec>): TArray<string>;
 
+    function   findDictStems              (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
     function  findInflections             (const aWord: string):                                                                    TArray<TParseResultRec>;
     function  findPronominalInflections   (const aCore: string; const aStemType: TStemType; const aContext: TPronominalContext):    TArray<TParseResultRec>;
     function  findPronominalPackon        (const aCore: string):                                                                    TTackOnRec;
@@ -232,6 +233,69 @@ begin
 end;
 
 //===== PARSING =====
+
+function TLatin.findDictStems(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+begin
+  result := NIL;
+
+  for var vParseResult in aParseResults do begin
+    var vTrimmedStem := vParseResult.prStem.trim;
+    var vIx: integer;
+
+    case FDictIx.tryGetValue(vTrimmedStem, vIx) of TRUE: begin
+      while (vIx < length(FDictLines)) do begin
+        var vDictLine := FDictLines[vIx];
+        var vDictStem := '';
+
+        case vParseResult.prStemID of
+          '1': vDictStem := string(vDictLine.dictStem1).trim;
+          '2': vDictStem := string(vDictLine.dictStem2).trim;
+          '3': vDictStem := string(vDictLine.dictStem3).trim;
+          '4': vDictStem := string(vDictLine.dictStem4).trim;
+        end;
+
+        case (vDictStem <> vTrimmedStem) of TRUE: BREAK; end;
+
+        var vDictPOS := string(vDictLine.dictPartOfSpeech).trim;
+        var vTargetPOS := vParseResult.prPartOfSpeech.trim;
+
+        case (vTargetPOS = 'VPAR') or (vTargetPOS = 'SUPI') of TRUE: vTargetPOS := 'V'; end;
+        case (vTargetPOS = 'PACK') of TRUE: vTargetPOS := 'PRON'; end;
+
+        case (vDictPOS = vTargetPOS) of TRUE: begin
+          case (vDictLine.dictClass = vParseResult.prClass) or (vDictLine.dictClass = '0') of TRUE: begin
+            case (vDictLine.dictVariant = vParseResult.prVariant) or (vDictLine.dictVariant = '0') of TRUE: begin
+              var vResult := vParseResult;
+
+              vResult.prAge := vDictLine.dictAge;
+              vResult.prArea := vDictLine.dictArea;
+              vResult.prGeography := vDictLine.dictGeography;
+              vResult.prFrequency := vDictLine.dictFrequency;
+              vResult.prSource := vDictLine.dictSource;
+
+              case (vDictPOS = 'N') of TRUE: begin
+                vResult.prGender := vDictLine.dictVNARec.dictNounGender;
+                vResult.prNounType := vDictLine.dictVNARec.dictNounType;
+              end; end;
+
+              case (vDictPOS = 'V') of TRUE: vResult.prVerbType := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'ADJ') of TRUE: vResult.prDegree := string(vDictLine.dictVNARec.dictDegree); end;
+              case (vDictPOS = 'PREP') of TRUE: vResult.prCase := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'ADV') of TRUE: vResult.prDegree := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'PRON') of TRUE: vResult.prPronounType := string(vDictLine.dictVNARec.dictCaseType); end;
+              case (vDictPOS = 'NUM') of TRUE: vResult.prNumKind := string(vDictLine.dictVNARec.dictCaseType); end;
+
+              vResult.prExplanation := string(vDictLine.dictTranslation);
+              result := result + [vResult];
+            end; end;
+          end; end;
+        end; end;
+
+        inc(vIx);
+      end;
+    end; end;
+  end;
+end;
 
 function TLatin.findInflections(const aWord: string): TArray<TParseResultRec>;
 begin
@@ -585,7 +649,7 @@ end;
 
 function TLatin.parseInflections(const aWord: string): TArray<TParseResultRec>;
 begin
-  result := findInflections(aWord);
+  result := findDictStems(findInflections(aWord));
 end;
 
 end.
