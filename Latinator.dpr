@@ -334,7 +334,7 @@ begin
     //disableConsoleCloseButton;
     setConsoleCtrlHandler   (@handleConsoleClose, TRUE);
 
-    setConsoleWidth (130);
+    setConsoleWidth (150);
     setConsoleTitle         ('Latinator');
     centerWindow            (getConsoleWindow);
     applyUserConsoleColors  (getStdHandle(STD_OUTPUT_HANDLE));
