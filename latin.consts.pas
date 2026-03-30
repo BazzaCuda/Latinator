@@ -25,7 +25,8 @@ uses
   latin.types;
 
 const
-  MAX_STEM_SIZE = 18;
+  MAX_STEM      = 18;
+  SIZE_OF_CHAR  =  2;
 
   ENCLITIC_TACKONS: array[0..3] of string = ('que', 'ne', 've', 'est');
 

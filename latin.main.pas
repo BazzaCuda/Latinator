@@ -130,6 +130,7 @@ end;
 
 function TLatin.removeDuplicateResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
 // DO NOT SORT!!!
+// This function must remain dumb and oblivious of what it is doing and why
 begin
   result := NIL;
   for var vParseResult in aParseResults do begin
@@ -172,18 +173,18 @@ end;
 
 function TLatin.formatParseResults(const aParseResults: TArray<TParseResultRec>): TArray<string>;
 const
-  C_POS   = 6;  // Matches dictPartOfSpeech: array[1..6]
-  C_END   = 11; // Matches irSuffix: array[1..11]
-  C_FLG   = 1;  // Matches char fields
-  C_CASE  = 3;  // Matches irCase: array[1..3]
-  C_DEG   = 5;  // Matches irDegreeTense: array[1..5]
-  C_PRON  = 6;  // Matches urPronounType: array[1..6]
-  C_TENSE = 5;  // Matches irDegreeTense: array[1..5]
-  C_VOICE = 7;  // Matches irVoice: array[1..7]
-  C_MOOD  = 3;  // Matches irMood: array[1..3]
-  C_VTYPE = 8;  // Matches urVerbType: array[1..8]
-  C_NKIND = 4;  // Matches dictNumKind: array[1..4]
-  C_NVAL  = 8;  // Matches dictNumValue: array[1..8]
+  WIDTH_POS       =  6;  // Matches dictPartOfSpeech: array[1..6]
+  WIDTH_ENDING    = 11;  // Matches irSuffix:         array[1..11]
+  WIDTH_FLAG      =  1;  // Matches char fields
+  WIDTH_CASE      =  3;  // Matches irCase:           array[1..3]
+  WIDTH_DEGREE    =  8;  // Matches dictDegree:       array[1..8]
+  WIDTH_PRON      =  6;  // Matches urPronounType:    array[1..6]
+  WIDTH_TENSE     =  5;  // Matches irDegreeTense:    array[1..5]
+  WIDTH_VOICE     =  7;  // Matches irVoice:          array[1..7]
+  WIDTH_MOOD      =  3;  // Matches irMood:           array[1..3]
+  WIDTH_VTYPE     =  8;  // Matches urVerbType:       array[1..8]
+  WIDTH_NUMKIND   =  4;  // Matches dictNumKind:      array[1..4]
+  WIDTH_NUMVAL    =  8;  // Matches dictNumValue:     array[1..8]
 begin
   result := NIL;
   var vUniqueResults := removeDuplicateResults(aParseResults);
@@ -199,32 +200,32 @@ begin
 
     result[length(result) - vIxDelta] := format(
       '%-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s', [
-      MAX_STEM_SIZE, vParseResult.prWord,
-      C_POS,         vParseResult.prPartOfSpeech,
-      MAX_STEM_SIZE, vParseResult.prStem,
-      C_END,         vParseResult.prEnding,
-      C_FLG,         vParseResult.prClass,
-      C_FLG,         vParseResult.prVariant,
-      C_CASE,        vParseResult.prCase,
-      C_FLG,         vParseResult.prNumber1,
-      C_FLG,         vParseResult.prGender,
-      C_FLG,         vParseResult.prStemID,
-      C_FLG,         vParseResult.prNounType,
-      C_DEG,         vParseResult.prDegree,
-      C_PRON,        vParseResult.prPronounType,
-      C_TENSE,       vParseResult.prTense,
-      C_VOICE,       vParseResult.prVoice,
-      C_MOOD,        vParseResult.prMood,
-      C_FLG,         vParseResult.prPerson,
-      C_FLG,         vParseResult.prNumber2,
-      C_VTYPE,       vParseResult.prVerbType,
-      C_FLG,         vParseResult.prAge,
-      C_FLG,         vParseResult.prArea,
-      C_FLG,         vParseResult.prGeography,
-      C_FLG,         vParseResult.prFrequency,
-      C_FLG,         vParseResult.prSource,
-      C_NKIND,       vParseResult.prNumKind,
-      C_NVAL,        vParseResult.prNumValue
+      MAX_STEM,       vParseResult.prWord,
+      WIDTH_POS,      vParseResult.prPartOfSpeech,
+      MAX_STEM,       vParseResult.prStem,
+      WIDTH_ENDING,   vParseResult.prEnding,
+      WIDTH_FLAG,     vParseResult.prClass,
+      WIDTH_FLAG,     vParseResult.prVariant,
+      WIDTH_CASE,     vParseResult.prCase,
+      WIDTH_FLAG,     vParseResult.prNumber1,
+      WIDTH_FLAG,     vParseResult.prGender,
+      WIDTH_FLAG,     vParseResult.prStemID,
+      WIDTH_FLAG,     vParseResult.prNounType,
+      WIDTH_DEGREE,   vParseResult.prDegree,
+      WIDTH_PRON,     vParseResult.prPronounType,
+      WIDTH_TENSE,    vParseResult.prTense,
+      WIDTH_VOICE,    vParseResult.prVoice,
+      WIDTH_MOOD,     vParseResult.prMood,
+      WIDTH_FLAG,     vParseResult.prPerson,
+      WIDTH_FLAG,     vParseResult.prNumber2,
+      WIDTH_VTYPE,    vParseResult.prVerbType,
+      WIDTH_FLAG,     vParseResult.prAge,
+      WIDTH_FLAG,     vParseResult.prArea,
+      WIDTH_FLAG,     vParseResult.prGeography,
+      WIDTH_FLAG,     vParseResult.prFrequency,
+      WIDTH_FLAG,     vParseResult.prSource,
+      WIDTH_NUMKIND,  vParseResult.prNumKind,
+      WIDTH_NUMVAL,   vParseResult.prNumValue
     ]);
 
     case (vIxDelta = 2) of TRUE: result[length(result) - 1] := vParseResult.prExplanation; end;
@@ -330,33 +331,33 @@ function TLatin.findDictStems(const aParseResults: TArray<TParseResultRec>): TAr
 begin
   result := NIL;
   for var vReq in aParseResults do begin
-    var vTrimmedReqStem := lowerCase(vReq.prStem.trim);
+    var vStem := lowerCase(vReq.prStem.trim);
     var vIndices: TArray<integer>;
 
-    case FDictIx.tryGetValue(vTrimmedReqStem, vIndices) of TRUE: begin
+    case FDictIx.tryGetValue(vStem, vIndices) of TRUE: begin
       for var vIx in vIndices do begin
         var vDictLine := FDictLines[vIx];
-        var vDictPOS_Trim := string(vDictLine.dictPartOfSpeech).trim;
+        var vDictPOS := string(vDictLine.dictPartOfSpeech).trim;
 
         for var vIdNo := 1 to 4 do begin
           var vIdChar := char(vIdNo + 48);
           // Only check this stem ID if it's the one requested (or wildcard '0')
           case (vReq.prStemID <> '0') and (vReq.prStemID <> vIdChar) of TRUE: CONTINUE; end;
 
-          var vDictStem_Trim := '';
+          var vDictStem := '';
           case vIdNo of
-            1: vDictStem_Trim := string(vDictLine.dictStem1).trim;
+            1: vDictStem := string(vDictLine.dictStem1).trim;
             2: begin
-                 vDictStem_Trim := string(vDictLine.dictStem2).trim;
-                 case (vDictStem_Trim = '') and ((vDictPOS_Trim = 'V') or (vDictPOS_Trim = 'N') or (vDictPOS_Trim = 'ADJ') or (vDictPOS_Trim = 'NUM')) of
-                   TRUE: vDictStem_Trim := string(vDictLine.dictStem1).trim;
+                 vDictStem := string(vDictLine.dictStem2).trim;
+                 case (vDictStem = '') and ((vDictPOS = 'V') or (vDictPOS = 'N') or (vDictPOS = 'ADJ') or (vDictPOS = 'NUM')) of
+                   TRUE: vDictStem := string(vDictLine.dictStem1).trim;
                  end;
                end;
-            3: vDictStem_Trim := string(vDictLine.dictStem3).trim;
-            4: vDictStem_Trim := string(vDictLine.dictStem4).trim;
+            3: vDictStem := string(vDictLine.dictStem3).trim;
+            4: vDictStem := string(vDictLine.dictStem4).trim;
           end;
 
-          case (vDictStem_Trim <> vTrimmedReqStem) of TRUE: CONTINUE; end;
+          case (vDictStem <> vStem) of TRUE: CONTINUE; end;
 
           var vResult := vReq;
           vResult.prAge := vDictLine.dictAge;
@@ -369,7 +370,7 @@ begin
           vResult.prClass := vDictLine.dictClass;      // Ensure result carries Dictionary Class
           vResult.prVariant := vDictLine.dictVariant; // Ensure result carries Dictionary Variant
 
-          case (vDictPOS_Trim = 'N') of TRUE: begin
+          case (vDictPOS = 'N') of TRUE: begin
             vResult.prGender := vDictLine.dictVNARec.dictNounGender;
             vResult.prNounType := vDictLine.dictVNARec.dictNounType;
           end;end;
@@ -379,7 +380,7 @@ begin
 
           // CRITICAL: Once this entry matches for the requested StemID,
           // do not look for further stem matches within the SAME dictionary entry.
-          BREAK;
+          // BREAK;
         end;
       end;
     end;end;
@@ -397,10 +398,10 @@ begin
     case (vSuffix = '') of   TRUE:  vStem := aWord;
                             FALSE:  case aWord.endsWith(vSuffix) of TRUE: vStem := aWord.substring(0, aWord.length - vSuffix.length); end;end;
 
-    case (vStem <> '') and (vStem.length <= MAX_STEM_SIZE) of TRUE: begin
+    case (vStem <> '') and (vStem.length <= MAX_STEM) of TRUE: begin
       var vResult       := default(TParseResultRec);
       vResult.prWord    := aWord;
-      vResult.prStem    := vStem;
+      vResult.prStem    := vStem.padRight(MAX_STEM);
       vResult.prEnding  := string(vInflection.irSuffix);
       vResult.prStemID  := vInflection.irStemID;
 
@@ -425,7 +426,7 @@ begin
 
   for var vResultRec in vResultRecs do begin
     var vPrefixCandidate := vResultRec;
-    case (vPrefixTargetPOS <> 'X') of TRUE: vPrefixCandidate.prPartOfSpeech := vPrefixTargetPOS; end;
+    case (vPrefixTargetPOS <> 'X') of TRUE: vPrefixCandidate.prPartOfSpeech := string(aPrefixRec.prTargetPartOfSpeech); end;
 
     result := result + findDictStems([vPrefixCandidate]);
   end;
@@ -473,7 +474,7 @@ begin
         vParseResult.prPartOfSpeech := string(vInflection.irPartOfSpeech);;
         vParseResult.prClass        := vInflection.irClass;
         vParseResult.prVariant      := vInflection.irVariant;
-        vParseResult.prStem         := vStemString;
+        vParseResult.prStem         := vStemString.padRight(MAX_STEM);
         vParseResult.prEnding       := string(vInflection.irSuffix);
         vParseResult.prCase         := string(vInflection.irCase);
         vParseResult.prNumber1      := vInflection.irNumber1;
@@ -520,11 +521,11 @@ begin
 
   var vPOS := trim(aResult.prPartOfSpeech);
 
-  aResult.prDegree  := '';
-  aResult.prTense   := '';
+  aResult.prDegree  := ''.padRight(length(aInflection.irDegreeTense));
+  aResult.prTense   := ''.padRight(length(aInflection.irDegreeTense));
 
-  case (vPOS = 'ADJ') or (vPOS = 'ADV') or (vPOS = 'NUM') of TRUE: aResult.prDegree := string(aInflection.irDegreeTense); end;
-  case (vPOS = 'V')   or (vPOS = 'VPAR')                  of TRUE: aResult.prTense  := string(aInflection.irDegreeTense); end;
+  case (vPOS = 'ADJ') or (vPOS = 'ADV') or (vPOS = 'NUM') of TRUE: aResult.prDegree := aInflection.irDegreeTense; end;
+  case (vPOS = 'V')   or (vPOS = 'VPAR')                  of TRUE: aResult.prTense  := aInflection.irDegreeTense; end;
 
   aResult.prVoice         := string(aInflection.irVoice);
   aResult.prMood          := string(aInflection.irMood);
@@ -581,11 +582,12 @@ begin
       case (vMappedTarget = 'PACK') of TRUE: vMappedTarget := 'PRON'; end;
       case (vMappedTarget = 'ADJ') and (vDictPOS = 'NUM') of TRUE: vMappedTarget := 'NUM'; end;
 
-      // Filtering logic
-      var vClassMatch := (vCandidate.prClass = vReq.prClass) or (vCandidate.prClass = '0') or (vReq.prClass = '0');
-      var vVarMatch   := (vCandidate.prVariant = vReq.prVariant) or (vCandidate.prVariant = '0') or (vReq.prVariant = '0');
+      // Filtering logic: Added StemID verification to ensure dictionary hits match the inflection's required Stem Index
+      var vClassMatch  := (vCandidate.prClass = vReq.prClass) or (vCandidate.prClass = '0') or (vReq.prClass = '0');
+      var vVarMatch    := (vCandidate.prVariant = vReq.prVariant) or (vCandidate.prVariant = '0') or (vReq.prVariant = '0');
+      var vStemIDMatch := (vReq.prStemID = '0') or (vCandidate.prStemID = vReq.prStemID);
 
-      case (vDictPOS = vMappedTarget) and vClassMatch and vVarMatch of
+      case (vDictPOS = vMappedTarget) and vClassMatch and vVarMatch and vStemIDMatch of
         TRUE: begin
           var vFinal := vCandidate;
           // Carry over the specific morphological tags from the inflection engine
@@ -653,34 +655,43 @@ function TLatin.parsePrefixes(const aParseResults: TArray<TParseResultRec>): TAr
 begin
   result := NIL;
   for var vPrefixRec in FPrefixes do begin
-    var vPrefix_Trim := string(vPrefixRec.prPrefix).trim;
-    case (vPrefix_Trim = '') of TRUE: CONTINUE; end;
+    var vPrefix := string(vPrefixRec.prPrefix).trim;
+    case (vPrefix = '') of TRUE: CONTINUE; end;
 
     for var vParseResult in aParseResults do begin
-      var vStem_Trim := vParseResult.prStem.trim;
-      var vPrefixLen := vPrefix_Trim.length;
-      case (vStem_Trim.length > vPrefixLen) and equalLatin(vStem_Trim.substring(0, vPrefixLen), vPrefix_Trim) of FALSE: CONTINUE; end;
+      var vInflectPOS := vParseResult.prPartOfSpeech.trim;
+      var vTargetPOS  := string(vPrefixRec.prTargetPartOfSpeech).trim;
+
+     // Amendment to allow recursive calls with wildcard 'X' to pass the filter
+      case (vTargetPOS <> 'X') and (vTargetPOS <> '') and (vInflectPOS <> 'X') and (vInflectPOS <> vTargetPOS) of TRUE: CONTINUE; end;
+
+      var vStem := vParseResult.prStem.trim;
+      var vPrefixLen := vPrefix.length;
+      case (vStem.length > vPrefixLen) and equalLatin(vStem.substring(0, vPrefixLen), vPrefix) of FALSE: CONTINUE; end;
 
       case (vPrefixRec.prConnector <> ' ') of TRUE: begin
-        case (vStem_Trim[vPrefixLen + 1] <> vPrefixRec.prConnector) of TRUE: CONTINUE; end;
+        case (vStem[vPrefixLen + 1] <> vPrefixRec.prConnector) of TRUE: CONTINUE; end;
       end;end;
 
       var vStrippedRec := vParseResult;
-      vStrippedRec.prStem := vStem_Trim.substring(vPrefixLen);
+      vStrippedRec.prStem := vStem.substring(vPrefixLen).padRight(MAX_STEM);
       vStrippedRec.prStemID := '0';
+      vStrippedRec.prPartOfSpeech := string(vPrefixRec.prSourcePartOfSpeech);
 
       var vCandidates := findDictStems([vStrippedRec]);
 
       case (length(vCandidates) > 0) of TRUE: begin
         var vValidated: TArray<TParseResultRec> := NIL;
-        var vRootPOS_Trim := string(vPrefixRec.prSourcePartOfSpeech).trim;
+        var vSourcePOS := string(vPrefixRec.prSourcePartOfSpeech).trim;
 
         for var vCandidate in vCandidates do begin
-          var vCPOS_Trim := vCandidate.prPartOfSpeech.trim;
-          case (vCPOS_Trim = 'N') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
-          case (vCPOS_Trim = 'ADJ') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
+          var vCPOS := vCandidate.prPartOfSpeech.trim;
+          case (vCPOS = 'N') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
+          case (vCPOS = 'ADJ') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
 
-          var vIsMatch := (vRootPOS_Trim = vCPOS_Trim) or ((vRootPOS_Trim = 'X') and ((vCPOS_Trim = 'N') or (vCPOS_Trim = 'PRON') or (vCPOS_Trim = 'ADJ') or (vCPOS_Trim = 'ADV') or (vCPOS_Trim = 'V')));
+          var vIsMatch := (vCPOS = vSourcePOS)
+                       or ((vCPOS = 'PACK') and (vSourcePOS = 'PRON'))
+                       or (vSourcePOS = 'X');
 
           case vIsMatch of TRUE: begin
             var vTrans := vCandidate;
@@ -694,10 +705,11 @@ begin
         case (length(vValidated) > 0) of TRUE: begin
           var vPrefixResult := default(TParseResultRec);
           vPrefixResult.prWord := vParseResult.prWord;
-          vPrefixResult.prStem := string(vPrefixRec.prPrefix);
+          vPrefixResult.prPartOfSpeech := 'PREFIX';
+          vPrefixResult.prStem := string(vPrefixRec.prPrefix).padRight(MAX_STEM);
           vPrefixResult.prExplanation := vPrefixRec.prSenses;
-          result := [vPrefixResult] + vValidated;
-          EXIT;
+          result := result + [vPrefixResult] + vValidated;
+          // EXIT; // removed to allow multiple grammatical interpretations
         end;end;
       end;end;
     end;
@@ -752,7 +764,7 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
       case (aPrefix <> '') of TRUE: begin
         var vPrefixEntry : TParseResultRec;
         vPrefixEntry.prWord        := aWord;
-        vPrefixEntry.prStem        := aPrefix;
+        vPrefixEntry.prStem        := aPrefix.padRight(MAX_STEM);
         vPrefixEntry.prExplanation := aPrefixSenses;
         result                     := result + [vPrefixEntry];
       end; end;
@@ -762,7 +774,7 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
       case (vTackOn <> '') of TRUE: begin
         var vTackonEntry              :  TParseResultRec;
         vTackonEntry.prWord           := aWord;
-        vTackonEntry.prStem           := string(vTackOnRec.trTackOn);
+        vTackonEntry.prStem           := string(vTackOnRec.trTackOn).padRight(MAX_STEM);
         vTackonEntry.prPartOfSpeech   := string(vTackOnRec.trTargetPartOfSpeech);
         vTackonEntry.prClass          := vTackOnRec.trTargetClass;
         vTackonEntry.prVariant        := vTackOnRec.trTargetVariant;
@@ -799,14 +811,14 @@ begin
   expandArray(result);
 
   result[0].prWord          := aWord;
-  result[0].prPartOfSpeech  := 'NUM';
+  result[0].prPartOfSpeech  := 'NUM'.padRight(length(FDictLines[0].dictPartOfSpeech));
   result[0].prClass         := '2';
   result[0].prVariant       := '0';
   result[0].prCase          := 'X';
   result[0].prNumber1       := 'X';
   result[0].prGender        := 'X';
-  result[0].prNumValue      := intToStr(romanNumeralsToInt(vWord));
-  result[0].prNumKind       := 'CARD';
+  result[0].prNumValue      := intToStr(romanNumeralsToInt(vWord)).padRight(length(FDictLines[0].dictVNARec.dictNumValue));
+  result[0].prNumKind       := 'CARD'.padRight(length(FDictLines[0].dictVNARec.dictNumKind));
   result[0].prAge           := 'X';
   result[0].prFrequency     := 'A';
   result[0].prExplanation   := format('%s as a ROMAN NUMERAL;', [result[0].prNumValue]);
@@ -816,20 +828,30 @@ function TLatin.parseSuffixes(const aParseResults: TArray<TParseResultRec>): TAr
 begin
   result := NIL;
   for var vSuffixRec in FSuffixes do begin
-    var vSuffix_Trim := string(vSuffixRec.srSuffix).trim;
-    case (vSuffix_Trim = '') of TRUE: CONTINUE; end;
+    var vSuffix := string(vSuffixRec.srSuffix).trim;
+    case (vSuffix = '') of TRUE: CONTINUE; end;
 
-    for var vParseResult in aParseResults do begin
-      var vStem_Trim := vParseResult.prStem.trim;
-      case (vStem_Trim.length > vSuffix_Trim.length) and vStem_Trim.endsWith(vSuffix_Trim) of FALSE: CONTINUE; end;
+     for var vParseResult in aParseResults do begin
+      var vInflectPOS := vParseResult.prPartOfSpeech.trim;
+      var vTargetPOS  := string(vSuffixRec.srTargetPartOfSpeech).trim;
+
+      // Allow recursive calls where POS is 'X' to pass through the target filter
+      case (vTargetPOS <> 'X') and (vInflectPOS <> 'X') and (vInflectPOS <> vTargetPOS) of TRUE: CONTINUE; end;
+
+      // Filter by the Suffix's target classification (Class and Variant)
+      case (vSuffixRec.srTargetClass <> '0') and (vParseResult.prClass <> vSuffixRec.srTargetClass) of TRUE: CONTINUE; end;
+      case (vSuffixRec.srTargetVariant <> '0') and (vParseResult.prVariant <> vSuffixRec.srTargetVariant) of TRUE: CONTINUE; end;
+      var vStem := vParseResult.prStem.trim;
+      case (vStem.length > vSuffix.length) and vStem.endsWith(vSuffix) of FALSE: CONTINUE; end;
 
       case (vSuffixRec.srConnector <> ' ') of TRUE: begin
-        case (vStem_Trim[vStem_Trim.length - vSuffix_Trim.length] <> vSuffixRec.srConnector) of TRUE: CONTINUE; end;
+        case (vStem[vStem.length - vSuffix.length] <> vSuffixRec.srConnector) of TRUE: CONTINUE; end;
       end;end;
 
       var vStrippedRec := vParseResult;
-      vStrippedRec.prStem := vStem_Trim.substring(0, vStem_Trim.length - vSuffix_Trim.length);
+      vStrippedRec.prStem := vStem.substring(0, vStem.length - vSuffix.length).padRight(MAX_STEM);
       vStrippedRec.prStemID := '0';
+      vStrippedRec.prPartOfSpeech := string(vSuffixRec.srSourcePartOfSpeech);
 
       var vCandidates := findDictStems([vStrippedRec]);
       var vPrefixActive := FALSE;
@@ -841,50 +863,57 @@ begin
 
       case (length(vCandidates) > 0) of TRUE: begin
         var vValidated: TArray<TParseResultRec> := NIL;
-        var vSourcePOS_Trim := string(vSuffixRec.srSourcePartOfSpeech).trim;
+        var vSourcePOS := string(vSuffixRec.srSourcePartOfSpeech).trim;
 
         for var vCandidate in vCandidates do begin
-          case (vPrefixActive) and (vCandidate.prPartOfSpeech.trim = '') of TRUE: begin
+          var vCPOS := vCandidate.prPartOfSpeech.trim;
+
+          case (vCPOS = 'PREFIX') or (vCPOS = 'SUFFIX') of TRUE: begin
             vValidated := vValidated + [vCandidate];
             CONTINUE;
           end;end;
 
-          var vCPOS_Trim := vCandidate.prPartOfSpeech.trim;
-          case (vCPOS_Trim = 'N') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
-          case (vCPOS_Trim = 'ADJ') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
+          case (vCPOS = 'N') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
+          case (vCPOS = 'ADJ') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
 
-          var vIsMatch := (vSourcePOS_Trim = vCPOS_Trim) or ((vCPOS_Trim = 'PACK') and (vSourcePOS_Trim = 'PRON')) or (vSourcePOS_Trim = 'X');
+          var vIsMatch := (vCPOS = vSourcePOS)
+                       or ((vCPOS = 'PACK') and (vSourcePOS = 'PRON'))
+                       or (vSourcePOS = 'X');
 
           case vIsMatch of TRUE: begin
             var vStemMatch := (vSuffixRec.srSourceStemID = '0') or (vCandidate.prStemID = vSuffixRec.srSourceStemID)
-                 or ((vCandidate.prStemID = '0') and ((vCPOS_Trim = 'N') or (vCPOS_Trim = 'ADJ') or (vCPOS_Trim = 'V'))
-                 and ((vSuffixRec.srSourceStemID = '1') or (vSuffixRec.srSourceStemID = '2')));
+                  or ((vCandidate.prStemID = '0') and ((vCPOS = 'N') or (vCPOS = 'ADJ') or (vCPOS = 'V'))
+                  and ((vSuffixRec.srSourceStemID = '1') or (vSuffixRec.srSourceStemID = '2')));
 
             case vStemMatch of TRUE: begin
               var vTrans := vCandidate;
               case (string(vSuffixRec.srTargetPartOfSpeech).trim <> 'X') and (string(vSuffixRec.srTargetPartOfSpeech).trim <> '') of
                 TRUE: vTrans.prPartOfSpeech := string(vSuffixRec.srTargetPartOfSpeech);
               end;
-              vTrans.prClass := vSuffixRec.srTargetClass;
-              vTrans.prVariant := vSuffixRec.srTargetVariant;
-              vTrans.prStemID := vSuffixRec.srTargetStemID;
-              vTrans.prDegree := string(vSuffixRec.srDegree);
+              vTrans.prClass    := vSuffixRec.srTargetClass;
+              vTrans.prVariant  := vSuffixRec.srTargetVariant;
+              vTrans.prStemID   := vSuffixRec.srTargetStemID;
+              vTrans.prDegree   := string(vSuffixRec.srDegree);
               vTrans.prVerbType := vSuffixRec.srVerbType;
               vTrans.prNumValue := vSuffixRec.srNumValue;
-              vTrans.prGender := vSuffixRec.srNounGender;
-              vTrans.prNumber1 := vSuffixRec.srNounNumber;
+
+              // Only overwrite Gender/Number if the suffix record contains an explicit value (not ' ' or 'X')
+              case (vSuffixRec.srNounGender <> ' ') and (vSuffixRec.srNounGender <> 'X') of TRUE: vTrans.prGender   := vSuffixRec.srNounGender; end;
+              case (vSuffixRec.srNounNumber <> ' ') and (vSuffixRec.srNounNumber <> 'X') of TRUE: vTrans.prNumber1  := vSuffixRec.srNounNumber; end;
+
               vValidated := vValidated + [vTrans];
             end;end;
           end;end;
         end;
 
-        case (length(vValidated) - ord(vPrefixActive) > 0) of TRUE: begin
+        case (length(vValidated) > 0) of TRUE: begin
           var vSuffixInfo := default(TParseResultRec);
           vSuffixInfo.prWord := vParseResult.prWord;
-          vSuffixInfo.prStem := string(vSuffixRec.srSuffix);
+          vSuffixInfo.prPartOfSpeech := 'SUFFIX';
+          vSuffixInfo.prStem := string(vSuffixRec.srSuffix).padRight(MAX_STEM);
           vSuffixInfo.prExplanation := vSuffixRec.srSenses;
-          result := [vSuffixInfo] + vValidated;
-          EXIT;
+          result := result + [vSuffixInfo] + vValidated;
+          // EXIT; // removed to allow multiple grammatical interpretations
         end;end;
       end;end;
     end;

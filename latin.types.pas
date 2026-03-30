@@ -35,7 +35,7 @@ type
             filler2:  char;
           dictNounType:   char;
          );
-      3: (dictDegree:     array[1..12] of char;);
+      3: (dictDegree:     array[1..8] of char;);
       4: (dictNumKind:    array[1..4] of char;
           dictNumValue:   array[1..8] of char;);
   end;
@@ -74,7 +74,7 @@ type
   TEsseRec = packed record
     erWord:             array[1..10] of char;
       filler1:  char;
-    erPartOfSpeech:     array[1..4] of char;
+    erPartOfSpeech:     array[1..5] of char;
       filler2:  char;
     erTense:            array[1..5] of char;
       filler3:  char;
@@ -183,7 +183,7 @@ type
       filler7:  char;
     srTargetVariant:      char;
       filler8:  char;
-    srDegree:             array[1..5] of char;
+    srDegree:             array[1..8] of char;
       filler9:  char;
     srVerbType:           char;
     srNumValue:           char;
@@ -234,7 +234,7 @@ type
       filler7:  char;
     urNounType:         char;
       filler8:  char;
-    urDegree:           array[1..5] of char;
+    urDegree:           array[1..8] of char;
       filler9:  char;
     urPronounType:      array[1..6] of char;
       filler10: char;
