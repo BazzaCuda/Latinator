@@ -323,6 +323,24 @@ type
     pcTricks:   boolean;
   end;
 
+{ Verb Conjugations }
+
+  TVerbTenses   = (vtPluperfect, vtPerfect, vtImperfect, vtPresent, vtFuturePerfect, vtFuture);
+  TVerbVoices   = (vvActive, vvPassive);
+  TVerbPerson   = (vpFirst, vpSecond, vpThird);
+  TVerbNumber   = (vnSingular, vnPlural);
+  TVerbMoods    = (vmIndicative, vmSubjunctive, vmImperative, vmInfinitive, vmParticiple, vmGerund, vmGerundive, vmSupine);
+
+{ Noun Declensions }
+
+  TNounCases    = (ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);
+  TNounGenders  = (ngMasculine, ngFeminine, ngNeuter);
+  TNounNumber   = (nnSingular, nnPlural);
+
+{ Adjective Declensions }
+
+  TAdjectiveDegrees = (adPositive, adComparative, adSuperlative);
+
 implementation
 
 end.

@@ -699,9 +699,9 @@ end;
 function TLatin.parseDictStems(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
 begin
   result := NIL;
-  for var vReq in aParseResults do begin
-    var vRawHits := findDictStems([vReq]);
-    var vTargetPOS := vReq.prPartOfSpeech.trim;
+  for var vResult in aParseResults do begin
+    var vRawHits := findDictStems([vResult]);
+    var vTargetPOS := vResult.prPartOfSpeech.trim;
 
     for var vCandidate in vRawHits do begin
       var vDictPOS := vCandidate.prPartOfSpeech.trim;
@@ -712,24 +712,26 @@ begin
       case (vMappedTarget = 'ADJ') and (vDictPOS = 'NUM') of TRUE: vMappedTarget := 'NUM'; end;
 
       // Filtering logic: Added StemID verification to ensure dictionary hits match the inflection's required Stem Index
-      var vClassMatch  := (vCandidate.prClass = vReq.prClass) or (vCandidate.prClass = '0') or (vReq.prClass = '0');
-      var vVarMatch    := (vCandidate.prVariant = vReq.prVariant) or (vCandidate.prVariant = '0') or (vReq.prVariant = '0');
-      var vStemIDMatch := (vReq.prStemID = '0') or (vCandidate.prStemID = vReq.prStemID);
+      var vClassMatch  := (vCandidate.prClass = vResult.prClass) or (vCandidate.prClass = '0') or (vResult.prClass = '0');
+      var vVarMatch    := (vCandidate.prVariant = vResult.prVariant) or (vCandidate.prVariant = '0') or (vResult.prVariant = '0');
+      var vStemIDMatch := (vResult.prStemID = '0') or (vCandidate.prStemID = vResult.prStemID);
 
       case (vDictPOS = vMappedTarget) and vClassMatch and vVarMatch and vStemIDMatch of
         TRUE: begin
           var vFinal := vCandidate;
           // Carry over the specific morphological tags from the inflection engine
           // (The dict entry provides the 'definition' and 'class', the requirement provides the 'case/person/tense')
-          vFinal.prCase     := vReq.prCase;
-          vFinal.prNumber1  := vReq.prNumber1;
-          vFinal.prGender   := vReq.prGender;
-          vFinal.prTense    := vReq.prTense;
-          vFinal.prVoice    := vReq.prVoice;
-          vFinal.prMood     := vReq.prMood;
-          vFinal.prPerson   := vReq.prPerson;
-          vFinal.prNumber2  := vReq.prNumber2;
-          vFinal.prDegree   := vReq.prDegree;
+          case (vResult.prPartOfSpeech.trim = 'VPAR') or (vResult.prPartOfSpeech.trim = 'SUPI') of
+            TRUE: vFinal.prPartOfSpeech := vResult.prPartOfSpeech; end;
+          vFinal.prCase     := vResult.prCase;
+          vFinal.prNumber1  := vResult.prNumber1;
+          vFinal.prGender   := vResult.prGender;
+          vFinal.prTense    := vResult.prTense;
+          vFinal.prVoice    := vResult.prVoice;
+          vFinal.prMood     := vResult.prMood;
+          vFinal.prPerson   := vResult.prPerson;
+          vFinal.prNumber2  := vResult.prNumber2;
+          vFinal.prDegree   := vResult.prDegree;
 
           result := result + [vFinal];
         end;
