@@ -423,7 +423,7 @@ begin
     case (vStem <> '') and (vStem.length <= MAX_STEM) of TRUE: begin
       var vResult       := default(TParseResultRec);
       vResult.prWord    := aWord;
-      vResult.prStem    := vStem.padRight(MAX_STEM);
+      vResult.prStem    := vStem;
       vResult.prEnding  := vInflection.irSuffix;
       vResult.prStemID  := vInflection.irStemID;
 
@@ -493,7 +493,7 @@ begin
         vParseResult.prPartOfSpeech := vInflection.irPartOfSpeech;
         vParseResult.prClass        := vInflection.irClass;
         vParseResult.prVariant      := vInflection.irVariant;
-        vParseResult.prStem         := vStemString.padRight(MAX_STEM);
+        vParseResult.prStem         := vStemString;
         vParseResult.prEnding       := vInflection.irSuffix;
         vParseResult.prCase         := vInflection.irCase;
         vParseResult.prNumber1      := vInflection.irNumber1;
@@ -540,8 +540,8 @@ begin
 
   var vPOS := trim(aResult.prPartOfSpeech);
 
-  aResult.prDegree  := ''.padRight(length(aInflection.irDegreeTense));
-  aResult.prTense   := ''.padRight(length(aInflection.irDegreeTense));
+  aResult.prDegree  := '';
+  aResult.prTense   := '';
 
   case (vPOS = 'ADJ') or (vPOS = 'ADV') or (vPOS = 'NUM') of TRUE: aResult.prDegree := aInflection.irDegreeTense; end;
   case (vPOS = 'V')   or (vPOS = 'VPAR')                  of TRUE: aResult.prTense  := aInflection.irDegreeTense; end;
@@ -658,7 +658,7 @@ begin
       end;end;
 
       var vStrippedRec := vParseResult;
-      vStrippedRec.prStem := vStem.substring(vPrefixLen).padRight(MAX_STEM);
+      vStrippedRec.prStem := vStem.substring(vPrefixLen);
       vStrippedRec.prStemID := '0';
       vStrippedRec.prPartOfSpeech := vPrefixRec.prSourcePartOfSpeech;
 
@@ -687,12 +687,12 @@ begin
         end;
 
         case (length(vValidated) > 0) of TRUE: begin
-          var vPrefixResult := default(TParseResultRec);
-          vPrefixResult.prWord := vParseResult.prWord;
-          vPrefixResult.prPartOfSpeech := 'PREFIX';
-          vPrefixResult.prStem := string(vPrefixRec.prPrefix).padRight(MAX_STEM);
-          vPrefixResult.prExplanation := vPrefixRec.prSenses;
-          result := result + [vPrefixResult] + vValidated;
+          var vPrefixResult             := default(TParseResultRec);
+          vPrefixResult.prWord          := vParseResult.prWord;
+          vPrefixResult.prPartOfSpeech  := 'PREFIX';
+          vPrefixResult.prStem          := string(vPrefixRec.prPrefix);
+          vPrefixResult.prExplanation   := vPrefixRec.prSenses;
+          result                        := result + [vPrefixResult] + vValidated;
           // EXIT; // removed to allow multiple grammatical interpretations
         end;end;
       end;end;
@@ -742,7 +742,7 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
       case (aPrefix <> '') of TRUE: begin
         var vPrefixEntry : TParseResultRec;
         vPrefixEntry.prWord        := aWord;
-        vPrefixEntry.prStem        := aPrefix.padRight(MAX_STEM);
+        vPrefixEntry.prStem        := aPrefix;
         vPrefixEntry.prExplanation := aPrefixSenses;
         result                     := result + [vPrefixEntry];
       end; end;
@@ -752,7 +752,7 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
       case (vTackOn <> '') of TRUE: begin
         var vTackonEntry              :  TParseResultRec;
         vTackonEntry.prWord           := aWord;
-        vTackonEntry.prStem           := string(vTackOnRec.trTackOn).padRight(MAX_STEM);
+        vTackonEntry.prStem           := vTackOnRec.trTackOn;
         vTackonEntry.prPartOfSpeech   := vTackOnRec.trTargetPartOfSpeech;
         vTackonEntry.prClass          := vTackOnRec.trTargetClass;
         vTackonEntry.prVariant        := vTackOnRec.trTargetVariant;
@@ -789,14 +789,14 @@ begin
   expandArray(result);
 
   result[0].prWord          := aWord;
-  result[0].prPartOfSpeech  := 'NUM'.padRight(length(FDictLines[0].dictPartOfSpeech));
+  result[0].prPartOfSpeech  := 'NUM';
   result[0].prClass         := '2';
   result[0].prVariant       := '0';
   result[0].prCase          := 'X';
   result[0].prNumber1       := 'X';
   result[0].prGender        := 'X';
-  result[0].prNumValue      := intToStr(romanNumeralsToInt(vWord)).padRight(length(FDictLines[0].dictVNARec.dictNumValue));
-  result[0].prNumKind       := 'CARD'.padRight(length(FDictLines[0].dictVNARec.dictNumKind));
+  result[0].prNumValue      := intToStr(romanNumeralsToInt(vWord));
+  result[0].prNumKind       := 'CARD';
   result[0].prAge           := 'X';
   result[0].prFrequency     := 'A';
   result[0].prExplanation   := format('%s as a ROMAN NUMERAL;', [result[0].prNumValue]);
@@ -827,7 +827,7 @@ begin
       end;end;
 
       var vStrippedRec := vParseResult;
-      vStrippedRec.prStem := vStem.substring(0, vStem.length - vSuffix.length).padRight(MAX_STEM);
+      vStrippedRec.prStem := vStem.substring(0, vStem.length - vSuffix.length);
       vStrippedRec.prStemID := '0';
       vStrippedRec.prPartOfSpeech := vSuffixRec.srSourcePartOfSpeech;
 
@@ -888,7 +888,7 @@ begin
           var vSuffixInfo := default(TParseResultRec);
           vSuffixInfo.prWord := vParseResult.prWord;
           vSuffixInfo.prPartOfSpeech := 'SUFFIX';
-          vSuffixInfo.prStem := string(vSuffixRec.srSuffix).padRight(MAX_STEM);
+          vSuffixInfo.prStem := string(vSuffixRec.srSuffix);
           vSuffixInfo.prExplanation := vSuffixRec.srSenses;
           result := result + [vSuffixInfo] + vValidated;
           // EXIT; // removed to allow multiple grammatical interpretations
@@ -943,7 +943,7 @@ for var vTackOn in FTackOns do begin
           var vTackOnRec            := default(TParseResultRec);
           vTackOnRec.prWord         := aWord;
           vTackOnRec.prPartOfSpeech := 'TACKON';
-          vTackOnRec.prStem         := vTackOnStr.padRight(MAX_STEM);
+          vTackOnRec.prStem         := vTackOnStr;
           vTackOnRec.prExplanation  := vTackOn.trSenses;
           result                    := vResultRecs + [vTackOnRec];
           EXIT;
