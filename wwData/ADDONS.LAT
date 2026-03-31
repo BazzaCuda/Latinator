@@ -473,10 +473,10 @@ SUFFIX ax           X     2 ADJ   3 1 POS             1 -ing; having a tendency/
 --  ENCLITICS
 --
 -- recType, addon, targetPOS, targetClass, targetVariant, addonDegree, nounGender, nounNumber, sense - BAZ
-TACKON que                            X              -que = and (enclitic, translated before attached word); completes plerus/uter;
-TACKON ne                             X              -ne = is it not that (enclitic); or ...(introduces a question or alternative);
-TACKON ve                             X              -ve = or if you will (enclitic); or as you please; or;             rare
-TACKON est                  PRON  4 1 X              -est = is, in a contraction; (idest = it/that is);                 rare      
+TACKO4 que                            X              -que = and (enclitic, translated before attached word); completes plerus/uter;
+TACKO4 ne                             X              -ne = is it not that (enclitic); or ...(introduces a question or alternative);
+TACKO4 ve                             X              -ve = or if you will (enclitic); or as you please; or;             rare
+TACKO4 est                  PRON  4 1 X              -est = is, in a contraction; (idest = it/that is);                 rare      
 --
 --  TACKONS  --  that are not PACKONS -- not w/qu PRONS
 --

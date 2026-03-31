@@ -39,6 +39,7 @@ const
     (pmSearchString: 'cu';    pmPrefix: '';    pmStemType: stCu)
   );
 
+  USER_TRICKS = TRUE;
 
 implementation
 

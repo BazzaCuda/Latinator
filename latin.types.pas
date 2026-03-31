@@ -317,6 +317,12 @@ type
     prSenses:   string;
   end;
 
+  TParseContext = record
+    pcNextWord: string;
+    pcNextUsed: boolean;
+    pcTricks:   boolean;
+  end;
+
 implementation
 
 end.
