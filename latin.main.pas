@@ -82,7 +82,9 @@ type
 
     function  mapInflectionToResult       (const aInflection: TInflectionsRec; var aResult: TParseResultRec):                       TVoid;
 
+    function  parseCompounds              (const aResults: TArray<TParseResultRec>; var aParseContext: TParseContext):              TArray<TParseResultRec>;
     function  parseDictStems              (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
+    function  parseEsse                   (const aWord: string):                                                                    TArray<TParseResultRec>;
     function  parseInflections            (const aWord: string):                                                                    TArray<TParseResultRec>;
     function  parsePrefixes               (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
     function  parsePronominals            (const aWord: string):                                                                    TArray<TParseResultRec>;
@@ -380,6 +382,9 @@ begin
         var vDictLine := FDictLines[vIndex];
         var vDictPOS  := string(vDictLine.dictPartOfSpeech).trim;
 
+        var vStaticPOS := (vDictPOS = 'CONJ') or (vDictPOS = 'PREP') or (vDictPOS = 'INTERJ') or (vDictPOS = 'ADV');
+        case vStaticPOS and (vParseResult.prEnding.trim <> '') of TRUE: CONTINUE; end;
+
         for var vStemID := 1 to 4 do begin
           var vStemIDAsChar := char(vStemID + 48);
           // Only check this particular 1-4 stemID if it either matches the parseResult stemID or the parseResult stemID is a wildcard 0
@@ -612,6 +617,85 @@ begin
                                                                       result[high(result)] := ''; end;end;
 end;
 
+function TLatin.parseCompounds(const aResults: TArray<TParseResultRec>; var aParseContext: TParseContext): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  case (aParseContext.pcNextWord = '') of TRUE: EXIT; end;
+
+  var vNextWord     := lowerCase(removeMacrons(aParseContext.pcNextWord));
+  var vEsseResults  := parseEsse(vNextWord);
+  var vIri          := (vNextWord = 'iri');
+  var vEsse         := (vNextWord = 'esse');
+  var vFuisse       := (vNextWord = 'fuisse');
+  var vNextAux      := (length(vEsseResults) > 0) or vIri or vEsse or vFuisse;
+
+  case (NOT vNextAux) of TRUE: EXIT; end;
+
+  for var vResult in aResults do begin
+    var vCompoundResult: TParseResultRec := default(TParseResultRec);
+    var vMatch := FALSE;
+
+    case (vResult.prMood.trim = 'PPL') of TRUE: begin
+      for var vAuxResult in vEsseResults do begin
+        case (vResult.prNumber1 = vAuxResult.prNumber2) and (vResult.prCase.trim = 'NOM') of TRUE: begin
+          vCompoundResult := vResult;
+          vCompoundResult.prWord := vResult.prWord + ' ' + aParseContext.pcNextWord;
+          vCompoundResult.prPartOfSpeech := 'V';
+          vCompoundResult.prPerson := vAuxResult.prPerson;
+          vCompoundResult.prNumber2 := vAuxResult.prNumber2;
+          vCompoundResult.prMood := vAuxResult.prMood;
+          vCompoundResult.prVoice := 'PASSIVE';
+
+          case (vResult.prTense.trim = 'PERF') of TRUE: begin
+            case (vAuxResult.prTense.trim = 'PRES') or (vAuxResult.prTense.trim = 'PERF') of TRUE: vCompoundResult.prTense := 'PERF'; end;
+            case (vAuxResult.prTense.trim = 'IMPF') or (vAuxResult.prTense.trim = 'PLUP') of TRUE: vCompoundResult.prTense := 'PLUP'; end;
+            case (vAuxResult.prTense.trim = 'FUT') or (vAuxResult.prTense.trim = 'FUTP') of TRUE: vCompoundResult.prTense := 'FUTP'; end;
+            vCompoundResult.prExplanation := 'passive perfect system compound';
+            vMatch := TRUE;
+          end;end;
+
+          case (vResult.prTense.trim = 'FUT') of TRUE: begin
+            vCompoundResult.prTense := vAuxResult.prTense;
+            vCompoundResult.prVoice := vResult.prVoice;
+            vCompoundResult.prExplanation := 'periphrastic compound';
+            vMatch := TRUE;
+          end;end;
+        end;end;
+      end;
+
+      case (vEsse or vFuisse) of TRUE: begin
+        vCompoundResult := vResult;
+        vCompoundResult.prWord := vResult.prWord + ' ' + aParseContext.pcNextWord;
+        vCompoundResult.prPartOfSpeech := 'V';
+        vCompoundResult.prMood := 'INF';
+        vCompoundResult.prVoice := vResult.prVoice;
+
+        case vEsse of TRUE: vCompoundResult.prTense := vResult.prTense; end;
+        case vFuisse of TRUE: vCompoundResult.prTense := 'PERF'; end;
+
+        vCompoundResult.prExplanation := 'compound infinitive';
+        vMatch := TRUE;
+      end;end;
+    end;end;
+
+    case (vResult.prMood.trim = 'SUPI') and (vResult.prCase.trim = 'ACC') and vIri of TRUE: begin
+      vCompoundResult := vResult;
+      vCompoundResult.prWord := vResult.prWord + ' ' + aParseContext.pcNextWord;
+      vCompoundResult.prPartOfSpeech := 'V';
+      vCompoundResult.prTense := 'FUT';
+      vCompoundResult.prVoice := 'PASSIVE';
+      vCompoundResult.prMood := 'INF';
+      vCompoundResult.prExplanation := 'future passive infinitive';
+      vMatch := TRUE;
+    end;end;
+
+    case vMatch of TRUE: begin
+      result := result + [vCompoundResult];
+      aParseContext.pcNextUsed := TRUE;
+    end;end;
+  end;
+end;
+
 function TLatin.parseDictStems(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
 begin
   result := NIL;
@@ -651,6 +735,33 @@ begin
         end;
       end;
     end;
+  end;
+end;
+
+function TLatin.parseEsse(const aWord: string): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  var vWord := lowerCase(removeMacrons(aWord));
+
+  for var vEsse in FEsse do begin
+    case (string(vEsse.erWord).trim = vWord) of TRUE: begin
+      var vResult: TParseResultRec  := default(TParseResultRec);
+      vResult.prWord                := aWord;
+      vResult.prPartOfSpeech        := 'V';
+      vResult.prStem                := 'sum';
+      vResult.prTense               := vEsse.erTense;
+      vResult.prVoice               := vEsse.erVoice;
+      vResult.prMood                := vEsse.erMood;
+      vResult.prPerson              := vEsse.erPerson;
+      vResult.prNumber2             := vEsse.erNumber;
+      vResult.prClass               := '5';
+      vResult.prVariant             := '1';
+      vResult.prAge                 := 'X';
+      vResult.prFrequency           := 'A';
+      vResult.prExplanation         := 'irregular form of sum, esse';
+
+      result := result + [vResult];
+    end;end;
   end;
 end;
 
@@ -694,6 +805,10 @@ begin
 
         for var vCandidate in vCandidates do begin
           var vCPOS := vCandidate.prPartOfSpeech.trim;
+
+          var vStaticPOS := (vCPOS = 'CONJ') or (vCPOS = 'PREP') or (vCPOS = 'INTERJ') or (vCPOS = 'ADV');
+          case vStaticPOS of TRUE: CONTINUE; end;
+
           case (vCPOS = 'N') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
           case (vCPOS = 'ADJ') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
 
@@ -870,6 +985,9 @@ begin
         for var vCandidate in vCandidates do begin
           var vCPOS := vCandidate.prPartOfSpeech.trim;
 
+          var vStaticPOS := (vCPOS = 'CONJ') or (vCPOS = 'PREP') or (vCPOS = 'INTERJ') or (vCPOS = 'ADV');
+          case vStaticPOS of TRUE: CONTINUE; end;
+
           case (vCPOS = 'PREFIX') or (vCPOS = 'SUFFIX') of TRUE: begin
             vValidated := vValidated + [vCandidate];
             CONTINUE;
@@ -1006,9 +1124,13 @@ begin
 
   result := result + parseUniques(aWord);
   result := result + parsePronominals(aWord);
+  result := result + parseEsse(aWord);
 
   var vInflectionRecs := parseInflections(aWord);
   result := result + parseDictStems(vInflectionRecs);
+  case  (length(result) > 0)                                      of TRUE:  begin
+                                                                              result := result + parseCompounds(result, aPC);
+                                                                              EXIT; end;end;
 
   case  (length(result) = 0)  or aPC.pcTricks                     of TRUE: result := result + parsePrefixes (vInflectionRecs); end;
   case  (length(result) = 0)  or aPC.pcTricks                     of TRUE: result := result + parseSuffixes (vInflectionRecs); end;
