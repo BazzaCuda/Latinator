@@ -64,10 +64,12 @@ type
     FTackOns:       TArray<TTackOnRec>;
     FUniques:       TArray<TUniquesRec>;
   private
-    function  equalLatin              (const aChar1: char;  const aChar2: char):  boolean; overload;
-    function  equalLatin              (const aStr1: string; const aStr2: string): boolean; overload;
+    function  equalLatin                  (const aChar1: char;  const aChar2: char):  boolean; overload;
+    function  equalLatin                  (const aStr1: string; const aStr2: string): boolean; overload;
 
-    function  formatParseResults  (const aParseResults:   TArray<TParseResultRec>): TArray<string>;
+    function  formatParseResults          (const aParseResults: TArray<TParseResultRec>):                                           TArray<string>;
+    function  removeDuplicateResults      (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
+    function  trimParseResults            (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
 
     function  findDictStems               (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
     function  findInflections             (const aWord: string):                                                                    TArray<TParseResultRec>;
@@ -91,9 +93,8 @@ type
     function  parseUniques                (const aWord: string):                                                                    TArray<TParseResultRec>;
     function  parseWord                   (const aWord: string; var aPC: TParseContext; const bTricks: boolean = FALSE):            TArray<TParseResultRec>;
 
-    function  removeDuplicateResults      (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
     function  removePrefix                (const aStem: string; const aPrefix: string; const aConnector: char):                     string;
-    function  restoreStemM                (const aStrippedCore, aTackOn: string):                                                   string;
+    function  restoreStemM                (const aCore: string; const aTackOn: string):                                             string;
     function  tryTrick                    (const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext):
                                                                                                                                     TArray<TParseResultRec>;
   public
@@ -140,6 +141,8 @@ begin
   result.pcNextUsed   := aPC.pcNextUsed;
   result.pcTricks     := USER_TRICKS;
 end;
+
+//===== FORMATTING THE OUTPUT ====
 
 function TLatin.removeDuplicateResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
 // DO NOT SORT!!!
@@ -200,7 +203,7 @@ const
   WIDTH_NUMVAL    =  8;  // Matches dictNumValue:     array[1..8]
 begin
   result := NIL;
-  var vUniqueResults := removeDuplicateResults(aParseResults);
+  var vUniqueResults := removeDuplicateResults(trimParseResults(aParseResults));
 
   for var vParseResult in vUniqueResults do begin
     var vIxDelta: integer;
@@ -242,6 +245,27 @@ begin
     ]);
 
     case (vIxDelta = 2) of TRUE: result[length(result) - 1] := vParseResult.prExplanation; end;
+  end;
+end;
+
+function TLatin.trimParseResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+begin
+  result := aParseResults;
+  for var i := 0 to high(result) do begin
+    result[i].prWord          := result[i].prWord.trim;
+    result[i].prPartOfSpeech  := result[i].prPartOfSpeech.trim;
+    result[i].prStem          := result[i].prStem.trim;
+    result[i].prEnding        := result[i].prEnding.trim;
+    result[i].prCase          := result[i].prCase.trim;
+    result[i].prDegree        := result[i].prDegree.trim;
+    result[i].prPronounType   := result[i].prPronounType.trim;
+    result[i].prTense         := result[i].prTense.trim;
+    result[i].prVoice         := result[i].prVoice.trim;
+    result[i].prMood          := result[i].prMood.trim;
+    result[i].prVerbType      := result[i].prVerbType.trim;
+    result[i].prNumKind       := result[i].prNumKind.trim;
+    result[i].prNumValue      := result[i].prNumValue.trim;
+    result[i].prExplanation   := result[i].prExplanation.trim;
   end;
 end;
 
@@ -716,13 +740,13 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
 
   function findPronominal(const aCore: string; const aPrefix: string; const aPrefixSenses: string): TArray<TParseResultRec>;
   begin
-    result         := NIL;
-    var vLocalCore := aCore;
-    var vStemType  := identifyPronominalStem(vLocalCore);
+    result          := NIL;
+    var vCore       := aCore;
+    var vStemType   := identifyPronominalStem(vCore);
 
     case (vStemType = stNone) of TRUE: EXIT; end;
 
-    var vTackOnRec := findPronominalPackon(vLocalCore);
+    var vTackOnRec := findPronominalPackon(vCore);
     var vTackOn    := string(vTackOnRec.trTackOn).trim;
     var vContext   :  TPronominalContext;
 
@@ -731,11 +755,11 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
     vContext.pcTackOn   := vTackOnRec.trTackOn;
     vContext.prSenses   := vTackOnRec.trSenses;
 
-    var vInflections := findPronominalInflections(vLocalCore, vStemType, vContext);
+    var vInflections := findPronominalInflections(vCore, vStemType, vContext);
 
     case (length(vInflections) = 0) and (vTackOn <> '') of TRUE: begin
-      var vStripped := stripPronominalPackon(vLocalCore, vTackOn);
-      vInflections  := findPronominalInflections(restoreStemM(vStripped, vTackOn), vStemType, vContext);
+      vCore := stripPronominalPackon(vCore, vTackOn);
+      vInflections := findPronominalInflections(restoreStemM(vCore, vTackOn), vStemType, vContext);
     end; end;
 
     case (length(vInflections) > 0) of TRUE: begin
@@ -1040,12 +1064,11 @@ begin
   end;end;
 end;
 
-function TLatin.restoreStemM(const aStrippedCore: string; const aTackOn: string): string;
+function TLatin.restoreStemM(const aCore: string; const aTackOn: string): string;
 begin
-  result := aStrippedCore;
+  result := aCore;
   case aTackOn.startsWith('dam') and (result[result.length] = 'n') of TRUE: result[result.length] := 'm'; end;
 end;
-
 
 function TLatin.setDataPath(const aPath: string): TVoid;
 begin
