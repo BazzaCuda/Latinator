@@ -652,8 +652,8 @@ end;
 
 function TLatin.mapClassToClass(const aClass: char): TClassClass;
 begin
-//  result := cc1;
-  result := cccNone;
+  result := cc1;
+//  result := cccNone; // BAZ EXPERIMENTAL
   for var vClass := cc1 to cc9 do case (MAP_CLASS_CLASSES[vClass] = aClass) of TRUE: EXIT(vClass); end;
 end;
 
@@ -691,8 +691,8 @@ end;
 
 function TLatin.mapVariantToVariant(const aVariant: char): TClassVariant;
 begin
-//  result := cv1;
-  result := cvNone; // BAZ EXPERIMENTAL
+  result := cv1;
+//  result := cvNone; // BAZ EXPERIMENTAL
   for var vVariant := cv1 to cv9 do case (MAP_CLASS_VARIANTS[vVariant] = aVariant) of TRUE: EXIT(vVariant); end;
 end;
 
@@ -708,7 +708,8 @@ begin
     ngCommon:    vTargetGenders := [ngMasculine, ngFeminine];
     ngAll:       vTargetGenders := [ngMasculine, ngFeminine, ngNeuter];
   else
-    // vTargetGenders := [ngMasculine, ngFeminine];    BAZ EXPERIMENTAL
+    vTargetGenders := [ngMasculine, ngFeminine];  //  BAZ EXPERIMENTAL
+    vTargetGenders := NIL;  //  BAZ EXPERIMENTAL
   end;
 
   result[ncNone][COL_CASE]        := 'Case';
@@ -752,6 +753,11 @@ begin
 
             var vFullWord      := vStem + vInflection.niSuffix;
             var vDisplaySuffix := ' -' + vInflection.niSuffix;
+            var vBaseEntry     := vFullWord + '|' + vDisplaySuffix; // BAZ EXPERIMENTAL
+            var vDuplicate     := FALSE;                            // BAZ EXPERIMENTAL
+
+            for var vExisting in vCellList do if vExisting.startsWith(vBaseEntry) then begin vDuplicate := TRUE; BREAK; end;  // BAZ EXPERIMENTA
+            case vDuplicate of TRUE: CONTINUE; end;                                                                            // BAZ EXPERIMENTA
 
             case USER_NOUN_DEBUG of TRUE: begin
               var vDebugTag  := ' [' + vSlotChar + vInflection.niGender + vInflection.niAge + vInflection.niFrequency + vInflection.niStemID + ']';
@@ -1405,12 +1411,12 @@ begin
   result := default(TNounData);
 
   for var vInflection in FInflections do begin
-    case (vInflection.irPartOfSpeech[1] = 'N') of TRUE: begin
+    case (trim(vInflection.irPartOfSpeech) = 'N') of TRUE: begin // BAZ EXPERIMENTAL
 
       var vClass := mapClassToClass(vInflection.irClass);
-      case vClass = cccNone of TRUE: CONTINUE; end; // BAZ EXPERIMENTAL
+//      case vClass = cccNone of TRUE: CONTINUE; end; // BAZ EXPERIMENTAL
       var vVariant := mapVariantToVariant(vInflection.irVariant);
-      case vVariant = cvNone of TRUE: CONTINUE; end; // BAZ EXPERIMENTAL
+//      case vVariant = cvNone of TRUE: CONTINUE; end; // BAZ EXPERIMENTAL
 
       var vCase := mapCaseToCase(string(vInflection.irCase).trim);
       case (vCase = ncNone) of TRUE: CONTINUE; end;

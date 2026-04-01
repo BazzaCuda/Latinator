@@ -41,7 +41,7 @@ const
 
   USER_TRICKS           = TRUE;
   USER_NOUN_CASE_ORDER  = ncoNomAcc;
-  USER_NOUN_DEBUG       = TRUE;
+  USER_NOUN_DEBUG       = FALSE;
 
   NOUN_CASE_MAX = 6; // 0-based
   NOUN_CASE_ORDER_STD: array[0..6] of TNounCase = (ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);

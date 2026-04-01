@@ -165,25 +165,25 @@ begin
       case length(vLine) > vFixedDataSize of TRUE: result[vLineCount - 1].irComment := copy(vLine, vFixedDataSize + 1, length(vLine)); end;
 
 //      case vLineCount < 44 of TRUE: begin
-      case string(result[vLineCount - 1].irPartOfSpeech).trim = 'N' of TRUE: begin
-                                      debugString('partOfSpeech', string(result[vLineCount - 1].irPartOfSpeech));
-                                      debugString('class',        string(result[vLineCount - 1].irClass));
-                                      debugString('variant',      string(result[vLineCount - 1].irVariant));
-                                      debugString('case',         string(result[vLineCount - 1].irCase));
-                                      debugString('number',       string(result[vLineCount - 1].irNumber1));
-                                      debugString('gender',       string(result[vLineCount - 1].irGender));
-                                      debugString('degree/tense', string(result[vLineCount - 1].irDegreeTense));
-                                      debugString('voice',        string(result[vLineCount - 1].irVoice));
-                                      debugString('mood',         string(result[vLineCount - 1].irMood));
-                                      debugString('person',       string(result[vLineCount - 1].irPerson));
-                                      debugString('number2',      string(result[vLineCount - 1].irNumber2));
-                                      debugString('stemID',       string(result[vLineCount - 1].irStemID));
-                                      debugString('suffix len',   string(result[vLineCount - 1].irSuffixLength));
-                                      debugString('suffix',       string(result[vLineCount - 1].irSuffix));
-                                      debugString('age',          string(result[vLineCount - 1].irAge));
-                                      debugString('frequency',    string(result[vLineCount - 1].irFrequency));
-                                      debugString('comment',      string(result[vLineCount - 1].irComment));
-                                    end;end;
+//      case string(result[vLineCount - 1].irPartOfSpeech).trim = 'N' of TRUE: begin
+//                                      debugString('partOfSpeech', string(result[vLineCount - 1].irPartOfSpeech));
+//                                      debugString('class',        string(result[vLineCount - 1].irClass));
+//                                      debugString('variant',      string(result[vLineCount - 1].irVariant));
+//                                      debugString('case',         string(result[vLineCount - 1].irCase));
+//                                      debugString('number',       string(result[vLineCount - 1].irNumber1));
+//                                      debugString('gender',       string(result[vLineCount - 1].irGender));
+//                                      debugString('degree/tense', string(result[vLineCount - 1].irDegreeTense));
+//                                      debugString('voice',        string(result[vLineCount - 1].irVoice));
+//                                      debugString('mood',         string(result[vLineCount - 1].irMood));
+//                                      debugString('person',       string(result[vLineCount - 1].irPerson));
+//                                      debugString('number2',      string(result[vLineCount - 1].irNumber2));
+//                                      debugString('stemID',       string(result[vLineCount - 1].irStemID));
+//                                      debugString('suffix len',   string(result[vLineCount - 1].irSuffixLength));
+//                                      debugString('suffix',       string(result[vLineCount - 1].irSuffix));
+//                                      debugString('age',          string(result[vLineCount - 1].irAge));
+//                                      debugString('frequency',    string(result[vLineCount - 1].irFrequency));
+//                                      debugString('comment',      string(result[vLineCount - 1].irComment));
+//                                    end;end;
     end;
 
     setLength(result, vLineCount);

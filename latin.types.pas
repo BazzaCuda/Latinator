@@ -358,8 +358,8 @@ type
 
   TAdjectiveDegrees = (adPositive, adComparative, adSuperlative);
 
-  TClassClass    = (cccNone, cc1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9); // BAZ EXPERIMENTAL
-  TClassVariant  = (cvNone, cv1, cv2, cv3, cv4, cv5, cv6, cv7, cv8, cv9);  // BAZ EXPERIMENTAL
+  TClassClass    = ({cccNone,} cc1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9); // BAZ EXPERIMENTAL
+  TClassVariant  = ({cvNone,} cv1, cv2, cv3, cv4, cv5, cv6, cv7, cv8, cv9);  // BAZ EXPERIMENTAL
 
   // Person, Number, Tense, Mood, Voice: amo = first person singular, present indicative active
   TVerbContext = record
