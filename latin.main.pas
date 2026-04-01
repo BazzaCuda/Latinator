@@ -65,10 +65,13 @@ type
     FTackOns:       TArray<TTackOnRec>;
     FUniques:       TArray<TUniquesRec>;
   private
+    function  declineNoun                 (const aWord: string):                                                                   TGrammarTable;
+
     function  equalLatin                  (const aChar1: char;  const aChar2: char):  boolean; overload;
     function  equalLatin                  (const aStr1: string; const aStr2: string): boolean; overload;
 
     function  formatParseResults          (const aParseResults: TArray<TParseResultRec>):                                           TArray<string>;
+    function  formatGrammarResults        (const aGrammarResult: TGrammarTable):                                                    TArray<string>;
     function  removeDuplicateResults      (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
     function  trimParseResults            (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
 
@@ -83,7 +86,7 @@ type
 
     function  mapInflectionToResult       (const aInflection: TInflectionsRec; var aResult: TParseResultRec):                       TVoid;
 
-    function  parseCompounds              (const aResults: TArray<TParseResultRec>; var aParseContext: TParseContext):              TArray<TParseResultRec>;
+    function  parseCompounds              (const aParseResults: TArray<TParseResultRec>; var aParseContext: TParseContext):         TArray<TParseResultRec>;
     function  parseDictStems              (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
     function  parseEsse                   (const aWord: string):                                                                    TArray<TParseResultRec>;
     function  parseInflections            (const aWord: string):                                                                    TArray<TParseResultRec>;
@@ -101,6 +104,9 @@ type
     function  siphonNounData              (var aDictionaryEntry: string):                                                           TNounData;
     function  tryTrick                    (const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext):
                                                                                                                                     TArray<TParseResultRec>;
+    function mapCaseToCase(const aCase: string): TNounCase;
+    function mapClassToClass(const aClass: char): TClassClass;
+    function mapVariantToVariant(const aVariant: char): TClassVariant;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -141,9 +147,10 @@ end;
 
 function TLatin.getParseContext(const aPC: TParseContext): TParseContext;
 begin
-  result.pcNextWord   := aPC.pcNextWord;
-  result.pcNextUsed   := aPC.pcNextUsed;
-  result.pcTricks     := USER_TRICKS;
+  result.pcConsoleCommand := aPC.pcConsoleCommand;
+  result.pcNextWord       := aPC.pcNextWord;
+  result.pcNextUsed       := aPC.pcNextUsed;
+  result.pcTricks         := USER_TRICKS;
 end;
 
 //===== FORMATTING THE OUTPUT ====
@@ -189,6 +196,11 @@ begin
     end;
     case vIsDuplicate of FALSE: result := result + [vParseResult]; end;
   end;
+end;
+
+function TLatin.formatGrammarResults(const aGrammarResult: TGrammarTable): TArray<string>;
+begin
+  result := NIL;
 end;
 
 function TLatin.formatParseResults(const aParseResults: TArray<TParseResultRec>): TArray<string>;
@@ -249,6 +261,9 @@ begin
     ]);
 
     case (vIxDelta = 2) of TRUE: result[length(result) - 1] := vParseResult.prExplanation; end;
+
+    expandArray(result);
+    result[high(result)] := format('stem1: %s, stem2: %s, stem3: %s, stem4: %s', [trim(vParseResult.prStem1), trim(vParseResult.prStem2), trim(vParseResult.prStem3), trim(vParseResult.prStem4)]);
   end;
 end;
 
@@ -350,7 +365,44 @@ begin
   {$endif}
 end;
 
-//===== PARSING =====
+//===== PARSING ETC =====
+
+function TLatin.declineNoun(const aWord: string): TGrammarTable;
+  function filterResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+  begin
+    result := NIL;
+    for var vParseResult in aParseResults do begin
+      case (trim(vParseResult.prPartOfSpeech) <> 'N') of TRUE: CONTINUE; end;
+
+      var vUnique := TRUE;
+      for var vResult in result do  begin
+                                      vUnique := (vParseResult.prStem1   <> vResult.prStem1)
+                                              or (vParseResult.prStem2   <> vResult.prStem2)
+                                              or (vParseResult.prClass   <> vResult.prClass)
+                                              or (vParseResult.prVariant <> vResult.prVariant);
+        case vUnique of FALSE: BREAK; end;
+      end;
+
+      case vUnique of TRUE: result := result + [vParseResult]; end;
+    end;
+  end;
+
+  function findCandidates(const aWord: string): TArray<TParseResultRec>;
+  begin
+    result := NIL;
+
+    result := result + parseUniques(aWord);
+    result := result + parsePronominals(aWord);
+
+    var vInflectionRecs := parseInflections(aWord);
+    result := result + parseDictStems(vInflectionRecs);
+  end;
+begin
+
+  var FNounResults := filterResults(findCandidates(aWord));
+  case length(FNounResults) = 0 of TRUE: EXIT; end;
+
+end;
 
 function TLatin.equalLatin(const aChar1: char; const aChar2: char): boolean;
 begin
@@ -415,6 +467,11 @@ begin
           case (vDictStem <> vStem) of TRUE: CONTINUE; end;
 
           var vResult             := vParseResult;
+          vResult.prStem          := vDictStem; // tautology
+          vResult.prStem1         := string(vDictLine.dictStem1).trim; // currently for declineNoun only
+          vResult.prStem2         := string(vDictLine.dictStem2).trim;
+          vResult.prStem3         := string(vDictLine.dictStem3).trim;
+          vResult.prStem4         := string(vDictLine.dictStem4).trim;
           vResult.prAge           := vDictLine.dictAge;
           vResult.prArea          := vDictLine.dictArea;
           vResult.prGeography     := vDictLine.dictGeography;
@@ -562,6 +619,18 @@ begin
   end;
 end;
 
+function TLatin.mapCaseToCase(const aCase: string): TNounCase;
+begin
+  result := ncNone;
+  for var vCase := ncNominative to ncLocative do case (MAP_NOUN_CASES[vCase] = aCase) of TRUE: EXIT(vCase); end;
+end;
+
+function TLatin.mapClassToClass(const aClass: char): TClassClass;
+begin
+  result := cc1;
+  for var vClass := cc1 to cc9 do case (MAP_CLASS_CLASSES[vClass] = aClass) of TRUE: EXIT(vClass); end;
+end;
+
 function TLatin.mapInflectionToResult(const aInflection: TInflectionsRec; var aResult: TParseResultRec): TVoid;
 begin
   aResult.prPartOfSpeech  := aInflection.irPartOfSpeech;
@@ -588,12 +657,16 @@ begin
   aResult.prFrequency     := aInflection.irFrequency;
 end;
 
+function TLatin.mapVariantToVariant(const aVariant: char): TClassVariant;
+begin
+  result := cv1;
+  for var vVariant := cv1 to cv9 do case (MAP_CLASS_VARIANTS[vVariant] = aVariant) of TRUE: EXIT(vVariant); end;
+end;
 
 function TLatin.parse(const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
 begin
 //  var vLine       := lowerCase(aLine);
 //      vLine       := removeMacrons(vLine);
-//      vLine       := vLine.replace('v', 'u').replace('j', 'i');
   result          := NIL;
   var vLine       := cleanSentences   (aLine);
   var vSentences  := extractSentences (vLine);
@@ -601,8 +674,9 @@ begin
   for var vSentence in vSentences do  begin
                                         var vWords := vSentence.split([' '], TStringSplitOptions.ExcludeEmpty);
 
-                                        var i   := -1;
-                                        var vPC := default(TParseContext);
+                                        var i                     := -1; // pseudo "for i := 0 ... " loop variable
+                                        var vPC                   := default(TParseContext);
+                                            vPC.pcConsoleCommand  := aConsoleCommand;
 
                                         for var vWord in vWords do  begin
                                                                       inc(i);
@@ -615,6 +689,14 @@ begin
                                                                       case i < length(vWords) - 1 of   TRUE: vPC.pcNextWord := vWords[i + 1];
                                                                                                       FALSE: vPC.pcNextWord := '' end;
 
+                                                                      case aConsoleCommand in [ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb] of TRUE: begin
+                                                                        case aConsoleCommand of
+                                                                          ccDeclineNoun: result := formatGrammarResults(declineNoun(vWord));
+                                                                        end;
+
+                                                                        CONTINUE;
+                                                                      end;end;
+
                                                                       result := result + formatParseResults(parseRomanNumerals(vWord));
                                                                       result := result + formatParseResults(parseWord(vWord, vPC));
 
@@ -622,7 +704,7 @@ begin
                                                                       result[high(result)] := ''; end;end;
 end;
 
-function TLatin.parseCompounds(const aResults: TArray<TParseResultRec>; var aParseContext: TParseContext): TArray<TParseResultRec>;
+function TLatin.parseCompounds(const aParseResults: TArray<TParseResultRec>; var aParseContext: TParseContext): TArray<TParseResultRec>;
 begin
   result := NIL;
   case (aParseContext.pcNextWord = '') of TRUE: EXIT; end;
@@ -636,7 +718,7 @@ begin
 
   case (NOT vNextAux) of TRUE: EXIT; end;
 
-  for var vResult in aResults do begin
+  for var vResult in aParseResults do begin
     var vCompoundResult: TParseResultRec := default(TParseResultRec);
     var vMatch := FALSE;
 
@@ -1135,6 +1217,7 @@ begin
 
   var vInflectionRecs := parseInflections(aWord);
   result := result + parseDictStems(vInflectionRecs);
+
   case  (length(result) > 0)                                      of TRUE:  begin
                                                                               result := result + parseCompounds(result, aPC);
                                                                               EXIT; end;end;
@@ -1205,48 +1288,6 @@ begin
 end;
 
 function TLatin.siphonNounData(var aDictionaryEntry: string): TNounData;
-  function mapCaseToCase(const aCase: string): TNounCase;
-  begin
-    result                              := ncNone;
-    case aCase = 'NOM' of TRUE: result  := ncNominative;  end;
-    case aCase = 'VOC' of TRUE: result  := ncVocative;    end;
-    case aCase = 'ACC' of TRUE: result  := ncAccusative;  end;
-    case aCase = 'GEN' of TRUE: result  := ncGenitive;    end;
-    case aCase = 'DAT' of TRUE: result  := ncDative;      end;
-    case aCase = 'ABL' of TRUE: result  := ncAblative;    end;
-    case aCase = 'LOC' of TRUE: result  := ncLocative;    end;
-  end;
-
-  function mapClassToClass(const aClass: char): TClassClass;
-  begin
-    case aClass of
-      '1': result := cc1;
-      '2': result := cc2;
-      '3': result := cc3;
-      '4': result := cc4;
-      '5': result := cc5;
-      '6': result := cc6;
-      '7': result := cc7;
-      '8': result := cc8;
-      '9': result := cc9;
-    end;
-  end;
-
-  function mapVariantToVariant(const aVariant: char): TClassVariant;
-  begin
-    case aVariant of
-      '1': result := cv1;
-      '2': result := cv2;
-      '3': result := cv3;
-      '4': result := cv4;
-      '5': result := cv5;
-      '6': result := cv6;
-      '7': result := cv7;
-      '8': result := cv8;
-      '9': result := cv9;
-    end;
-  end;
-
 begin
   result := default(TNounData);
 

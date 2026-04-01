@@ -24,6 +24,18 @@ interface
 type
   TVoid = record end;
 
+  TConsoleCommand = (ccNone, ccWW, ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb, ccLS, ccLoadLS, ccExportLS, ccImportLS, ccClearLS);
+  TConsoleContext = record
+    ccCommand: TConsoleCommand;
+    ccWW:      boolean;
+    ccLS:      boolean;
+  end;
+
+  TConsoleCommandMapping = record
+    cmInput:    string;
+    cmCommand:  TConsoleCommand;
+  end;
+
 { Whitaker's Words Data }
 
   TVerbNounAdjAdvRec = packed record
@@ -126,6 +138,10 @@ type
     prWord:         string;
     prPartOfSpeech: string;
     prStem:         string;
+    prStem1:        string;
+    prStem2:        string;
+    prStem3:        string;
+    prStem4:        string;
     prEnding:       string;
     prClass:        char;
     prVariant:      char;
@@ -318,6 +334,7 @@ type
   end;
 
   TParseContext = record
+    pcConsoleCommand: TConsoleCommand;
     pcNextWord: string;
     pcNextUsed: boolean;
     pcTricks:   boolean;
@@ -391,21 +408,9 @@ type
   TNounRow = array[0..3] of string;
 
   // The first row[ncNone] contains the column headers
-  TDeclensionTable = array[ncNone..ncLocative] of TNounRow;
+  TGrammarTable = array[ncNone..ncLocative] of TNounRow;
 
   TNounCaseOrder = (ncoNomAcc, ncoNomGen);
-
-  TConsoleCommand = (ccNone, ccWW, ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb, ccLS, ccLoadLS, ccExportLS, ccImportLS, ccClearLS);
-  TConsoleContext = record
-    ccCommand: TConsoleCommand;
-    ccWW:      boolean;
-    ccLS:      boolean;
-  end;
-
-  TConsoleCommandMapping = record
-    cmInput:    string;
-    cmCommand:  TConsoleCommand;
-  end;
 
 implementation
 

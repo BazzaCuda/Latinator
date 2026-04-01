@@ -45,10 +45,10 @@ const
   NOUN_CASE_MAX = 6; // 0-based
   NOUN_CASE_ORDER_STD: array[0..6] of TNounCase = (ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);
 
-  // my condolences: Wheeler was moron! :P :D
+  // my condolences: Wheelock was a moron! :P :D
   NOUN_CASE_ORDER_US:  array[0..6] of TNounCase = (ncNominative, ncGenitive, ncDative, ncAccusative, ncVocative, ncAblative, ncLocative);
 
-  CONSOLE_COMMAND_MAP: array[0..8] of TConsoleCommandMapping = (
+  MAP_CONSOLE_COMMANDS: array[0..8] of TConsoleCommandMapping = (
     (cmInput: 'nn';      cmCommand: ccDeclineNoun),
     (cmInput: 'aa';      cmCommand: ccDeclineAdjective),
     (cmInput: 'vv';      cmCommand: ccConjugateVerb),
@@ -59,6 +59,10 @@ const
     (cmInput: 'import';  cmCommand: ccImportLS),
     (cmInput: 'clear';   cmCommand: ccClearLS)
   );
+
+  MAP_CLASS_CLASSES:  array[cc1..cc9]                 of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
+  MAP_CLASS_VARIANTS: array[cv1..cv9]                 of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
+  MAP_NOUN_CASES:     array[ncNominative..ncLocative] of string = ('NOM', 'VOC', 'ACC', 'GEN', 'DAT', 'ABL', 'LOC');
 
 implementation
 

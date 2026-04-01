@@ -19,8 +19,6 @@
 
 program Latinator;
 
-//{$APPTYPE CONSOLE}
-
 // check if madExcept has left debugging options set in the Release configuration
 {$if defined(RELEASE)}
   {$ifopt D+} {$MESSAGE ERROR 'Release Build: Debug Information     (D+) enabled' } {$endif}
@@ -219,7 +217,7 @@ begin
   var vConsoleLine := aLine.split([' '], TStringSplitOptions.ExcludeEmpty);
   case length(vConsoleLine) = 0 of TRUE: EXIT; end;
 
-  for var vMapping in CONSOLE_COMMAND_MAP do
+  for var vMapping in MAP_CONSOLE_COMMANDS do
     case vMapping.cmInput = vConsoleLine[0] of TRUE:  begin
                                                         result.ccCommand := vMapping.cmCommand;
                                                         BREAK; end;end;
@@ -338,6 +336,7 @@ begin
     setConsoleWidth (150);
     setConsoleTitle         ('Latinator');
     centerWindow            (getConsoleWindow);
+    showWindow(getConsoleWindow, SW_SHOW); // only needed for the Delphi debugger
     applyUserConsoleColors  (getStdHandle(STD_OUTPUT_HANDLE));
 
     assignFile  (input, '');
