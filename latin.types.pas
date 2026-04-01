@@ -341,8 +341,8 @@ type
 
   TAdjectiveDegrees = (adPositive, adComparative, adSuperlative);
 
-  TClassClass    = (cc1 = 1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9);
-  TClassVariant  = (cv1 = 1, cv2, cv3, cv4, cv5, cv6, cv7, cv8, cv9);
+  TClassClass    = (cc1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9);
+  TClassVariant  = (cv1, cv2, cv3, cv4, cv5, cv6, cv7, cv8, cv9);
 
   // Person, Number, Tense, Mood, Voice: amo = first person singular, present indicative active
   TVerbContext = record
@@ -386,6 +386,15 @@ type
 
   TNounData = array[TClassClass, TClassVariant, ncNominative..ncLocative, nnSingular..nnPlural, ngMasculine..ngNeuter] of TNounInflection;
 
+  // For a noun: Case, Singular, Plural, N/A
+  // For an adjective: Case, Masculine, Feminine, Neuter
+  TNounRow = array[0..3] of string;
+
+  // The first row[ncNone] contains the column headers
+  TDeclensionTable = array[ncNone..ncLocative] of TNounRow;
+
 implementation
 
-end.                                                    Don't use LaTeX formatting.
+end.
+
+Don't use LaTeX formatting.

@@ -98,7 +98,7 @@ type
 
     function  removePrefix                (const aStem: string; const aPrefix: string; const aConnector: char):                     string;
     function  restoreStemM                (const aCore: string; const aTackOn: string):                                             string;
-    function  siphonNounData:                                                                                                       TNounData;
+    function  siphonNounData              (var aDictionaryEntry: string):                                                           TNounData;
     function  tryTrick                    (const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext):
                                                                                                                                     TArray<TParseResultRec>;
   public
@@ -301,7 +301,8 @@ end;
 function TLatin.loadInflections(const aFileName: string): TVoid;
 begin
   FInflections  := latin.fileUtils.loadInflections(FDataPath + aFileName);
-  {FNounData     :=} siphonNounData;
+  var vDictionaryEntry: string;
+  FNounData := siphonNounData(vDictionaryEntry);
 
   {$if BazDebugWindow}
   debugInteger('FInflections', length(FInflections));
@@ -1202,7 +1203,7 @@ begin
   FDataPath := aPath;
 end;
 
-function TLatin.siphonNounData: TNounData;
+function TLatin.siphonNounData(var aDictionaryEntry: string): TNounData;
   function mapCaseToCase(const aCase: string): TNounCase;
   begin
     result                              := ncNone;
@@ -1246,7 +1247,7 @@ function TLatin.siphonNounData: TNounData;
   end;
 
 begin
-  fillChar(result, sizeOf(result), 0);
+  result := default(TNounData);
 
   for var vInflection in FInflections do
     case vInflection.irPartOfSpeech[1] = 'N' of TRUE: begin
@@ -1288,6 +1289,7 @@ begin
                 result[vClass, vVariant, vCase, vNumber, ngNeuter].niSuffix     := string(vInflection.irSuffix).trim;   end;
       end;
     end;end;
+    //result := aNounData;
 end;
 
 function TLatin.tryTrick(const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext): TArray<TParseResultRec>;
@@ -1311,8 +1313,6 @@ end;
 function TLatin.unload: TVoid;
 begin
   FLewisAndShort := NIL;
-  finalize(FNounData);
-  fillChar(FNounData, sizeOf(FNounData), 0);
   FNounData := default(TNounData);
 end;
 
