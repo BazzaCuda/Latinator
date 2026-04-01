@@ -40,6 +40,25 @@ const
   );
 
   USER_TRICKS = TRUE;
+  USER_NOUN_CASE_ORDER = ncoNomAcc;
+
+  NOUN_CASE_MAX = 6; // 0-based
+  NOUN_CASE_ORDER_STD: array[0..6] of TNounCase = (ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);
+
+  // my condolences: Wheeler was moron! :P :D
+  NOUN_CASE_ORDER_US:  array[0..6] of TNounCase = (ncNominative, ncGenitive, ncDative, ncAccusative, ncVocative, ncAblative, ncLocative);
+
+  CONSOLE_COMMAND_MAP: array[0..8] of TConsoleCommandMapping = (
+    (cmInput: 'nn';      cmCommand: ccDeclineNoun),
+    (cmInput: 'aa';      cmCommand: ccDeclineAdjective),
+    (cmInput: 'vv';      cmCommand: ccConjugateVerb),
+    (cmInput: 'ww';      cmCommand: ccWW),
+    (cmInput: 'ls';      cmCommand: ccLS),
+    (cmInput: 'las';     cmCommand: ccLoadLS),
+    (cmInput: 'export';  cmCommand: ccExportLS),
+    (cmInput: 'import';  cmCommand: ccImportLS),
+    (cmInput: 'clear';   cmCommand: ccClearLS)
+  );
 
 implementation
 

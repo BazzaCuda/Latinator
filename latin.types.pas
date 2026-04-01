@@ -393,6 +393,20 @@ type
   // The first row[ncNone] contains the column headers
   TDeclensionTable = array[ncNone..ncLocative] of TNounRow;
 
+  TNounCaseOrder = (ncoNomAcc, ncoNomGen);
+
+  TConsoleCommand = (ccNone, ccWW, ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb, ccLS, ccLoadLS, ccExportLS, ccImportLS, ccClearLS);
+  TConsoleContext = record
+    ccCommand: TConsoleCommand;
+    ccWW:      boolean;
+    ccLS:      boolean;
+  end;
+
+  TConsoleCommandMapping = record
+    cmInput:    string;
+    cmCommand:  TConsoleCommand;
+  end;
+
 implementation
 
 end.

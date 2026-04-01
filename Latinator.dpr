@@ -190,7 +190,7 @@ end;
 function clearLewisAndShort(const aLatin: ILatin): TVoid;
 begin
   aLatin.LewisAndShort.clear;
-  writeUnicode                      ('Cleared');
+  writeUnicode                      ('Lewis & Short cleared');
   writeUnicode                      ('');
 end;
 
@@ -212,6 +212,25 @@ end;
 var
   gFinished : boolean = FALSE;
 
+function mapConsoleCommand(var aLine: string): TConsoleContext;
+begin
+  result := default(TConsoleContext);
+
+  var vConsoleLine := aLine.split([' '], TStringSplitOptions.ExcludeEmpty);
+  case length(vConsoleLine) = 0 of TRUE: EXIT; end;
+
+  for var vMapping in CONSOLE_COMMAND_MAP do
+    case vMapping.cmInput = vConsoleLine[0] of TRUE:  begin
+                                                        result.ccCommand := vMapping.cmCommand;
+                                                        BREAK; end;end;
+
+  case result.ccCommand in [ccWW..ccConjugateVerb] of TRUE: delete(aLine, 1, length(vConsoleLine[0])); end;
+
+  result.ccWW := result.ccCommand in [ccNone..ccConjugateVerb];
+  result.ccLS := result.ccCommand in [ccNone, ccLS..ccClearLS];
+end;
+
+
 function consoleLoop(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
     var vLine: string;
@@ -228,35 +247,17 @@ begin
                                                               writeUnicode('Bene Vale!');
                                                               BREAK; end;end;
 
-        case vLine = 'las'    of   TRUE:  begin
-                                            loadLewisAndShort   (aLatin, aDataPath);
-                                            CONTINUE; end;end;
+        var vConsoleContext := mapConsoleCommand(vLine);
 
-        case vLine = 'export' of   TRUE:  begin
-                                            exportLewisAndShort (aLatin, aDataPath);
-                                            CONTINUE; end;end;
+        case vConsoleContext.ccCommand of
+          ccLoadLS:   begin loadLewisAndShort   (aLatin, aDataPath);  CONTINUE; end;
+          ccExportLS: begin exportLewisAndShort (aLatin, aDataPath);  CONTINUE; end;
+          ccImportLS: begin importLewisAndShort (aLatin, aDataPath);  CONTINUE; end;
+          ccClearLS:  begin clearLewisAndShort  (aLatin);             CONTINUE; end;
+        end;
 
-        case vLine = 'import' of   TRUE:  begin
-                                            importLewisAndShort (aLatin, aDataPath);
-                                            CONTINUE; end;end;
-
-        case vLine = 'clear'  of   TRUE:  begin
-                                            clearLewisAndShort  (aLatin);
-                                            CONTINUE; end;end;
-
-        var vWhitakersWords := TRUE;                  // the default is to do both
-        var vLewisAndShort  := TRUE;
-
-        case (pos('ww ', vLine) = 1) of TRUE: begin   // the user can override the default
-                                                delete(vLine, 1, 3);
-                                                vLewisAndShort := FALSE; end;end;
-
-        case (pos('ls ', vLine) = 1) of TRUE: begin
-                                                delete(vLine, 1, 3);
-                                                vWhitakersWords := FALSE; end;end;
-
-       case vWhitakersWords of TRUE: for var vString in aLatin.parse(vLine) do writeUnicode(vString); end;
-       case vLewisAndShort  of TRUE: writeEntry(aLatin.LewisAndShort.findEntry(vLine)); end;
+        case vConsoleContext.ccWW of TRUE: for var vString in aLatin.parse(vConsoleContext.ccCommand, vLine) do writeUnicode(vString); end;
+        case vConsoleContext.ccLS of TRUE: writeEntry(aLatin.LewisAndShort.findEntry(vLine)); end;
 
       until vLine = '';
 

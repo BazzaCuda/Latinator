@@ -36,7 +36,7 @@ type
     function  loadSuffixes      (const aFileName: string): TVoid;
     function  loadTackOns       (const aFileName: string): TVoid;
     function  loadUniques       (const aFileName: string): TVoid;
-    function  parse             (const aLine:     string): TArray<string>;
+    function  parse             (const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
     function  setDataPath       (const aPath:     string): TVoid;
     function  unload:                                      TVoid;
   end;
@@ -115,7 +115,7 @@ type
     function  loadTackOns       (const aFileName: string): TVoid;
     function  loadUniques       (const aFileName: string): TVoid;
 
-    function  parse             (const aLine:     string): TArray<string>;
+    function  parse             (const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
     function  setDataPath       (const aPath:     string): TVoid;
     function  unload:                                      TVoid;
   end;
@@ -588,7 +588,8 @@ begin
   aResult.prFrequency     := aInflection.irFrequency;
 end;
 
-function TLatin.parse(const aLine: string): TArray<string>;
+
+function TLatin.parse(const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
 begin
 //  var vLine       := lowerCase(aLine);
 //      vLine       := removeMacrons(vLine);
