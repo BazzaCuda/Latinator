@@ -104,9 +104,11 @@ type
     function  siphonNounData              (var aDictionaryEntry: string):                                                           TNounData;
     function  tryTrick                    (const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext):
                                                                                                                                     TArray<TParseResultRec>;
-    function mapCaseToCase(const aCase: string): TNounCase;
-    function mapClassToClass(const aClass: char): TClassClass;
-    function mapVariantToVariant(const aVariant: char): TClassVariant;
+    function mapCaseToCase        (const aCase:     string):        TNounCase;
+    function mapClassToClass      (const aClass:    char):          TClassClass;
+    function mapGenderToGender    (const aGender:   char):          TNounGender;
+    function mapVariantToVariant  (const aVariant:  char):          TClassVariant;
+    function nounDeclension       (const aContext:  TNounContext):  TGrammarTable;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -199,8 +201,19 @@ begin
 end;
 
 function TLatin.formatGrammarResults(const aGrammarResult: TGrammarTable): TArray<string>;
+const
+  WIDTH_CASE = 10;
+  WIDTH_CELL = 80;
 begin
   result := NIL;
+  for var vCase := ncNone to ncLocative do begin
+    result := result + [format('%-*s  |  %-*s  |  %-*s  |  %-*s', [
+      WIDTH_CASE, aGrammarResult[vCase][0],
+      WIDTH_CELL, aGrammarResult[vCase][1],
+      WIDTH_CELL, aGrammarResult[vCase][2],
+      WIDTH_CELL, aGrammarResult[vCase][3]
+    ])];
+  end;
 end;
 
 function TLatin.formatParseResults(const aParseResults: TArray<TParseResultRec>): TArray<string>;
@@ -402,6 +415,18 @@ begin
   var FNounResults := filterResults(findCandidates(aWord));
   case length(FNounResults) = 0 of TRUE: EXIT; end;
 
+  var vResult  := FNounResults[0];
+  var vContext := default(TNounContext);
+
+  vContext.ncClass   := mapClassToClass(vResult.prClass);
+  vContext.ncVariant := mapVariantToVariant(vResult.prVariant);
+  vContext.ncStem1   := vResult.prStem1;
+  vContext.ncStem2   := vResult.prStem2;
+  vContext.ncStem3   := vResult.prStem3;
+  vContext.ncStem4   := vResult.prStem4;
+  vContext.ncGender  := mapGenderToGender(vResult.prGender);
+
+  result := nounDeclension(vContext);
 end;
 
 function TLatin.equalLatin(const aChar1: char; const aChar2: char): boolean;
@@ -627,8 +652,15 @@ end;
 
 function TLatin.mapClassToClass(const aClass: char): TClassClass;
 begin
-  result := cc1;
+//  result := cc1;
+  result := cccNone;
   for var vClass := cc1 to cc9 do case (MAP_CLASS_CLASSES[vClass] = aClass) of TRUE: EXIT(vClass); end;
+end;
+
+function TLatin.mapGenderToGender(const aGender: char): TNounGender;
+begin
+  result := ngNone;
+  for var vGender := ngMasculine to ngAll do case (MAP_NOUN_GENDERS[vGender] = aGender) of TRUE: EXIT(vGender); end;
 end;
 
 function TLatin.mapInflectionToResult(const aInflection: TInflectionsRec; var aResult: TParseResultRec): TVoid;
@@ -659,8 +691,89 @@ end;
 
 function TLatin.mapVariantToVariant(const aVariant: char): TClassVariant;
 begin
-  result := cv1;
+//  result := cv1;
+  result := cvNone; // BAZ EXPERIMENTAL
   for var vVariant := cv1 to cv9 do case (MAP_CLASS_VARIANTS[vVariant] = aVariant) of TRUE: EXIT(vVariant); end;
+end;
+
+function TLatin.nounDeclension(const aContext: TNounContext): TGrammarTable;
+const COL_CASE = 0;
+begin
+  var vTargetGenders: TArray<TNounGender> := NIL;
+
+  case aContext.ncGender of
+    ngMasculine: vTargetGenders := [ngMasculine];
+    ngFeminine:  vTargetGenders := [ngFeminine];
+    ngNeuter:    vTargetGenders := [ngNeuter];
+    ngCommon:    vTargetGenders := [ngMasculine, ngFeminine];
+    ngAll:       vTargetGenders := [ngMasculine, ngFeminine, ngNeuter];
+  else
+    // vTargetGenders := [ngMasculine, ngFeminine];    BAZ EXPERIMENTAL
+  end;
+
+  result[ncNone][COL_CASE]        := 'Case';
+  result[ncNone][ord(nnSingular)] := 'Singular';
+  result[ncNone][ord(nnPlural)]   := 'Plural';
+
+  for var vCase := ncNominative to ncLocative do begin
+    result[vCase][COL_CASE] := MAP_NOUN_CASES[vCase];
+
+    for var vNumber := nnSingular to nnPlural do begin
+      var vCellList := TStringList.create;
+      vCellList.sorted     := TRUE;
+      vCellList.duplicates := dupIgnore;
+
+      try
+        for var vGender in vTargetGenders do begin
+          var vSlotChar := ' ';
+
+          case vGender of
+            ngMasculine: vSlotChar := 'M';
+            ngFeminine:  vSlotChar := 'F';
+            ngNeuter:    vSlotChar := 'N';
+          end;
+
+          for var vInflection in FNounData[aContext.ncClass, aContext.ncVariant, vCase, vNumber, vGender] do begin
+
+            case NOT (vInflection.niAge in ['X', 'C']) of TRUE: CONTINUE; end;
+            case (aContext.ncGender in [ngMasculine, ngFeminine, ngNeuter])
+              and NOT (vInflection.niGender in ['X', 'C', vSlotChar]) of TRUE: CONTINUE; end;
+
+            var vStem := '';
+            case vInflection.niStemID of
+              '1': vStem := aContext.ncStem1;
+              '2': vStem := aContext.ncStem2;
+              '3': vStem := aContext.ncStem3;
+              '4': vStem := aContext.ncStem4;
+            end;
+
+            // Skip inflections that require a stem index not provided by this dictionary entry
+            case (vStem = '') and (vInflection.niStemID <> '0') of TRUE: CONTINUE; end;
+
+            var vFullWord      := vStem + vInflection.niSuffix;
+            var vDisplaySuffix := ' -' + vInflection.niSuffix;
+
+            case USER_NOUN_DEBUG of TRUE: begin
+              var vDebugTag  := ' [' + vSlotChar + vInflection.niGender + vInflection.niAge + vInflection.niFrequency + vInflection.niStemID + ']';
+              vFullWord      := vFullWord      + vDebugTag;
+              vDisplaySuffix := vDisplaySuffix + vDebugTag;
+            end;end;
+
+            vCellList.add(vFullWord + '|' + vDisplaySuffix);
+          end;end;
+
+          case (vCellList.count > 0) of TRUE: begin
+            result[vCase][ord(vNumber)] := vCellList[0].split(['|'])[0];
+            for var vIdx := 1 to vCellList.count - 1 do begin
+              result[vCase][ord(vNumber)] := result[vCase][ord(vNumber)] + ' /' + vCellList[vIdx].split(['|'])[1];
+          end;end;
+
+          FALSE: result[vCase][ord(vNumber)] := '---';
+        end;
+
+      finally
+        vCellList.free;
+      end;end;end;
 end;
 
 function TLatin.parse(const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
@@ -691,7 +804,7 @@ begin
 
                                                                       case aConsoleCommand in [ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb] of TRUE: begin
                                                                         case aConsoleCommand of
-                                                                          ccDeclineNoun: result := formatGrammarResults(declineNoun(vWord));
+                                                                          ccDeclineNoun: result := result + formatGrammarResults(declineNoun(vWord));
                                                                         end;
 
                                                                         CONTINUE;
@@ -1291,47 +1404,52 @@ function TLatin.siphonNounData(var aDictionaryEntry: string): TNounData;
 begin
   result := default(TNounData);
 
-  for var vInflection in FInflections do
-    case vInflection.irPartOfSpeech[1] = 'N' of TRUE: begin
-      var vClass    := mapClassToClass(vInflection.irClass);
-      var vVariant  := mapVariantToVariant(vInflection.irVariant);
+  for var vInflection in FInflections do begin
+    case (vInflection.irPartOfSpeech[1] = 'N') of TRUE: begin
+
+      var vClass := mapClassToClass(vInflection.irClass);
+      case vClass = cccNone of TRUE: CONTINUE; end; // BAZ EXPERIMENTAL
+      var vVariant := mapVariantToVariant(vInflection.irVariant);
+      case vVariant = cvNone of TRUE: CONTINUE; end; // BAZ EXPERIMENTAL
 
       var vCase := mapCaseToCase(string(vInflection.irCase).trim);
-      case vCase = ncNone of TRUE: CONTINUE; end;
+      case (vCase = ncNone) of TRUE: CONTINUE; end;
 
       var vNumber: TNounNumber;
       case vInflection.irNumber1 of
-          'S': vNumber := nnSingular;
-          'P': vNumber := nnPlural;
+        'S': vNumber := nnSingular;
+        'P': vNumber := nnPlural;
       else
         CONTINUE;
       end;
 
+      var vInflectionRec          :  TNounInflection;
+      vInflectionRec.niStemID     := vInflection.irStemID;
+      vInflectionRec.niSuffix     := string(vInflection.irSuffix).trim;
+      vInflectionRec.niGender     := vInflection.irGender;
+      vInflectionRec.niAge        := vInflection.irAge;
+      vInflectionRec.niFrequency  := vInflection.irFrequency;
+
       case vInflection.irGender of
-        'M':  begin
-                result[vClass, vVariant, vCase, vNumber, ngMasculine].niStemID  := vInflection.irStemID;
-                result[vClass, vVariant, vCase, vNumber, ngMasculine].niSuffix  := string(vInflection.irSuffix).trim;   end;
-        'F':  begin
-                result[vClass, vVariant, vCase, vNumber, ngFeminine].niStemID   :=  vInflection.irStemID;
-                result[vClass, vVariant, vCase, vNumber, ngFeminine].niSuffix   :=  string(vInflection.irSuffix).trim;  end;
-        'N':  begin
-                result[vClass, vVariant, vCase, vNumber, ngNeuter].niStemID     := vInflection.irStemID;
-                result[vClass, vVariant, vCase, vNumber, ngNeuter].niSuffix     := string(vInflection.irSuffix).trim;   end;
+        'M':  result[vClass, vVariant, vCase, vNumber, ngMasculine]   := result[vClass, vVariant, vCase, vNumber, ngMasculine]  + [vInflectionRec];
+
+        'F':  result[vClass, vVariant, vCase, vNumber, ngFeminine]    := result[vClass, vVariant, vCase, vNumber, ngFeminine]   + [vInflectionRec];
+
+        'N':  result[vClass, vVariant, vCase, vNumber, ngNeuter]      := result[vClass, vVariant, vCase, vNumber, ngNeuter]     + [vInflectionRec];
+
         'C':  begin
-                result[vClass, vVariant, vCase, vNumber, ngMasculine].niStemID  := vInflection.irStemID;
-                result[vClass, vVariant, vCase, vNumber, ngMasculine].niSuffix  := string(vInflection.irSuffix).trim;
-                result[vClass, vVariant, vCase, vNumber, ngFeminine].niStemID   := vInflection.irStemID;
-                result[vClass, vVariant, vCase, vNumber, ngFeminine].niSuffix   := string(vInflection.irSuffix).trim;   end;
+                result[vClass, vVariant, vCase, vNumber, ngMasculine] := result[vClass, vVariant, vCase, vNumber, ngMasculine]  + [vInflectionRec];
+                result[vClass, vVariant, vCase, vNumber, ngFeminine]  := result[vClass, vVariant, vCase, vNumber, ngFeminine]   + [vInflectionRec];
+              end;
+
         'X':  begin
-                result[vClass, vVariant, vCase, vNumber, ngMasculine].niStemID  := vInflection.irStemID;
-                result[vClass, vVariant, vCase, vNumber, ngMasculine].niSuffix  := string(vInflection.irSuffix).trim;
-                result[vClass, vVariant, vCase, vNumber, ngFeminine].niStemID   := vInflection.irStemID;
-                result[vClass, vVariant, vCase, vNumber, ngFeminine].niSuffix   := string(vInflection.irSuffix).trim;
-                result[vClass, vVariant, vCase, vNumber, ngNeuter].niStemID     := vInflection.irStemID;
-                result[vClass, vVariant, vCase, vNumber, ngNeuter].niSuffix     := string(vInflection.irSuffix).trim;   end;
+                result[vClass, vVariant, vCase, vNumber, ngMasculine] := result[vClass, vVariant, vCase, vNumber, ngMasculine]  + [vInflectionRec];
+                result[vClass, vVariant, vCase, vNumber, ngFeminine]  := result[vClass, vVariant, vCase, vNumber, ngFeminine]   + [vInflectionRec];
+                result[vClass, vVariant, vCase, vNumber, ngNeuter]    := result[vClass, vVariant, vCase, vNumber, ngNeuter]     + [vInflectionRec];
+              end;
       end;
     end;end;
-    //result := aNounData;
+  end;
 end;
 
 function TLatin.tryTrick(const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext): TArray<TParseResultRec>;

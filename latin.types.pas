@@ -352,14 +352,14 @@ type
   // Case, Number, Gender: amicum = accusative singular masculine
   TNounCase   = (ncNone, ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);
   TNounNumber = (nnNone, nnSingular, nnPlural);
-  TNounGender = (ngNone, ngMasculine, ngFeminine, ngNeuter);
+  TNounGender = (ngNone, ngMasculine, ngFeminine, ngNeuter, ngCommon, ngAll);
 
   TVerbalSubstantive = (vsParticiple, vsGerund, vsGerundive, vsSupine);
 
   TAdjectiveDegrees = (adPositive, adComparative, adSuperlative);
 
-  TClassClass    = (cc1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9);
-  TClassVariant  = (cv1, cv2, cv3, cv4, cv5, cv6, cv7, cv8, cv9);
+  TClassClass    = (cccNone, cc1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9); // BAZ EXPERIMENTAL
+  TClassVariant  = (cvNone, cv1, cv2, cv3, cv4, cv5, cv6, cv7, cv8, cv9);  // BAZ EXPERIMENTAL
 
   // Person, Number, Tense, Mood, Voice: amo = first person singular, present indicative active
   TVerbContext = record
@@ -385,6 +385,8 @@ type
     ncVariant:  TClassVariant;
     ncStem1:    string;
     ncStem2:    string;
+    ncStem3:    string;
+    ncStem4:    string;
   end;
 
   TNounTable = array[ncNominative..ncLocative, nnSingular..nnPlural, ngMasculine..ngNeuter] of string;
@@ -397,11 +399,14 @@ type
   // ... vNounTable[ncNominative, nnSingular, ngMasculine]
 
   TNounInflection = record
-    niStemID: char;
-    niSuffix: string;
+    niStemID:    char;
+    niSuffix:    string;
+    niGender:    char;
+    niAge:       char;
+    niFrequency: char;
   end;
 
-  TNounData = array[TClassClass, TClassVariant, ncNominative..ncLocative, nnSingular..nnPlural, ngMasculine..ngNeuter] of TNounInflection;
+  TNounData = array[TClassClass, TClassVariant, ncNominative..ncLocative, nnSingular..nnPlural, ngMasculine..ngNeuter] of TArray<TNounInflection>;
 
   // For a noun: Case, Singular, Plural, N/A
   // For an adjective: Case, Masculine, Feminine, Neuter

@@ -39,8 +39,9 @@ const
     (pmSearchString: 'cu';    pmPrefix: '';    pmStemType: stCu)
   );
 
-  USER_TRICKS = TRUE;
-  USER_NOUN_CASE_ORDER = ncoNomAcc;
+  USER_TRICKS           = TRUE;
+  USER_NOUN_CASE_ORDER  = ncoNomAcc;
+  USER_NOUN_DEBUG       = TRUE;
 
   NOUN_CASE_MAX = 6; // 0-based
   NOUN_CASE_ORDER_STD: array[0..6] of TNounCase = (ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);
@@ -63,6 +64,7 @@ const
   MAP_CLASS_CLASSES:  array[cc1..cc9]                 of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
   MAP_CLASS_VARIANTS: array[cv1..cv9]                 of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
   MAP_NOUN_CASES:     array[ncNominative..ncLocative] of string = ('NOM', 'VOC', 'ACC', 'GEN', 'DAT', 'ABL', 'LOC');
+  MAP_NOUN_GENDERS:   array[ngMasculine..ngAll]       of char   = ('M', 'F', 'N', 'C', 'X');
 
 implementation
 
