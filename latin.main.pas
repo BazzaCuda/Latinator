@@ -161,7 +161,7 @@ function TLatin.removeDuplicateResults(const aParseResults: TArray<TParseResultR
 begin
   result := NIL;
   for var vParseResult in aParseResults do begin
-    var vIsDuplicate := FALSE;
+    var vDuplicate := FALSE;
     for var vUnique in result do begin
       case (vParseResult.prWord = vUnique.prWord)
            and (vParseResult.prPartOfSpeech = vUnique.prPartOfSpeech)
@@ -190,11 +190,11 @@ begin
            and (vParseResult.prNumKind = vUnique.prNumKind)
            and (vParseResult.prNumValue = vUnique.prNumValue)
            and (vParseResult.prExplanation = vUnique.prExplanation) of TRUE: begin
-        vIsDuplicate := TRUE;
+        vDuplicate := TRUE;
         BREAK;
       end;end;
     end;
-    case vIsDuplicate of FALSE: result := result + [vParseResult]; end;
+    case vDuplicate of FALSE: result := result + [vParseResult]; end;
   end;
 end;
 
@@ -901,11 +901,11 @@ begin
           case (vCPOS = 'N') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
           case (vCPOS = 'ADJ') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
 
-          var vIsMatch := (vCPOS = vSourcePOS)
+          var vMatch  := (vCPOS = vSourcePOS)
                        or ((vCPOS = 'PACK') and (vSourcePOS = 'PRON'))
                        or (vSourcePOS = 'X');
 
-          case vIsMatch of TRUE: begin
+          case vMatch of TRUE: begin
             var vTrans := vCandidate;
             case (vTargetPOS <> 'X') and (vTargetPOS <> '') of
               TRUE: vTrans.prPartOfSpeech := vPrefixRec.prTargetPartOfSpeech;
@@ -1085,11 +1085,11 @@ begin
           case (vCPOS = 'N') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
           case (vCPOS = 'ADJ') and (vCandidate.prClass = '9') and (vCandidate.prVariant = '8') of TRUE: CONTINUE; end;
 
-          var vIsMatch := (vCPOS = vSourcePOS)
+          var vMatch  := (vCPOS = vSourcePOS)
                        or ((vCPOS = 'PACK') and (vSourcePOS = 'PRON'))
                        or (vSourcePOS = 'X');
 
-          case vIsMatch of TRUE: begin
+          case vMatch of TRUE: begin
             var vStemMatch := (vSuffixRec.srSourceStemID = '0') or (vCandidate.prStemID = vSuffixRec.srSourceStemID)
                   or ((vCandidate.prStemID = '0') and ((vCPOS = 'N') or (vCPOS = 'ADJ') or (vCPOS = 'V'))
                   and ((vSuffixRec.srSourceStemID = '1') or (vSuffixRec.srSourceStemID = '2')));
