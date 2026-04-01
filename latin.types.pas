@@ -323,24 +323,69 @@ type
     pcTricks:   boolean;
   end;
 
-{ Verb Conjugations }
+{ Verb Conjugations and Noun/Adjective/etc Declensions }
 
-  TVerbTenses   = (vtPluperfect, vtPerfect, vtImperfect, vtPresent, vtFuturePerfect, vtFuture);
-  TVerbVoices   = (vvActive, vvPassive);
-  TVerbPerson   = (vpFirst, vpSecond, vpThird);
-  TVerbNumber   = (vnSingular, vnPlural);
-  TVerbMoods    = (vmIndicative, vmSubjunctive, vmImperative, vmInfinitive, vmParticiple, vmGerund, vmGerundive, vmSupine);
+  // Person, Number, Tense, Mood, Voice: amo = first person singular, present indicative active
+  TVerbPerson = (vpNone, vpFirst, vpSecond, vpThird);
+  TVerbNumber = (vnNone, vnSingular, vnPlural);
+  TVerbTense  = (vtNone, vtPluperfect, vtPerfect, vtImperfect, vtPresent, vtFuturePerfect, vtFuture);
+  TVerbMood   = (vmNone, vmIndicative, vmSubjunctive, vmImperative, vmInfinitive);
+  TVerbVoice  = (vvNone, vvActive, vvPassive);
 
-{ Noun Declensions }
+  // Case, Number, Gender: amicum = accusative singular masculine
+  TNounCase   = (ncNone, ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);
+  TNounNumber = (nnNone, nnSingular, nnPlural);
+  TNounGender = (ngNone, ngMasculine, ngFeminine, ngNeuter);
 
-  TNounCases    = (ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);
-  TNounGenders  = (ngMasculine, ngFeminine, ngNeuter);
-  TNounNumber   = (nnSingular, nnPlural);
-
-{ Adjective Declensions }
+  TVerbalSubstantive = (vsParticiple, vsGerund, vsGerundive, vsSupine);
 
   TAdjectiveDegrees = (adPositive, adComparative, adSuperlative);
 
+  TClassClass    = (cc1 = 1, cc2, cc3, cc4, cc5, cc6, cc7, cc8, cc9);
+  TClassVariant  = (cv1 = 1, cv2, cv3, cv4, cv5, cv6, cv7, cv8, cv9);
+
+  // Person, Number, Tense, Mood, Voice: amo = first person singular, present indicative active
+  TVerbContext = record
+    vcPerson:   TVerbPerson;
+    vcNumber:   TVerbNumber;
+    vcTense:    TVerbTense;
+    vcMood:     TVerbMood;
+    vcVoice:    TVerbVoice;
+    vcClass:    TClassClass;
+    vcVariant:  TClassVariant;
+    vcStem1:    string;
+    vcStem2:    string;
+    vcStem3:    string;
+    vcStem4:    string;
+  end;
+
+  // Case, Number, Gender: amicum = accusative singular masculine
+  TNounContext = record
+    ncCase:     TNounCase;
+    ncNumber:   TNounNumber;
+    ncGender:   TNounGender;
+    ncClass:    TClassClass;
+    ncVariant:  TClassVariant;
+    ncStem1:    string;
+    ncStem2:    string;
+  end;
+
+  TNounTable = array[ncNominative..ncLocative, nnSingular..nnPlural, ngMasculine..ngNeuter] of string;
+  TVerbTable = array[vpFirst..vpThird, vnSingular..vnPlural] of string;
+
+  // e.g.
+  // function nounDeclension(const aContext: TNounContext): TNounTable;
+  // function verbConjugation(const aContext: TVerbContext): TVerbTable;
+  // var vNounTable := nounDeclension(myContext);
+  // ... vNounTable[ncNominative, nnSingular, ngMasculine]
+
+  TNounInflection = record
+    niStemID: char;
+    niSuffix: string;
+  end;
+
+  TNounData = array[TClassClass, TClassVariant, ncNominative..ncLocative, nnSingular..nnPlural, ngMasculine..ngNeuter] of TNounInflection;
+
 implementation
 
-end.
+end.                                                    Don't use LaTeX formatting.
