@@ -242,6 +242,8 @@ result := NIL;
 end;
 
 function TLatin.formatGrammarResults(const aGrammarResult: TGrammarTable): TArray<string>;
+// will print out column headers then a verb 3 x 3, noun 7 x 3, or adjective 7 x 4 grid
+// followed by a two-line dictionary entry
 const
   WIDTH_LABEL = 10;
   WIDTH_CELL  = 16;
@@ -264,6 +266,7 @@ begin
 
     case (vRow = ncNone) of TRUE: result := result + [stringOfChar('-', vLine.length)]; end;
   end;
+
   result := result + [''];
 end;
 
@@ -868,7 +871,7 @@ const COL_CASE = 0;
     var vGender     := MAP_NOUN_GENDER_LABELS[aContext.ncGender];
     var vDeclension := MAP_NOUN_DECLENSION_LABELS[aContext.ncClass];
 
-    result          := format('%s, %s: %s declension %s noun|%s', [vNominative, vGenitive, vDeclension, vGender, aContext.ncTranslation]);
+    result          := format('%s, %s: %s declension %s#%s', [vNominative, vGenitive, vDeclension, vGender, aContext.ncTranslation]); // consoleUtils will split the line at the #
   end;
 
 begin
@@ -981,15 +984,15 @@ begin
                                                                       case aConsoleCommand in [ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb] of TRUE: begin
                                                                         var vDictionaryEntry: string;
                                                                         case aConsoleCommand of
-                                                                          ccDeclineNoun:    result := result + formatGrammarResults(declineNoun   (vWord, vDictionaryEntry)) + [vDictionaryEntry];
-                                                                          ccConjugateVerb:  result := result + formatGrammarResults(conjugateVerb (vWord, vDictionaryEntry)) + [vDictionaryEntry];
+                                                                          ccDeclineNoun:    result := result + [''] + formatGrammarResults(declineNoun   (vWord, vDictionaryEntry)) + [vDictionaryEntry, ''];
+                                                                          ccConjugateVerb:  result := result + [''] + formatGrammarResults(conjugateVerb (vWord, vDictionaryEntry)) + [vDictionaryEntry, ''];
                                                                         end;
 
                                                                         CONTINUE;
                                                                       end;end;
 
                                                                       result := result + formatParseResults(parseRomanNumerals(vWord));
-                                                                      result := result + formatParseResults(parseWord(vWord, vPC));
+                                                                      result := result + [''] + formatParseResults(parseWord(vWord, vPC));
 
                                                                       expandArray(result);
                                                                       result[high(result)] := ''; end;end;
@@ -1736,7 +1739,7 @@ const COL_LABEL = 0;
     var vMood         := MAP_VERB_MOOD_LABELS[  aContext.vcMood];
     var vVoice        := MAP_VERB_VOICE_LABELS  [aContext.vcVoice];
 
-    result            := format('%s, %s, %s, %s: %s conjugation %s %s %s|%s', [vPres1S, vInf, vPerf1S, vSupine, vConjugation, vTense, vMood, vVoice, aContext.vcTranslation]);
+    result            := format('%s, %s, %s, %s: %s conjugation %s %s %s#%s', [vPres1S, vInf, vPerf1S, vSupine, vConjugation, vTense, vMood, vVoice, aContext.vcTranslation]);
   end;
 
 begin
@@ -1766,14 +1769,14 @@ begin
           end;
 
           case (vStem = '') and (vConjugation.vcStemID <> '0') of TRUE: CONTINUE; end;
-          vCellList.add(vStem + vConjugation.vcSuffix);
+          vCellList.add(vStem + vConjugation.vcSuffix + '| -' + vConjugation.vcSuffix);
         end;
 
         case (vCellList.count > 0) of
           TRUE: begin
-            result[vRow][ord(vNumber)] := vCellList[0];
+            result[vRow][ord(vNumber)] := vCellList[0].split(['|'])[0];
             for var vIdx := 1 to vCellList.count - 1 do
-              result[vRow][ord(vNumber)] := result[vRow][ord(vNumber)] + ' / ' + vCellList[vIdx];
+              result[vRow][ord(vNumber)] := result[vRow][ord(vNumber)] + ' / ' + vCellList[vIdx].split(['|'])[1];
           end;
           FALSE: result[vRow][ord(vNumber)] := '---';
         end;

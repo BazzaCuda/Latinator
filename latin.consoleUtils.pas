@@ -91,10 +91,13 @@ end;
 
 function writeUnicode(const vText: string): TVoid;
 begin
-  var vConsoleHandle := getStdHandle(STD_OUTPUT_HANDLE);
-  var vWritten: cardinal := 0;
-  writeConsoleW(vConsoleHandle, PWideChar(vText), length(vText), vWritten, NIL);
-  writeLn('');
+  var vHandle := getStdHandle(STD_OUTPUT_HANDLE);
+  case (vHandle = INVALID_HANDLE_VALUE) of TRUE: EXIT; end;
+
+  var vOutput  := vText.replace('#', sLineBreak) + sLineBreak;
+
+  var vWritten: DWORD := 0;
+  writeConsoleW(vHandle, PWideChar(vOutput), vOutput.length, vWritten, NIL);
 end;
 
 end.
