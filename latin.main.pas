@@ -173,41 +173,56 @@ end;
 function TLatin.removeDuplicateResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
 // DO NOT SORT!!!
 // This function must remain dumb and oblivious of what it is doing and why
+const
+  EXACT_UNIQUE = FALSE;
 begin
   result := NIL;
+
   for var vParseResult in aParseResults do begin
     var vDuplicate := FALSE;
     for var vUnique in result do begin
-      case (vParseResult.prWord = vUnique.prWord)
-           and (vParseResult.prPartOfSpeech = vUnique.prPartOfSpeech)
-           and (vParseResult.prStem = vUnique.prStem)
-           and (vParseResult.prEnding = vUnique.prEnding)
-           and (vParseResult.prClass = vUnique.prClass)
-           and (vParseResult.prVariant = vUnique.prVariant)
-           and (vParseResult.prCase = vUnique.prCase)
-           and (vParseResult.prNumber1 = vUnique.prNumber1)
-           and (vParseResult.prGender = vUnique.prGender)
-           and (vParseResult.prStemID = vUnique.prStemID)
-           and (vParseResult.prNounType = vUnique.prNounType)
-           and (vParseResult.prDegree = vUnique.prDegree)
-           and (vParseResult.prPronounType = vUnique.prPronounType)
-           and (vParseResult.prTense = vUnique.prTense)
-           and (vParseResult.prVoice = vUnique.prVoice)
-           and (vParseResult.prMood = vUnique.prMood)
-           and (vParseResult.prPerson = vUnique.prPerson)
-           and (vParseResult.prNumber2 = vUnique.prNumber2)
-           and (vParseResult.prVerbType = vUnique.prVerbType)
-           and (vParseResult.prAge = vUnique.prAge)
-           and (vParseResult.prArea = vUnique.prArea)
-           and (vParseResult.prGeography = vUnique.prGeography)
-           and (vParseResult.prFrequency = vUnique.prFrequency)
-           and (vParseResult.prSource = vUnique.prSource)
-           and (vParseResult.prNumKind = vUnique.prNumKind)
-           and (vParseResult.prNumValue = vUnique.prNumValue)
-           and (vParseResult.prExplanation = vUnique.prExplanation) of TRUE: begin
-        vDuplicate := TRUE;
-        BREAK;
-      end;end;
+      case EXACT_UNIQUE of
+        TRUE: vDuplicate := (vParseResult.prWord = vUnique.prWord)
+                       and (vParseResult.prPartOfSpeech = vUnique.prPartOfSpeech)
+                       and (vParseResult.prStem = vUnique.prStem)
+                       and (vParseResult.prEnding = vUnique.prEnding)
+                       and (vParseResult.prClass = vUnique.prClass)
+                       and (vParseResult.prVariant = vUnique.prVariant)
+                       and (vParseResult.prCase = vUnique.prCase)
+                       and (vParseResult.prNumber1 = vUnique.prNumber1)
+                       and (vParseResult.prGender = vUnique.prGender)
+                       and (vParseResult.prStemID = vUnique.prStemID)
+                       and (vParseResult.prNounType = vUnique.prNounType)
+                       and (vParseResult.prDegree = vUnique.prDegree)
+                       and (vParseResult.prPronounType = vUnique.prPronounType)
+                       and (vParseResult.prTense = vUnique.prTense)
+                       and (vParseResult.prVoice = vUnique.prVoice)
+                       and (vParseResult.prMood = vUnique.prMood)
+                       and (vParseResult.prPerson = vUnique.prPerson)
+                       and (vParseResult.prNumber2 = vUnique.prNumber2)
+                       and (vParseResult.prVerbType = vUnique.prVerbType)
+                       and (vParseResult.prAge = vUnique.prAge)
+                       and (vParseResult.prArea = vUnique.prArea)
+                       and (vParseResult.prGeography = vUnique.prGeography)
+                       and (vParseResult.prFrequency = vUnique.prFrequency)
+                       and (vParseResult.prSource = vUnique.prSource)
+                       and (vParseResult.prNumKind = vUnique.prNumKind)
+                       and (vParseResult.prNumValue = vUnique.prNumValue)
+                       and (vParseResult.prExplanation = vUnique.prExplanation);
+        FALSE: vDuplicate := (vParseResult.prWord = vUnique.prWord)
+                        and (vParseResult.prPartOfSpeech = vUnique.prPartOfSpeech)
+                        and (vParseResult.prCase = vUnique.prCase)
+                        and (vParseResult.prNumber1 = vUnique.prNumber1)
+                        and (vParseResult.prNumber2 = vUnique.prNumber2)
+                        and (vParseResult.prGender = vUnique.prGender)
+                        and (vParseResult.prDegree = vUnique.prDegree)
+                        and (vParseResult.prTense = vUnique.prTense)
+                        and (vParseResult.prVoice = vUnique.prVoice)
+                        and (vParseResult.prMood = vUnique.prMood)
+                        and (vParseResult.prPerson = vUnique.prPerson)
+                        and (vParseResult.prExplanation = vUnique.prExplanation);
+      end;
+      case vDuplicate of TRUE: BREAK; end;
     end;
     case vDuplicate of FALSE: result := result + [vParseResult]; end;
   end;
