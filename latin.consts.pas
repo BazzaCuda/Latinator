@@ -61,17 +61,22 @@ const
     (cmInput: 'clear';   cmCommand: ccClearLS)
   );
 
-  MAP_CLASS_CLASSES:      array[cc1..cc9]                   of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
-  MAP_CLASS_VARIANTS:     array[cv1..cv9]                   of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
-  MAP_NOUN_CASES:         array[ncNominative..ncLocative]   of string = ('NOM', 'VOC', 'ACC', 'GEN', 'DAT', 'ABL', 'LOC');
-  MAP_NOUN_GENDERS:       array[ngMasculine..ngAll]         of char   = ('M', 'F', 'N', 'C', 'X');
-  MAP_NOUN_GENDER_LABELS: array[ngMasculine..ngCommon]      of string = ('masculine', 'feminine', 'neuter', 'masculine/feminine');
-  MAP_VERB_TENSES:        array[vtPluperfect..vtSupine]     of string = ('PLUP', 'PERF', 'IMPF', 'PRES', 'FPERF', 'FUT', 'SUPI');
-  MAP_VERB_VOICES:        array[vvActive..vvPassive]        of string = ('ACTIVE', 'PASSIVE');
-  MAP_VERB_MOODS:         array[vmIndicative..vmInfinitive] of string = ('IND', 'SUB', 'IMP', 'INF');
-  MAP_VERB_NUMBERS:       array[vnSingular..vnPlural]       of char   = ('S', 'P');
-  MAP_VERB_PERSONS:       array[vpFirst..vpThird]           of char   = ('1', '2', '3');
-  MAP_VERB_PERSON_LABELS: array[vpFirst..vpThird]           of string = ('1st', '2nd', '3rd');
+  MAP_CLASS_CLASSES:          array[cc1..cc9]                   of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
+  MAP_CLASS_LABELS:           array[cc1..cc9]                   of string = ('1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th');
+  MAP_CLASS_VARIANTS:         array[cv1..cv9]                   of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
+  MAP_NOUN_CASES:             array[ncNominative..ncLocative]   of string = ('NOM', 'VOC', 'ACC', 'GEN', 'DAT', 'ABL', 'LOC');
+  MAP_NOUN_DECLENSION_LABELS: array[cc1..cc9]                   of string = ('1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th');
+  MAP_NOUN_GENDERS:           array[ngMasculine..ngAll]         of char   = ('M', 'F', 'N', 'C', 'X');
+  MAP_NOUN_GENDER_LABELS:     array[ngMasculine..ngAll]         of string = ('masculine', 'feminine', 'neuter', 'masculine/feminine', 'all');
+  MAP_VERB_TENSES:            array[vtPluperfect..vtSupine]     of string = ('PLUP', 'PERF', 'IMPF', 'PRES', 'FPERF', 'FUT', 'SUPI');
+  MAP_VERB_TENSE_LABELS:      array[vtPluperfect..vtSupine]     of string = ('Pluperfect', 'Perfect', 'Imperfect', 'Present', 'Future Perfect', 'Future', 'Supine');
+  MAP_VERB_MOODS:             array[vmIndicative..vmInfinitive] of string = ('IND', 'SUB', 'IMP', 'INF');
+  MAP_VERB_MOOD_LABELS:       array[vmIndicative..vmInfinitive] of string = ('Indicative', 'Subjunctive', 'Imperative', 'Infinitive');
+  MAP_VERB_NUMBERS:           array[vnSingular..vnPlural]       of char   = ('S', 'P');
+  MAP_VERB_PERSONS:           array[vpFirst..vpThird]           of char   = ('1', '2', '3');
+  MAP_VERB_PERSON_LABELS:     array[vpFirst..vpThird]           of string = ('1st', '2nd', '3rd');
+  MAP_VERB_VOICES:            array[vvActive..vvPassive]        of string = ('ACTIVE', 'PASSIVE');
+  MAP_VERB_VOICE_LABELS:      array[vvActive..vvPassive]        of string = ('Active', 'Passive');
 
 implementation
 

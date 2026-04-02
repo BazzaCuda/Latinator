@@ -363,17 +363,18 @@ type
 
   // Person, Number, Tense, Mood, Voice: amo = first person singular, present indicative active
   TVerbContext = record
-    vcPerson:   TVerbPerson;
-    vcNumber:   TVerbNumber;
-    vcTense:    TVerbTense;
-    vcMood:     TVerbMood;
-    vcVoice:    TVerbVoice;
-    vcClass:    TClassClass;
-    vcVariant:  TClassVariant;
-    vcStem1:    string;
-    vcStem2:    string;
-    vcStem3:    string;
-    vcStem4:    string;
+    vcPerson:       TVerbPerson;
+    vcNumber:       TVerbNumber;
+    vcTense:        TVerbTense;
+    vcMood:         TVerbMood;
+    vcVoice:        TVerbVoice;
+    vcClass:        TClassClass;
+    vcVariant:      TClassVariant;
+    vcStem1:        string;
+    vcStem2:        string;
+    vcStem3:        string;
+    vcStem4:        string;
+    vcTranslation:  string;
   end;
 
   TVerbConjugation = record
@@ -387,15 +388,16 @@ type
 
   // Case, Number, Gender: amicum = accusative singular masculine
   TNounContext = record
-    ncCase:     TNounCase;
-    ncNumber:   TNounNumber;
-    ncGender:   TNounGender;
-    ncClass:    TClassClass;
-    ncVariant:  TClassVariant;
-    ncStem1:    string;
-    ncStem2:    string;
-    ncStem3:    string;
-    ncStem4:    string;
+    ncCase:         TNounCase;
+    ncNumber:       TNounNumber;
+    ncGender:       TNounGender;
+    ncClass:        TClassClass;
+    ncVariant:      TClassVariant;
+    ncStem1:        string;
+    ncStem2:        string;
+    ncStem3:        string;
+    ncStem4:        string;
+    ncTranslation:  string;
   end;
 
   TNounTable = array[ncNominative..ncLocative, nnSingular..nnPlural, ngMasculine..ngNeuter] of string;
