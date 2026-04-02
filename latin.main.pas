@@ -243,30 +243,38 @@ end;
 
 function TLatin.formatGrammarResults(const aGrammarResult: TGrammarTable): TArray<string>;
 // will print out column headers then a verb 3 x 3, noun 7 x 3, or adjective 7 x 4 grid
-// followed by a two-line dictionary entry
+// adjusting the width of each column for the longest entry in that column
 const
   WIDTH_LABEL = 10;
   WIDTH_CELL  = 16;
   COL_FIRST   =  1;
   COL_LAST    =  3;
 begin
-  result := NIL;
+
+result := NIL;
+  var vWidths: array[low(TNounRow)..high(TNounRow)] of integer;
+  for var vIdx := low(TNounRow) to high(TNounRow) do vWidths[vIdx] := 0;
+
+  var vColCount := 0;
+  for var vCol := low(TNounRow) to high(TNounRow) do
+    case (aGrammarResult[ncNone][vCol] <> '') of TRUE: vColCount := vCol + 1; end;
+
+  for var vRow := ncNone to ncLocative do
+    case (aGrammarResult[vRow][0] <> '') of TRUE:
+      for var vCol := 0 to vColCount - 1 do
+        vWidths[vCol] := max(vWidths[vCol], aGrammarResult[vRow][vCol].length);
+    end;
 
   for var vRow := ncNone to ncLocative do begin
     case (aGrammarResult[vRow][0] = '') of TRUE: CONTINUE; end;
 
-    var vLine := '| ' + format('%-*s', [WIDTH_LABEL, aGrammarResult[vRow][0]]);
-    for var vCol := COL_FIRST to COL_LAST do begin
-      case (aGrammarResult[ncNone][vCol] = '') of TRUE: BREAK; end;
-      vLine := vLine + ' | ' + format('%-*s', [WIDTH_CELL, aGrammarResult[vRow][vCol]]);
-    end;
+    var vLine: string := '|';
+    for var vCol := 0 to vColCount - 1 do
+      vLine := vLine + ' ' + format('%-*s', [vWidths[vCol], aGrammarResult[vRow][vCol]]) + ' |';
 
-    vLine := vLine + ' |';
     result := result + [vLine];
-
     case (vRow = ncNone) of TRUE: result := result + [stringOfChar('-', vLine.length)]; end;
   end;
-
   result := result + [''];
 end;
 
