@@ -66,13 +66,15 @@ type
     FTackOns:       TArray<TTackOnRec>;
     FUniques:       TArray<TUniquesRec>;
   private
-    function  declineNoun                 (const aWord: string):                                                                   TGrammarTable;
+    function  conjugateVerb               (const aWord: string; var aDictionaryEntry: string):                                      TGrammarTable;
+    function  declineNoun                 (const aWord: string; var aDictionaryEntry: string):                                      TGrammarTable;
 
     function  equalLatin                  (const aChar1: char;  const aChar2: char):  boolean; overload;
     function  equalLatin                  (const aStr1: string; const aStr2: string): boolean; overload;
 
     function  formatParseResults          (const aParseResults: TArray<TParseResultRec>):                                           TArray<string>;
     function  formatGrammarResults        (const aGrammarResult: TGrammarTable):                                                    TArray<string>;
+
     function  removeDuplicateResults      (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
     function  trimParseResults            (const aParseResults: TArray<TParseResultRec>):                                           TArray<TParseResultRec>;
 
@@ -102,14 +104,24 @@ type
 
     function  removePrefix                (const aStem: string; const aPrefix: string; const aConnector: char):                     string;
     function  restoreStemM                (const aCore: string; const aTackOn: string):                                             string;
+
     function  siphonNounData:                                                                                                       TNounData;
+    function  siphonVerbData:                                                                                                       TVerbData;
+
     function  tryTrick                    (const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext):
                                                                                                                                     TArray<TParseResultRec>;
-    function mapCaseToCase        (const aCase:     string):        TNounCase;
-    function mapClassToClass      (const aClass:    char):          TClassClass;
-    function mapGenderToGender    (const aGender:   char):          TNounGender;
-    function mapVariantToVariant  (const aVariant:  char):          TClassVariant;
-    function nounDeclension       (const aContext:  TNounContext):  TGrammarTable;
+    function mapCaseToCase                (const aCase:     string):                                                                TNounCase;
+    function mapClassToClass              (const aClass:    char):                                                                  TClassClass;
+    function mapGenderToGender            (const aGender:   char):                                                                  TNounGender;
+    function mapMoodToMood                (const aMood:     string):                                                                TVerbMood;
+    function mapNumberToNumber            (const aNumber:   char):                                                                  TVerbNumber;
+    function mapPersonToPerson            (const aPerson:   char):                                                                  TVerbPerson;
+    function mapTenseToTense              (const aTense:    string):                                                                TVerbTense;
+    function mapVariantToVariant          (const aVariant:  char):                                                                  TClassVariant;
+    function mapVoiceToVoice              (const aVoice:    string):                                                                TVerbVoice;
+
+    function nounDeclension               (const aContext:  TNounContext; var aDictionaryEntry: string):                            TGrammarTable;
+    function verbConjugation              (const aContext:  TVerbContext; var aDictionaryEntry: string):                            TGrammarTable;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -124,7 +136,7 @@ type
     function  loadTackOns       (const aFileName: string): TVoid;
     function  loadUniques       (const aFileName: string): TVoid;
 
-    function  parse             (const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
+    function  parse             (const aConsoleCommand: TConsoleCommand; const aLine: string):                                      TArray<string>;
     function  setDataPath       (const aPath:     string): TVoid;
     function  unload:                                      TVoid;
   end;
@@ -203,18 +215,28 @@ end;
 
 function TLatin.formatGrammarResults(const aGrammarResult: TGrammarTable): TArray<string>;
 const
-  WIDTH_CASE = 10;
-  WIDTH_CELL = 16;
+  WIDTH_LABEL = 10;
+  WIDTH_CELL  = 16;
+  COL_FIRST   =  1;
+  COL_LAST    =  3;
 begin
   result := NIL;
-  for var vCase := ncNone to ncLocative do begin
-    result := result + [format('%-*s  |  %-*s  |  %-*s  |  %-*s', [
-      WIDTH_CASE, aGrammarResult[vCase][0],
-      WIDTH_CELL, aGrammarResult[vCase][1],
-      WIDTH_CELL, aGrammarResult[vCase][2],
-      WIDTH_CELL, aGrammarResult[vCase][3]
-    ])];
+
+  for var vRow := ncNone to ncLocative do begin
+    case (aGrammarResult[vRow][0] = '') of TRUE: CONTINUE; end;
+
+    var vLine := '| ' + format('%-*s', [WIDTH_LABEL, aGrammarResult[vRow][0]]);
+    for var vCol := COL_FIRST to COL_LAST do begin
+      case (aGrammarResult[ncNone][vCol] = '') of TRUE: BREAK; end;
+      vLine := vLine + ' | ' + format('%-*s', [WIDTH_CELL, aGrammarResult[vRow][vCol]]);
+    end;
+
+    vLine := vLine + ' |';
+    result := result + [vLine];
+
+    case (vRow = ncNone) of TRUE: result := result + [stringOfChar('-', vLine.length)]; end;
   end;
+  result := result + [''];
 end;
 
 function TLatin.formatParseResults(const aParseResults: TArray<TParseResultRec>): TArray<string>;
@@ -330,8 +352,8 @@ end;
 function TLatin.loadInflections(const aFileName: string): TVoid;
 begin
   FInflections  := latin.fileUtils.loadInflections(FDataPath + aFileName);
-  FNounData := siphonNounData;
-
+  FNounData     := siphonNounData;
+  FVerbData     := siphonVerbData;
   {$if BazDebugWindow}
   debugInteger('FInflections', length(FInflections));
   {$endif}
@@ -380,7 +402,61 @@ end;
 
 //===== PARSING ETC =====
 
-function TLatin.declineNoun(const aWord: string): TGrammarTable;
+
+function TLatin.conjugateVerb(const aWord: string; var aDictionaryEntry: string): TGrammarTable;
+  function filterResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+  begin
+    result := NIL;
+    for var vParseResult in aParseResults do begin
+      case (trim(vParseResult.prPartOfSpeech) <> 'V') of TRUE: CONTINUE; end;
+
+      var vUnique := TRUE;
+      for var vResult in result do begin
+        vUnique := (vParseResult.prStem1   <> vResult.prStem1)
+                or (vParseResult.prStem2   <> vResult.prStem2)
+                or (vParseResult.prStem3   <> vResult.prStem3)
+                or (vParseResult.prStem4   <> vResult.prStem4)
+                or (vParseResult.prClass   <> vResult.prClass)
+                or (vParseResult.prVariant <> vResult.prVariant);
+        case vUnique of FALSE: BREAK; end;
+      end;
+
+      case vUnique of TRUE: result := result + [vParseResult]; end;
+    end;
+  end;
+
+  function findCandidates(const aWord: string): TArray<TParseResultRec>;
+  begin
+    result := NIL;
+    result := result + parseUniques(aWord);
+    result := result + parseEsse(aWord);
+
+    var vInflectionRecs := parseInflections(aWord);
+    result := result + parseDictStems(vInflectionRecs);
+  end;
+begin
+  var vVerbResults := filterResults(findCandidates(aWord));
+  case length(vVerbResults) = 0 of TRUE: EXIT; end;
+
+  var vResult  := vVerbResults[0];
+  var vContext := default(TVerbContext);
+
+  vContext.vcClass   := mapClassToClass(vResult.prClass);
+  vContext.vcVariant := mapVariantToVariant(vResult.prVariant);
+  vContext.vcStem1   := vResult.prStem1;
+  vContext.vcStem2   := vResult.prStem2;
+  vContext.vcStem3   := vResult.prStem3;
+  vContext.vcStem4   := vResult.prStem4;
+
+  vContext.vcTense   := mapTenseToTense(trim(vResult.prTense));
+  vContext.vcVoice   := mapVoiceToVoice(trim(vResult.prVoice));
+  vContext.vcMood    := mapMoodToMood(trim(vResult.prMood));
+
+  result := verbConjugation(vContext, aDictionaryEntry);
+end;
+
+
+function TLatin.declineNoun(const aWord: string; var aDictionaryEntry: string): TGrammarTable;
   function filterResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
   begin
     result := NIL;
@@ -426,7 +502,7 @@ begin
   vContext.ncStem4   := vResult.prStem4;
   vContext.ncGender  := mapGenderToGender(vResult.prGender);
 
-  result := nounDeclension(vContext);
+  result := nounDeclension(vContext, aDictionaryEntry);
 end;
 
 function TLatin.equalLatin(const aChar1: char; const aChar2: char): boolean;
@@ -689,6 +765,30 @@ begin
   aResult.prFrequency     := aInflection.irFrequency;
 end;
 
+function TLatin.mapMoodToMood(const aMood: string): TVerbMood;
+begin
+  result := vmNone;
+  for var vMood := vmIndicative to vmInfinitive do case (MAP_VERB_MOODS[vMood] = aMood) of TRUE: EXIT(vMood); end;
+end;
+
+function TLatin.mapNumberToNumber(const aNumber: char): TVerbNumber;
+begin
+  result := vnNone;
+  for var vNumber := vnSingular to vnPlural do case (MAP_VERB_NUMBERS[vNumber] = aNumber) of TRUE: EXIT(vNumber); end;
+end;
+
+function TLatin.mapPersonToPerson(const aPerson: char): TVerbPerson;
+begin
+  result := vpNone;
+  for var vPerson := vpFirst to vpThird do case (MAP_VERB_PERSONS[vPerson] = aPerson) of TRUE: EXIT(vPerson); end;
+end;
+
+function TLatin.mapTenseToTense(const aTense: string): TVerbTense;
+begin
+  result := vtNone;
+  for var vTense := vtPluperfect to vtSupine do case (MAP_VERB_TENSES[vTense] = aTense) of TRUE: EXIT(vTense); end;
+end;
+
 function TLatin.mapVariantToVariant(const aVariant: char): TClassVariant;
 begin
   result := cv1;
@@ -696,8 +796,24 @@ begin
   for var vVariant := cv1 to cv9 do case (MAP_CLASS_VARIANTS[vVariant] = aVariant) of TRUE: EXIT(vVariant); end;
 end;
 
-function TLatin.nounDeclension(const aContext: TNounContext): TGrammarTable;
+function TLatin.mapVoiceToVoice(const aVoice: string): TVerbVoice;
+begin
+  result := vvNone;
+  for var vVoice := vvActive to vvPassive do case (MAP_VERB_VOICES[vVoice] = aVoice) of TRUE: EXIT(vVoice); end;
+end;
+
+function TLatin.nounDeclension(const aContext: TNounContext; var aDictionaryEntry: string): TGrammarTable;
 const COL_CASE = 0;
+
+  function getDictionaryEntry(const aTable: TGrammarTable): string;
+  begin
+    var vNominative := aTable[ncNominative][ord(nnSingular)];
+    var vGenitive   := aTable[ncGenitive][ord(nnSingular)];
+    var vGender     := MAP_NOUN_GENDER_LABELS[aContext.ncGender];
+
+    result := format('%s, %s, %s', [vNominative, vGenitive, vGender]);
+  end;
+
 begin
   var vTargetGenders: TArray<TNounGender> := NIL;
 
@@ -773,6 +889,8 @@ begin
       finally
         vCellList.free;
       end;end;end;
+
+  aDictionaryEntry := getDictionaryEntry(result);
 end;
 
 function TLatin.parse(const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
@@ -802,8 +920,10 @@ begin
                                                                                                       FALSE: vPC.pcNextWord := '' end;
 
                                                                       case aConsoleCommand in [ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb] of TRUE: begin
+                                                                        var vDictionaryEntry: string;
                                                                         case aConsoleCommand of
-                                                                          ccDeclineNoun: result := result + formatGrammarResults(declineNoun(vWord));
+                                                                          ccDeclineNoun:    result := result + formatGrammarResults(declineNoun   (vWord, vDictionaryEntry)) + [vDictionaryEntry];
+                                                                          ccConjugateVerb:  result := result + formatGrammarResults(conjugateVerb (vWord, vDictionaryEntry)) + [vDictionaryEntry];
                                                                         end;
 
                                                                         CONTINUE;
@@ -930,7 +1050,7 @@ begin
             TRUE: vFinal.prPartOfSpeech := vResult.prPartOfSpeech; end;
           vFinal.prCase     := vResult.prCase;
           vFinal.prNumber1  := vResult.prNumber1;
-          vFinal.prGender   := vResult.prGender;
+          case (vDictPOS <> 'N') of TRUE: vFinal.prGender := vResult.prGender; end; // don't obliterate the DictLine gender (Adjectives and Pronouns are fine though)
           vFinal.prTense    := vResult.prTense;
           vFinal.prVoice    := vResult.prVoice;
           vFinal.prMood     := vResult.prMood;
@@ -1457,6 +1577,35 @@ begin
   end;
 end;
 
+function TLatin.siphonVerbData: TVerbData;
+begin
+  result := default(TVerbData);
+  for var vInflection in FInflections do
+    case (trim(vInflection.irPartOfSpeech) = 'V') of TRUE: begin
+
+      var vTense  := mapTenseToTense(trim(vInflection.irDegreeTense));
+      var vVoice  := mapVoiceToVoice(trim(vInflection.irVoice));
+      var vMood   := mapMoodToMood(trim(vInflection.irMood));
+      var vPerson := mapPersonToPerson(vInflection.irPerson);
+      var vNumber := mapNumberToNumber(vInflection.irNumber2);
+
+      var vConjugation          :  TVerbConjugation;
+      vConjugation.vcStemID     := vInflection.irStemID;
+      vConjugation.vcSuffix     := trim(vInflection.irSuffix);
+      vConjugation.vcAge        := vInflection.irAge;
+      vConjugation.vcFrequency  := vInflection.irFrequency;
+
+      for var vClass := cc1 to cc9 do
+        case (vInflection.irClass = '0') or (vInflection.irClass = MAP_CLASS_CLASSES[vClass]) of TRUE:
+          for var vVariant := cv1 to cv9 do
+            case (vInflection.irVariant = '0') or (vInflection.irVariant = MAP_CLASS_VARIANTS[vVariant]) of TRUE:
+              result[vClass, vVariant, vTense, vVoice, vMood, vPerson, vNumber] :=
+                result[vClass, vVariant, vTense, vVoice, vMood, vPerson, vNumber] + [vConjugation];
+            end;
+        end;
+    end;end;
+end;
+
 function TLatin.tryTrick(const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext): TArray<TParseResultRec>;
 begin
   result    := NIL;
@@ -1479,6 +1628,82 @@ function TLatin.unload: TVoid;
 begin
   FLewisAndShort := NIL;
   FNounData := default(TNounData);
+end;
+
+function TLatin.verbConjugation(const aContext: TVerbContext; var aDictionaryEntry: string): TGrammarTable;
+const COL_LABEL = 0;
+
+  function getDictionaryEntry: string;
+
+    function getForm(const aTense: TVerbTense; const aVoice: TVerbVoice; const aMood: TVerbMood; const aPerson: TVerbPerson; const aNumber: TVerbNumber): string;
+    begin
+      result := '';
+      var vList := FVerbData[aContext.vcClass, aContext.vcVariant, aTense, aVoice, aMood, aPerson, aNumber];
+      case (length(vList) > 0) of TRUE: begin
+        var vStem := '';
+        case vList[0].vcStemID of
+          '1': vStem := aContext.vcStem1;
+          '2': vStem := aContext.vcStem2;
+          '3': vStem := aContext.vcStem3;
+          '4': vStem := aContext.vcStem4;
+        end;
+        result := vStem + vList[0].vcSuffix;
+      end;end;
+    end;
+
+  begin
+    var vPres1S := getForm(vtPresent, vvActive, vmIndicative, vpFirst, vnSingular);
+    var vInf    := getForm(vtPresent, vvActive, vmInfinitive, vpNone,  vnNone);
+    var vPerf1S := getForm(vtPerfect, vvActive, vmIndicative, vpFirst, vnSingular);
+    var vSupine := getForm(vtSupine,  vvActive, vmNone,       vpNone,  vnSingular);
+    result      := format('%s, %s, %s, %s', [vPres1S, vInf, vPerf1S, vSupine]);
+  end;
+
+begin
+  result := default(TGrammarTable);
+  result[ncNone][COL_LABEL]       := 'Person';
+  result[ncNone][ord(nnSingular)] := 'Singular';
+  result[ncNone][ord(nnPlural)]   := 'Plural';
+
+  for var vPerson := vpFirst to vpThird do begin
+    var vRow := TNounCase(ord(vPerson));
+    result[vRow][COL_LABEL] := MAP_VERB_PERSON_LABELS[vPerson];
+
+    for var vNumber := vnSingular to vnPlural do begin
+      var vCellList := TStringList.create;
+      vCellList.sorted     := TRUE;
+      vCellList.duplicates := dupIgnore;
+      try
+        for var vConjugation in FVerbData[aContext.vcClass, aContext.vcVariant, aContext.vcTense, aContext.vcVoice, aContext.vcMood, vPerson, vNumber] do begin
+          case NOT (vConjugation.vcAge in ['X', 'C']) of TRUE: CONTINUE; end;
+
+          var vStem := '';
+          case vConjugation.vcStemID of
+            '1': vStem := aContext.vcStem1;
+            '2': vStem := aContext.vcStem2;
+            '3': vStem := aContext.vcStem3;
+            '4': vStem := aContext.vcStem4;
+          end;
+
+          case (vStem = '') and (vConjugation.vcStemID <> '0') of TRUE: CONTINUE; end;
+          vCellList.add(vStem + vConjugation.vcSuffix);
+        end;
+
+        case (vCellList.count > 0) of
+          TRUE: begin
+            result[vRow][ord(vNumber)] := vCellList[0];
+            for var vIdx := 1 to vCellList.count - 1 do
+              result[vRow][ord(vNumber)] := result[vRow][ord(vNumber)] + ' / ' + vCellList[vIdx];
+          end;
+          FALSE: result[vRow][ord(vNumber)] := '---';
+        end;
+      finally
+        vCellList.free;
+      end;
+    end;
+  end;
+
+  aDictionaryEntry := getDictionaryEntry;
 end;
 
 end.

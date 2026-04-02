@@ -345,7 +345,7 @@ type
   // Person, Number, Tense, Mood, Voice: amo = first person singular, present indicative active
   TVerbPerson = (vpNone, vpFirst, vpSecond, vpThird);
   TVerbNumber = (vnNone, vnSingular, vnPlural);
-  TVerbTense  = (vtNone, vtPluperfect, vtPerfect, vtImperfect, vtPresent, vtFuturePerfect, vtFuture);
+  TVerbTense  = (vtNone, vtPluperfect, vtPerfect, vtImperfect, vtPresent, vtFuturePerfect, vtFuture, vtSupine);
   TVerbMood   = (vmNone, vmIndicative, vmSubjunctive, vmImperative, vmInfinitive);
   TVerbVoice  = (vvNone, vvActive, vvPassive);
 
@@ -383,7 +383,7 @@ type
     vcFrequency:  char;
   end;
 
-  TVerbData = array[TVerbTense, TVerbVoice, TVerbMood, TVerbPerson, TVerbNumber] of TArray<TVerbConjugation>;
+  TVerbData = array[TClassClass, TClassVariant, TVerbTense, TVerbVoice, TVerbMood, TVerbPerson, TVerbNumber] of TArray<TVerbConjugation>;
 
   // Case, Number, Gender: amicum = accusative singular masculine
   TNounContext = record
