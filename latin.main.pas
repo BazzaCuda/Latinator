@@ -1195,13 +1195,13 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
     case (vStemType = stNone) of TRUE: EXIT; end;
 
     var vTackOnRec := findPronominalPackon(vCore);
-    var vTackOn    := string(vTackOnRec.trTackOn).trim;
+    var vTackOn    := trim(vTackOnRec.trTackOn);
     var vContext   :  TPronominalContext;
 
     vContext.pcFullWord := aWord;
     vContext.pcPrefix   := aPrefix;
-    vContext.pcTackOn   := vTackOnRec.trTackOn;
-    vContext.prSenses   := vTackOnRec.trSenses;
+    vContext.pcTackOn   := vTackOn;
+    vContext.prSenses   := trim(vTackOnRec.trSenses);
 
     var vInflections := findPronominalInflections(vCore, vStemType, vContext);
 
@@ -1212,11 +1212,12 @@ function TLatin.parsePronominals(const aWord: string): TArray<TParseResultRec>;
 
     case (length(vInflections) > 0) of TRUE: begin
       case (aPrefix <> '') of TRUE: begin
-        var vPrefixEntry : TParseResultRec;
-        vPrefixEntry.prWord        := aWord;
-        vPrefixEntry.prStem        := aPrefix;
-        vPrefixEntry.prExplanation := aPrefixSenses;
-        result                     := result + [vPrefixEntry];
+        var vPrefixEntry            :=  default(TParseResultRec);
+        vPrefixEntry.prWord         :=  aWord;
+        vPrefixEntry.prPartOfSpeech := 'PREFIX';
+        vPrefixEntry.prStem         :=  aPrefix;
+        vPrefixEntry.prExplanation  :=  aPrefixSenses.trim;
+        result                      :=  result + [vPrefixEntry];
       end; end;
 
       result := result + vInflections;
@@ -1536,50 +1537,46 @@ begin
   result := default(TNounData);
 
   for var vInflection in FInflections do begin
-    case (trim(vInflection.irPartOfSpeech) = 'N') of TRUE: begin // BAZ EXPERIMENTAL
+    case (trim(vInflection.irPartOfSpeech) <> 'N') of TRUE: CONTINUE; end;
 
-      var vClass := mapClassToClass(vInflection.irClass);
-//      case vClass = cccNone of TRUE: CONTINUE; end; // BAZ EXPERIMENTAL
-      var vVariant := mapVariantToVariant(vInflection.irVariant);
-//      case vVariant = cvNone of TRUE: CONTINUE; end; // BAZ EXPERIMENTAL
+    var vCase := mapCaseToCase(string(vInflection.irCase).trim);
+    case (vCase = ncNone) of TRUE: CONTINUE; end;
 
-      var vCase := mapCaseToCase(string(vInflection.irCase).trim);
-      case (vCase = ncNone) of TRUE: CONTINUE; end;
+    var vNumber: TNounNumber;
+    case vInflection.irNumber1 of
+      'S': vNumber := nnSingular;
+      'P': vNumber := nnPlural;
+    else
+      CONTINUE;
+    end;
 
-      var vNumber: TNounNumber;
-      case vInflection.irNumber1 of
-        'S': vNumber := nnSingular;
-        'P': vNumber := nnPlural;
-      else
-        CONTINUE;
+    var vInflectionRec: TNounInflection;
+    vInflectionRec.niStemID     := vInflection.irStemID;
+    vInflectionRec.niSuffix     := string(vInflection.irSuffix).trim;
+    vInflectionRec.niGender     := vInflection.irGender;
+    vInflectionRec.niAge        := vInflection.irAge;
+    vInflectionRec.niFrequency  := vInflection.irFrequency;
+
+    for var vClass := cc1 to cc9 do
+      case (vInflection.irClass = '0') or (vInflection.irClass = MAP_CLASS_CLASSES[vClass]) of TRUE:
+        for var vVariant := cv1 to cv9 do
+          case (vInflection.irVariant = '0') or (vInflection.irVariant = MAP_CLASS_VARIANTS[vVariant]) of TRUE:
+            case vInflection.irGender of
+              'M': result[vClass, vVariant, vCase, vNumber, ngMasculine] := result[vClass, vVariant, vCase, vNumber, ngMasculine] + [vInflectionRec];
+              'F': result[vClass, vVariant, vCase, vNumber, ngFeminine]  := result[vClass, vVariant, vCase, vNumber, ngFeminine]  + [vInflectionRec];
+              'N': result[vClass, vVariant, vCase, vNumber, ngNeuter]    := result[vClass, vVariant, vCase, vNumber, ngNeuter]    + [vInflectionRec];
+              'C': begin
+                     result[vClass, vVariant, vCase, vNumber, ngMasculine] := result[vClass, vVariant, vCase, vNumber, ngMasculine] + [vInflectionRec];
+                     result[vClass, vVariant, vCase, vNumber, ngFeminine]  := result[vClass, vVariant, vCase, vNumber, ngFeminine]  + [vInflectionRec];
+                   end;
+              'X': begin
+                     result[vClass, vVariant, vCase, vNumber, ngMasculine] := result[vClass, vVariant, vCase, vNumber, ngMasculine] + [vInflectionRec];
+                     result[vClass, vVariant, vCase, vNumber, ngFeminine]  := result[vClass, vVariant, vCase, vNumber, ngFeminine]  + [vInflectionRec];
+                     result[vClass, vVariant, vCase, vNumber, ngNeuter]    := result[vClass, vVariant, vCase, vNumber, ngNeuter]    + [vInflectionRec];
+                   end;
+            end;
+          end;
       end;
-
-      var vInflectionRec          :  TNounInflection;
-      vInflectionRec.niStemID     := vInflection.irStemID;
-      vInflectionRec.niSuffix     := string(vInflection.irSuffix).trim;
-      vInflectionRec.niGender     := vInflection.irGender;
-      vInflectionRec.niAge        := vInflection.irAge;
-      vInflectionRec.niFrequency  := vInflection.irFrequency;
-
-      case vInflection.irGender of
-        'M':  result[vClass, vVariant, vCase, vNumber, ngMasculine]   := result[vClass, vVariant, vCase, vNumber, ngMasculine]  + [vInflectionRec];
-
-        'F':  result[vClass, vVariant, vCase, vNumber, ngFeminine]    := result[vClass, vVariant, vCase, vNumber, ngFeminine]   + [vInflectionRec];
-
-        'N':  result[vClass, vVariant, vCase, vNumber, ngNeuter]      := result[vClass, vVariant, vCase, vNumber, ngNeuter]     + [vInflectionRec];
-
-        'C':  begin
-                result[vClass, vVariant, vCase, vNumber, ngMasculine] := result[vClass, vVariant, vCase, vNumber, ngMasculine]  + [vInflectionRec];
-                result[vClass, vVariant, vCase, vNumber, ngFeminine]  := result[vClass, vVariant, vCase, vNumber, ngFeminine]   + [vInflectionRec];
-              end;
-
-        'X':  begin
-                result[vClass, vVariant, vCase, vNumber, ngMasculine] := result[vClass, vVariant, vCase, vNumber, ngMasculine]  + [vInflectionRec];
-                result[vClass, vVariant, vCase, vNumber, ngFeminine]  := result[vClass, vVariant, vCase, vNumber, ngFeminine]   + [vInflectionRec];
-                result[vClass, vVariant, vCase, vNumber, ngNeuter]    := result[vClass, vVariant, vCase, vNumber, ngNeuter]     + [vInflectionRec];
-              end;
-      end;
-    end;end;
   end;
 end;
 
