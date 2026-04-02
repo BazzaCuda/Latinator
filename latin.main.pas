@@ -243,6 +243,7 @@ function TLatin.formatParseResults(const aParseResults: TArray<TParseResultRec>)
 const
   WIDTH_POS       =  6;  // Matches dictPartOfSpeech: array[1..6]
   WIDTH_ENDING    = 11;  // Matches irSuffix:         array[1..11]
+  WIDTH_STEM_ENDING  = 30;
   WIDTH_FLAG      =  1;  // Matches char fields
   WIDTH_CASE      =  3;  // Matches irCase:           array[1..3]
   WIDTH_DEGREE    =  8;  // Matches dictDegree:       array[1..8]
@@ -254,53 +255,67 @@ const
   WIDTH_NUMKIND   =  4;  // Matches dictNumKind:      array[1..4]
   WIDTH_NUMVAL    =  8;  // Matches dictNumValue:     array[1..8]
 begin
-  result := NIL;
+result := NIL;
   var vUniqueResults := removeDuplicateResults(trimParseResults(aParseResults));
+  var vLastIdentity  := '';
+  var vGroupResult   := default(TParseResultRec);
 
   for var vParseResult in vUniqueResults do begin
-    var vIxDelta: integer;
-    case (trim(vParseResult.prExplanation) = '') of
-      TRUE:  vIxDelta := 1;
-      FALSE: vIxDelta := 2;
-    end;
+    var vCurrentIdentity := vParseResult.prExplanation + vParseResult.prStem1 + vParseResult.prStem2 + vParseResult.prStem3 + vParseResult.prStem4;
 
-    expandArray(result, vIxDelta);
+    case (vLastIdentity <> '') and (vCurrentIdentity <> vLastIdentity) of TRUE: begin
+      expandArray(result);
+      result[high(result)] := vGroupResult.prExplanation;
+      expandArray(result);
+      result[high(result)] := format('stem1: %s, stem2: %s, stem3: %s, stem4: %s', [trim(vGroupResult.prStem1), trim(vGroupResult.prStem2), trim(vGroupResult.prStem3), trim(vGroupResult.prStem4)]);
+      expandArray(result);
+      result[high(result)] := ''; // Spacer
+    end;end;
 
-    result[length(result) - vIxDelta] := format(
-      '%-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s', [
-      MAX_STEM,       vParseResult.prWord,
-      WIDTH_POS,      vParseResult.prPartOfSpeech,
-      MAX_STEM,       vParseResult.prStem,
-      WIDTH_ENDING,   vParseResult.prEnding,
-      WIDTH_FLAG,     vParseResult.prClass,
-      WIDTH_FLAG,     vParseResult.prVariant,
-      WIDTH_CASE,     vParseResult.prCase,
-      WIDTH_FLAG,     vParseResult.prNumber1,
-      WIDTH_FLAG,     vParseResult.prGender,
-      WIDTH_FLAG,     vParseResult.prStemID,
-      WIDTH_FLAG,     vParseResult.prNounType,
-      WIDTH_DEGREE,   vParseResult.prDegree,
-      WIDTH_PRON,     vParseResult.prPronounType,
-      WIDTH_TENSE,    vParseResult.prTense,
-      WIDTH_VOICE,    vParseResult.prVoice,
-      WIDTH_MOOD,     vParseResult.prMood,
-      WIDTH_FLAG,     vParseResult.prPerson,
-      WIDTH_FLAG,     vParseResult.prNumber2,
-      WIDTH_VTYPE,    vParseResult.prVerbType,
-      WIDTH_FLAG,     vParseResult.prAge,
-      WIDTH_FLAG,     vParseResult.prArea,
-      WIDTH_FLAG,     vParseResult.prGeography,
-      WIDTH_FLAG,     vParseResult.prFrequency,
-      WIDTH_FLAG,     vParseResult.prSource,
-      WIDTH_NUMKIND,  vParseResult.prNumKind,
-      WIDTH_NUMVAL,   vParseResult.prNumValue
-    ]);
-
-    case (vIxDelta = 2) of TRUE: result[length(result) - 1] := vParseResult.prExplanation; end;
+    var vCombined := trim(vParseResult.prStem);
+    var vEnding   := trim(vParseResult.prEnding);
+    case (vEnding <> '') of TRUE: vCombined := vCombined + '.' + vEnding; end;
 
     expandArray(result);
-    result[high(result)] := format('stem1: %s, stem2: %s, stem3: %s, stem4: %s', [trim(vParseResult.prStem1), trim(vParseResult.prStem2), trim(vParseResult.prStem3), trim(vParseResult.prStem4)]);
+    result[high(result)] := format(
+      '%-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s', [
+      MAX_STEM,          vParseResult.prWord,
+      WIDTH_POS,         vParseResult.prPartOfSpeech,
+      WIDTH_STEM_ENDING, vCombined,
+      WIDTH_FLAG,        vParseResult.prClass,
+      WIDTH_FLAG,        vParseResult.prVariant,
+      WIDTH_CASE,        vParseResult.prCase,
+      WIDTH_FLAG,        vParseResult.prNumber1,
+      WIDTH_FLAG,        vParseResult.prGender,
+      WIDTH_FLAG,        vParseResult.prStemID,
+      WIDTH_FLAG,        vParseResult.prNounType,
+      WIDTH_DEGREE,      vParseResult.prDegree,
+      WIDTH_PRON,        vParseResult.prPronounType,
+      WIDTH_TENSE,       vParseResult.prTense,
+      WIDTH_VOICE,       vParseResult.prVoice,
+      WIDTH_MOOD,        vParseResult.prMood,
+      WIDTH_FLAG,        vParseResult.prPerson,
+      WIDTH_FLAG,        vParseResult.prNumber2,
+      WIDTH_VTYPE,       vParseResult.prVerbType,
+      WIDTH_FLAG,        vParseResult.prAge,
+      WIDTH_FLAG,        vParseResult.prArea,
+      WIDTH_FLAG,        vParseResult.prGeography,
+      WIDTH_FLAG,        vParseResult.prFrequency,
+      WIDTH_FLAG,        vParseResult.prSource,
+      WIDTH_NUMKIND,     vParseResult.prNumKind,
+      WIDTH_NUMVAL,      vParseResult.prNumValue
+    ]);
+
+    vLastIdentity := vCurrentIdentity;
+    vGroupResult  := vParseResult;
   end;
+
+  case (vLastIdentity <> '') of TRUE: begin
+    expandArray(result);
+    result[high(result)] := vGroupResult.prExplanation;
+    expandArray(result);
+    result[high(result)] := format('stem1: %s, stem2: %s, stem3: %s, stem4: %s', [trim(vGroupResult.prStem1), trim(vGroupResult.prStem2), trim(vGroupResult.prStem3), trim(vGroupResult.prStem4)]);
+  end;end;
 end;
 
 function TLatin.trimParseResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
@@ -573,10 +588,10 @@ begin
 
           var vResult             := vParseResult;
           vResult.prStem          := vDictStem; // tautology
-          vResult.prStem1         := string(vDictLine.dictStem1).trim; // currently for declineNoun only
-          vResult.prStem2         := string(vDictLine.dictStem2).trim;
-          vResult.prStem3         := string(vDictLine.dictStem3).trim;
-          vResult.prStem4         := string(vDictLine.dictStem4).trim;
+          vResult.prStem1         := trim(vDictLine.dictStem1); // currently for declineNoun only
+          vResult.prStem2         := trim(vDictLine.dictStem2);
+          vResult.prStem3         := trim(vDictLine.dictStem3);
+          vResult.prStem4         := trim(vDictLine.dictStem4);
           vResult.prAge           := vDictLine.dictAge;
           vResult.prArea          := vDictLine.dictArea;
           vResult.prGeography     := vDictLine.dictGeography;
@@ -591,6 +606,9 @@ begin
             vResult.prGender      := vDictLine.dictVNARec.dictNounGender;
             vResult.prNounType    := vDictLine.dictVNARec.dictNounType;
           end;end;
+
+          case (vDictPOS = 'PRON') of TRUE: vResult.prDegree  := trim(vDictLine.dictVNARec.dictDegree); end;
+          case (vDictPOS = 'ADV')  of TRUE: vResult.prDegree  := trim(vDictLine.dictVNARec.dictDegree); end;
 
           vResult.prExplanation := vDictLine.dictTranslation;
           result := result + [vResult];
@@ -693,6 +711,7 @@ begin
         vParseResult.prCase         := vInflection.irCase;
         vParseResult.prNumber1      := vInflection.irNumber1;
         vParseResult.prGender       := vInflection.irGender;
+        vParseResult.prDegree       := vInflection.irDegreeTense; // this is actually blank for PRON in inflects.lat
         vParseResult.prAge          := vInflection.irAge;
         vParseResult.prFrequency    := vInflection.irFrequency;
 
@@ -1048,6 +1067,7 @@ begin
           or ((vCandidate.prGender = 'C') and (vResult.prGender in ['M', 'F']))
           or ((vResult.prGender = 'C') and (vCandidate.prGender in ['M', 'F'])); end;
 
+      // Warning: this section will overwrite incoming DictLine.lat data with Inflects.lat data unless a caveat is provided
       case (vDictPOS = vMappedTarget) and vClassMatch and vVarMatch and vStemIDMatch and vGenderMatch of TRUE: begin
           var vFinal := vCandidate;
           // Carry over the specific morphological tags from the inflection engine
@@ -1062,7 +1082,7 @@ begin
           vFinal.prMood     := vResult.prMood;
           vFinal.prPerson   := vResult.prPerson;
           vFinal.prNumber2  := vResult.prNumber2;
-          vFinal.prDegree   := vResult.prDegree;
+          case (vDictPOS <> 'PRON') of TRUE: vFinal.prDegree := vResult.prDegree; end; // inflects.lat is empty for PRON so use DictLine
 
           result := result + [vFinal];
         end;
