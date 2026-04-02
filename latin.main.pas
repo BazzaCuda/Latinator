@@ -176,8 +176,7 @@ function TLatin.removeDuplicateResults(const aParseResults: TArray<TParseResultR
 const
   EXACT_UNIQUE = FALSE;
 begin
-  result := NIL;
-
+result := NIL;
   for var vParseResult in aParseResults do begin
     var vDuplicate := FALSE;
     for var vUnique in result do begin
@@ -209,18 +208,31 @@ begin
                        and (vParseResult.prNumKind = vUnique.prNumKind)
                        and (vParseResult.prNumValue = vUnique.prNumValue)
                        and (vParseResult.prExplanation = vUnique.prExplanation);
-        FALSE: vDuplicate := (vParseResult.prWord = vUnique.prWord)
-                        and (vParseResult.prPartOfSpeech = vUnique.prPartOfSpeech)
-                        and (vParseResult.prCase = vUnique.prCase)
-                        and (vParseResult.prNumber1 = vUnique.prNumber1)
-                        and (vParseResult.prNumber2 = vUnique.prNumber2)
-                        and (vParseResult.prGender = vUnique.prGender)
-                        and (vParseResult.prDegree = vUnique.prDegree)
-                        and (vParseResult.prTense = vUnique.prTense)
-                        and (vParseResult.prVoice = vUnique.prVoice)
-                        and (vParseResult.prMood = vUnique.prMood)
-                        and (vParseResult.prPerson = vUnique.prPerson)
-                        and (vParseResult.prExplanation = vUnique.prExplanation);
+        FALSE: begin // Base morphological comparison
+          vDuplicate := (vParseResult.prWord = vUnique.prWord)
+                    and (vParseResult.prPartOfSpeech = vUnique.prPartOfSpeech)
+                    and (vParseResult.prCase = vUnique.prCase)
+                    and (vParseResult.prNumber1 = vUnique.prNumber1)
+                    and (vParseResult.prNumber2 = vUnique.prNumber2)
+                    and (vParseResult.prGender = vUnique.prGender)
+                    and (vParseResult.prDegree = vUnique.prDegree)
+                    and (vParseResult.prTense = vUnique.prTense)
+                    and (vParseResult.prVoice = vUnique.prVoice)
+                    and (vParseResult.prMood = vUnique.prMood)
+                    and (vParseResult.prPerson = vUnique.prPerson);
+
+          case vDuplicate of TRUE: begin
+            var vParsePronominal  := vParseResult.prExplanation.startsWith('Pronominal:');
+            var vUniquePronominal := vUnique.prExplanation.startsWith('Pronominal:');
+
+            case (vParsePronominal = vUniquePronominal) of
+              // If both are the same category, check if the actual text matches
+              TRUE:  vDuplicate := (vParseResult.prExplanation = vUnique.prExplanation);
+              // If they differ, and the new one is Pronominal, it's a duplicate of the existing Dictionary entry
+              FALSE: vDuplicate := vParsePronominal;
+            end;
+          end;end;
+        end;
       end;
       case vDuplicate of TRUE: BREAK; end;
     end;
@@ -282,7 +294,7 @@ result := NIL;
       expandArray(result);
       result[high(result)] := vGroupResult.prExplanation;
       expandArray(result);
-      result[high(result)] := format('stem1: %s, stem2: %s, stem3: %s, stem4: %s', [trim(vGroupResult.prStem1), trim(vGroupResult.prStem2), trim(vGroupResult.prStem3), trim(vGroupResult.prStem4)]);
+      result[high(result)] := format('stem1: %s stem2: %s stem3: %s stem4: %s', [trim(vGroupResult.prStem1), trim(vGroupResult.prStem2), trim(vGroupResult.prStem3), trim(vGroupResult.prStem4)]);
       expandArray(result);
       result[high(result)] := ''; // Spacer
     end;end;
@@ -1071,9 +1083,17 @@ begin
       case (vMappedTarget = 'ADJ') and (vDictPOS = 'NUM') of TRUE: vMappedTarget := 'NUM'; end;
 
       // Filtering logic: Added StemID verification to ensure dictionary hits match the inflection's required Stem Index
+      // Warning: this section will overwrite incoming DictLine.lat data with Inflects.lat data unless a caveat is provided
       var vClassMatch  := (vCandidate.prClass = vResult.prClass) or (vCandidate.prClass = '0') or (vResult.prClass = '0');
       var vVarMatch    := (vCandidate.prVariant = vResult.prVariant) or (vCandidate.prVariant = '0') or (vResult.prVariant = '0');
       var vStemIDMatch := (vResult.prStemID = '0') or (vCandidate.prStemID = vResult.prStemID);
+
+      var vDegreeMatch := TRUE;
+      case (vDictPOS = 'ADV') or (vDictPOS = 'ADJ') of TRUE: begin
+        var vDegree := trim(vResult.prDegree);
+        case (vDegree = 'COMP')  of TRUE: vDegreeMatch := (vCandidate.prStem3 <> '') and (vCandidate.prStem3 <> 'zzz'); end;
+        case (vDegree = 'SUPER') of TRUE: vDegreeMatch := (vCandidate.prStem4 <> '') and (vCandidate.prStem4 <> 'zzz'); end;
+      end;end;
 
       var vGenderMatch := TRUE;
       case (vDictPOS = 'N') of TRUE:
@@ -1082,8 +1102,7 @@ begin
           or ((vCandidate.prGender = 'C') and (vResult.prGender in ['M', 'F']))
           or ((vResult.prGender = 'C') and (vCandidate.prGender in ['M', 'F'])); end;
 
-      // Warning: this section will overwrite incoming DictLine.lat data with Inflects.lat data unless a caveat is provided
-      case (vDictPOS = vMappedTarget) and vClassMatch and vVarMatch and vStemIDMatch and vGenderMatch of TRUE: begin
+      case (vDictPOS = vMappedTarget) and vClassMatch and vVarMatch and vStemIDMatch and vGenderMatch and vDegreeMatch of TRUE: begin
           var vFinal := vCandidate;
           // Carry over the specific morphological tags from the inflection engine
           // (The dict entry provides the 'definition' and 'class', the requirement provides the 'case/person/tense')
