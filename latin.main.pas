@@ -244,11 +244,6 @@ end;
 function TLatin.formatGrammarResults(const aGrammarResult: TGrammarTable): TArray<string>;
 // will print out column headers then a verb 3 x 3, noun 7 x 3, or adjective 7 x 4 grid
 // adjusting the width of each column for the longest entry in that column
-const
-  WIDTH_LABEL = 10;
-  WIDTH_CELL  = 16;
-  COL_FIRST   =  1;
-  COL_LAST    =  3;
 begin
 
 result := NIL;
