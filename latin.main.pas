@@ -60,6 +60,7 @@ type
     FInflections:   TArray<TInflectionsRec>;
     FLewisAndShort: ILewisAndShort;
     FNounData:      TNounData;
+    FVerbData:      TVerbData;
     FPrefixes:      TArray<TPrefixRec>;
     FSuffixes:      TArray<TSuffixRec>;
     FTackOns:       TArray<TTackOnRec>;
@@ -101,7 +102,7 @@ type
 
     function  removePrefix                (const aStem: string; const aPrefix: string; const aConnector: char):                     string;
     function  restoreStemM                (const aCore: string; const aTackOn: string):                                             string;
-    function  siphonNounData              (var aDictionaryEntry: string):                                                           TNounData;
+    function  siphonNounData:                                                                                                       TNounData;
     function  tryTrick                    (const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext):
                                                                                                                                     TArray<TParseResultRec>;
     function mapCaseToCase        (const aCase:     string):        TNounCase;
@@ -203,7 +204,7 @@ end;
 function TLatin.formatGrammarResults(const aGrammarResult: TGrammarTable): TArray<string>;
 const
   WIDTH_CASE = 10;
-  WIDTH_CELL = 80;
+  WIDTH_CELL = 16;
 begin
   result := NIL;
   for var vCase := ncNone to ncLocative do begin
@@ -329,8 +330,7 @@ end;
 function TLatin.loadInflections(const aFileName: string): TVoid;
 begin
   FInflections  := latin.fileUtils.loadInflections(FDataPath + aFileName);
-  var vDictionaryEntry: string;
-  FNounData := siphonNounData(vDictionaryEntry);
+  FNounData := siphonNounData;
 
   {$if BazDebugWindow}
   debugInteger('FInflections', length(FInflections));
@@ -708,8 +708,7 @@ begin
     ngCommon:    vTargetGenders := [ngMasculine, ngFeminine];
     ngAll:       vTargetGenders := [ngMasculine, ngFeminine, ngNeuter];
   else
-    vTargetGenders := [ngMasculine, ngFeminine];  //  BAZ EXPERIMENTAL
-    vTargetGenders := NIL;  //  BAZ EXPERIMENTAL
+    vTargetGenders := NIL;
   end;
 
   result[ncNone][COL_CASE]        := 'Case';
@@ -753,14 +752,8 @@ begin
 
             var vFullWord      := vStem + vInflection.niSuffix;
             var vDisplaySuffix := ' -' + vInflection.niSuffix;
-            var vBaseEntry     := vFullWord + '|' + vDisplaySuffix; // BAZ EXPERIMENTAL
-            var vDuplicate     := FALSE;                            // BAZ EXPERIMENTAL
 
-            for var vExisting in vCellList do if vExisting.startsWith(vBaseEntry) then begin vDuplicate := TRUE; BREAK; end;  // BAZ EXPERIMENTA
-            case vDuplicate of TRUE: CONTINUE; end;                                                                            // BAZ EXPERIMENTA
-
-            case USER_NOUN_DEBUG of TRUE: begin
-              var vDebugTag  := ' [' + vSlotChar + vInflection.niGender + vInflection.niAge + vInflection.niFrequency + vInflection.niStemID + ']';
+            case USER_NOUN_DEBUG of TRUE: begin              var vDebugTag  := ' [' + vSlotChar + vInflection.niGender + vInflection.niAge + vInflection.niFrequency + vInflection.niStemID + ']';
               vFullWord      := vFullWord      + vDebugTag;
               vDisplaySuffix := vDisplaySuffix + vDebugTag;
             end;end;
@@ -922,8 +915,14 @@ begin
       var vVarMatch    := (vCandidate.prVariant = vResult.prVariant) or (vCandidate.prVariant = '0') or (vResult.prVariant = '0');
       var vStemIDMatch := (vResult.prStemID = '0') or (vCandidate.prStemID = vResult.prStemID);
 
-      case (vDictPOS = vMappedTarget) and vClassMatch and vVarMatch and vStemIDMatch of
-        TRUE: begin
+      var vGenderMatch := TRUE;
+      case (vDictPOS = 'N') of TRUE:
+        vGenderMatch := (vCandidate.prGender = vResult.prGender)
+          or (vCandidate.prGender = 'X') or (vResult.prGender = 'X')
+          or ((vCandidate.prGender = 'C') and (vResult.prGender in ['M', 'F']))
+          or ((vResult.prGender = 'C') and (vCandidate.prGender in ['M', 'F'])); end;
+
+      case (vDictPOS = vMappedTarget) and vClassMatch and vVarMatch and vStemIDMatch and vGenderMatch of TRUE: begin
           var vFinal := vCandidate;
           // Carry over the specific morphological tags from the inflection engine
           // (The dict entry provides the 'definition' and 'class', the requirement provides the 'case/person/tense')
@@ -1406,7 +1405,7 @@ begin
   FDataPath := aPath;
 end;
 
-function TLatin.siphonNounData(var aDictionaryEntry: string): TNounData;
+function TLatin.siphonNounData: TNounData;
 begin
   result := default(TNounData);
 

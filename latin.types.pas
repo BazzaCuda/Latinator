@@ -376,6 +376,15 @@ type
     vcStem4:    string;
   end;
 
+  TVerbConjugation = record
+    vcStemID:     char;
+    vcSuffix:     string;
+    vcAge:        char;
+    vcFrequency:  char;
+  end;
+
+  TVerbData = array[TVerbTense, TVerbVoice, TVerbMood, TVerbPerson, TVerbNumber] of TArray<TVerbConjugation>;
+
   // Case, Number, Gender: amicum = accusative singular masculine
   TNounContext = record
     ncCase:     TNounCase;
