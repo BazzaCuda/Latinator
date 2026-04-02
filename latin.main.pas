@@ -492,8 +492,12 @@ begin
   case length(FNounResults) = 0 of TRUE: EXIT; end;
 
   var vResult  := FNounResults[0];
-  var vContext := default(TNounContext);
+  for var vCandidate in FNounResults do
+    case (vCandidate.prCase = 'NOM') and (vCandidate.prNumber1 = 'S') of
+      TRUE: begin vResult := vCandidate; BREAK; end;
+    end;
 
+  var vContext := default(TNounContext);
   vContext.ncClass   := mapClassToClass(vResult.prClass);
   vContext.ncVariant := mapVariantToVariant(vResult.prVariant);
   vContext.ncStem1   := vResult.prStem1;
@@ -863,8 +867,10 @@ begin
               '4': vStem := aContext.ncStem4;
             end;
 
-            // Skip inflections that require a stem index not provided by this dictionary entry
-            case (vStem = '') and (vInflection.niStemID <> '0') of TRUE: CONTINUE; end;
+            // Plan A: Skip inflections that require a stem index not provided by this dictionary entry
+            // case (vStem = '') and (vInflection.niStemID <> '0') of TRUE: CONTINUE; end;
+            // Plan B: Whitaker Fallback: if the required stem is missing, use the primary stem
+            case (vStem = '') of TRUE: vStem := aContext.ncStem1; end;
 
             var vFullWord      := vStem + vInflection.niSuffix;
             var vDisplaySuffix := ' -' + vInflection.niSuffix;

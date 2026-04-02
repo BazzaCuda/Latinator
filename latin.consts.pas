@@ -65,7 +65,7 @@ const
   MAP_CLASS_VARIANTS:     array[cv1..cv9]                   of char   = ('1', '2', '3', '4', '5', '6', '7', '8', '9');
   MAP_NOUN_CASES:         array[ncNominative..ncLocative]   of string = ('NOM', 'VOC', 'ACC', 'GEN', 'DAT', 'ABL', 'LOC');
   MAP_NOUN_GENDERS:       array[ngMasculine..ngAll]         of char   = ('M', 'F', 'N', 'C', 'X');
-  MAP_NOUN_GENDER_LABELS: array[ngMasculine..ngCommon]      of string = ('masculine', 'feminine', 'neuter', 'common');
+  MAP_NOUN_GENDER_LABELS: array[ngMasculine..ngCommon]      of string = ('masculine', 'feminine', 'neuter', 'masculine/feminine');
   MAP_VERB_TENSES:        array[vtPluperfect..vtSupine]     of string = ('PLUP', 'PERF', 'IMPF', 'PRES', 'FPERF', 'FUT', 'SUPI');
   MAP_VERB_VOICES:        array[vvActive..vvPassive]        of string = ('ACTIVE', 'PASSIVE');
   MAP_VERB_MOODS:         array[vmIndicative..vmInfinitive] of string = ('IND', 'SUB', 'IMP', 'INF');
