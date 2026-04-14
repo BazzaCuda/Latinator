@@ -62,7 +62,9 @@ uses
   latin.charUtils in 'latin.charUtils.pas',
   latin.miscUtils in 'latin.miscUtils.pas',
   latin.LewisAndShort in 'latin.LewisAndShort.pas',
-  latin.consts in 'latin.consts.pas';
+  latin.consts in 'latin.consts.pas',
+  latin.macronData in 'latin.macronData.pas',
+  latin.tricks in 'latin.tricks.pas';
 
 var
   vAsGUI: boolean = FALSE;
@@ -134,6 +136,26 @@ begin
   writeUnicode('');
 end;
 
+procedure clearConsole;
+begin
+  var vHandle := getStdHandle(STD_OUTPUT_HANDLE);
+  var vConsoleScreenBufferInfo: TConsoleScreenBufferInfo;
+
+  getConsoleScreenBufferInfo(vHandle, vConsoleScreenBufferInfo);
+
+  var vLength := vConsoleScreenBufferInfo.dwSize.X * vConsoleScreenBufferInfo.dwSize.Y;
+
+  var vTopLeft: TCoord;
+  vTopLeft.X := 0;
+  vTopLeft.Y := 0;
+
+  var vWritten: DWORD;
+
+  fillConsoleOutputCharacter(vHandle, ' ', vLength, vTopLeft, vWritten);
+  fillConsoleOutputAttribute(vHandle, vConsoleScreenBufferInfo.wAttributes, vLength, vTopLeft, vWritten);
+  setConsoleCursorPosition(vHandle, vTopLeft);
+end;
+
 function findDataPath(const aStartPath: string; aDepth: integer = 2): string;
 begin
   result := aStartPath;
@@ -192,6 +214,13 @@ begin
   writeUnicode                      ('');
 end;
 
+function doClearConsole: TVoid;
+begin
+  clearConsole;
+  writeBanner;
+  writeUnicode('Press ENTER to exit');
+end;
+
 function readLine(var aLine: string): TVoid;
 begin
   var vHandle                 :  THANDLE := getStdHandle(STD_INPUT_HANDLE);
@@ -222,12 +251,11 @@ begin
                                                         result.ccCommand := vMapping.cmCommand;
                                                         BREAK; end;end;
 
-  case result.ccCommand in [ccWW..ccConjugateVerb] of TRUE: delete(aLine, 1, length(vConsoleLine[0])); end;
+  case result.ccCommand in [ccWW..ccClearLS] of TRUE: delete(aLine, 1, length(vConsoleLine[0]) + 1); end; // allow for the original space after the commnad
 
-  result.ccWW := result.ccCommand in [ccNone..ccConjugateVerb];
-  result.ccLS := result.ccCommand in [ccNone, ccLS..ccClearLS];
+  result.ccWW := result.ccCommand in [ccNone, ccWW..ccConjugateVerb];
+  result.ccLS := result.ccCommand in [ccNone, ccLS];
 end;
-
 
 function consoleLoop(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
@@ -248,6 +276,7 @@ begin
         var vConsoleContext := mapConsoleCommand(vLine);
 
         case vConsoleContext.ccCommand of
+          ccCLS:      doClearConsole;
           ccLoadLS:   begin loadLewisAndShort   (aLatin, aDataPath);  CONTINUE; end;
           ccExportLS: begin exportLewisAndShort (aLatin, aDataPath);  CONTINUE; end;
           ccImportLS: begin importLewisAndShort (aLatin, aDataPath);  CONTINUE; end;
@@ -255,7 +284,7 @@ begin
         end;
 
         case vConsoleContext.ccWW of TRUE: for var vString in aLatin.parse(vConsoleContext.ccCommand, vLine) do writeUnicode(vString); end;
-        case vConsoleContext.ccLS of TRUE: writeEntry(aLatin.LewisAndShort.findEntry(vLine)); end;
+        case vConsoleContext.ccLS of TRUE: writeEntry(aLatin.LewisAndShort.findEntry(vLine.trim)); end;
 
       until vLine = '';
 
@@ -344,14 +373,14 @@ begin
     assignFile  (output, '');
     rewrite     (output);
 
-    // introductory messages from our sponsor
-    writeUnicode('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
+    writeBanner;
 
     importLewisAndShort (vLatin, vDataPath); // have to do this after the banner and console setup because it emits console messages
 
-    writeUnicode        ('Press ENTER to exit');
+    clearConsole;
+    writeBanner;
 
-    consoleLoop         (vLatin, vDataPath);
+    consoleLoop(vLatin, vDataPath);
 
     vLatin := NIL;
   end;end;

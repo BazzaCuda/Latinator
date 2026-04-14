@@ -46,10 +46,11 @@ const
   NOUN_CASE_MAX = 6; // 0-based
   NOUN_CASE_ORDER_STD: array[0..6] of TNounCase = (ncNominative, ncVocative, ncAccusative, ncGenitive, ncDative, ncAblative, ncLocative);
 
-  // my condolences: Wheelock was a moron! :P :D
+  // my condolences: Wheelock was a buffoon! :P :D
   NOUN_CASE_ORDER_US:  array[0..6] of TNounCase = (ncNominative, ncGenitive, ncDative, ncAccusative, ncVocative, ncAblative, ncLocative);
 
-  MAP_CONSOLE_COMMANDS: array[0..8] of TConsoleCommandMapping = (
+  MAP_CONSOLE_COMMANDS: array[0..9] of TConsoleCommandMapping = (
+    (cmInput: 'cls';     cmCommand: ccCLS),
     (cmInput: 'nn';      cmCommand: ccDeclineNoun),
     (cmInput: 'aa';      cmCommand: ccDeclineAdjective),
     (cmInput: 'vv';      cmCommand: ccConjugateVerb),

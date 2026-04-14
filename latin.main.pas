@@ -47,7 +47,7 @@ implementation
 
 uses
   system.strUtils,
-  latin.charUtils, latin.consts, latin.fileUtils, latin.miscUtils, latin.stringUtils,
+  latin.charUtils, latin.consts, latin.fileUtils, latin.macronData, latin.miscUtils, latin.stringUtils, latin.tricks,
   _debugWindow;
 
 type
@@ -65,6 +65,8 @@ type
     FSuffixes:      TArray<TSuffixRec>;
     FTackOns:       TArray<TTackOnRec>;
     FUniques:       TArray<TUniquesRec>;
+
+    FMacronVerbs:   TArray<TVerbRec>;
   private
     function  conjugateVerb               (const aWord: string; var aDictionaryEntry: string):                                      TGrammarTable;
     function  declineNoun                 (const aWord: string; var aDictionaryEntry: string):                                      TGrammarTable;
@@ -123,6 +125,15 @@ type
 
     function nounDeclension               (const aContext:  TNounContext; var aDictionaryEntry: string):                            TGrammarTable;
     function verbConjugation              (const aContext:  TVerbContext; var aDictionaryEntry: string):                            TGrammarTable;
+    function parseDoubleConsonants(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function parseInitialTricks(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function parseInternalTricks(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function parseMedievalTricks(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function parseSlurs(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function parseSyncope(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function parseTerminalIis(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function parseTwoWords(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function filterAbbreviations(const aWord: string; const aResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -267,8 +278,10 @@ result := NIL;
     for var vCol := 0 to vColCount - 1 do
       vLine := vLine + ' ' + format('%-*s', [vWidths[vCol], aGrammarResult[vRow][vCol]]) + ' |';
 
+    case (vRow in [ncLocative]) of TRUE: result := result + ['|' + stringOfChar('-', vLine.length - 2) + '|']; end;
+
     result := result + [vLine];
-    case (vRow = ncNone) of TRUE: result := result + [stringOfChar('-', vLine.length)]; end;
+    case (vRow in [ncNone]) of TRUE: result := result + ['|' + stringOfChar('=', vLine.length - 2) + '|']; end;
   end;
   result := result + [''];
 end;
@@ -301,7 +314,7 @@ result := NIL;
       expandArray(result);
       result[high(result)] := vGroupResult.prExplanation;
       expandArray(result);
-      result[high(result)] := format('stem1: %s stem2: %s stem3: %s stem4: %s', [trim(vGroupResult.prStem1), trim(vGroupResult.prStem2), trim(vGroupResult.prStem3), trim(vGroupResult.prStem4)]);
+      result[high(result)] := format('stem 1: %s 2: %s 3: %s 4: %s', [trim(vGroupResult.prStem1), trim(vGroupResult.prStem2), trim(vGroupResult.prStem3), trim(vGroupResult.prStem4)]);
       expandArray(result);
       result[high(result)] := ''; // Spacer
     end;end;
@@ -348,7 +361,7 @@ result := NIL;
     expandArray(result);
     result[high(result)] := vGroupResult.prExplanation;
     expandArray(result);
-    result[high(result)] := format('stem1: %s, stem2: %s, stem3: %s, stem4: %s', [trim(vGroupResult.prStem1), trim(vGroupResult.prStem2), trim(vGroupResult.prStem3), trim(vGroupResult.prStem4)]);
+    result[high(result)] := format('stem 1: %s 2: %s 3: %s 4: %s', [trim(vGroupResult.prStem1), trim(vGroupResult.prStem2), trim(vGroupResult.prStem3), trim(vGroupResult.prStem4)]);
   end;end;
 end;
 
@@ -574,6 +587,20 @@ begin
 
   result := TRUE;
   for var i := 1 to aStr1.length do case equalLatin(aStr1[i], aStr2[i]) of FALSE: EXIT(FALSE); end;
+end;
+
+function TLatin.filterAbbreviations(const aWord: string; const aResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+// strip out any results flagged as Class 9 Variant 8 (Undeclinable Abbreviations) if the user didn't capitalize the input
+begin
+  result := NIL;
+  var vAllCaps := (aWord = upperCase(aWord));
+
+  for var vRes in aResults do begin
+    var vIsAbbrev := (vRes.prClass = '9') and (vRes.prVariant = '8');
+    case vIsAbbrev and (NOT vAllCaps) of TRUE: CONTINUE; end;
+
+    result := result + [vRes];
+  end;
 end;
 
 function TLatin.findDictStems(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
@@ -874,7 +901,7 @@ const COL_CASE = 0;
     var vGender     := MAP_NOUN_GENDER_LABELS[aContext.ncGender];
     var vDeclension := MAP_NOUN_DECLENSION_LABELS[aContext.ncClass];
 
-    result          := format('%s, %s: %s declension %s#%s', [vNominative, vGenitive, vDeclension, vGender, aContext.ncTranslation]); // consoleUtils will split the line at the #
+    result          := format('%s, %s#%s declension %s#%s', [vNominative, vGenitive, vDeclension, vGender, aContext.ncTranslation]); // consoleUtils will split the line at the #
   end;
 
 begin
@@ -1495,26 +1522,182 @@ for var vTackOn in FTackOns do begin
   end;
 end;
 
+//===== TRICKS =====
+
+function TLatin.parseDoubleConsonants(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  for var i := 2 to aWord.length - 1 do begin
+    case isVowel(aWord[i - 1]) and NOT isVowel(aWord[i]) and isVowel(aWord[i + 1]) of TRUE: begin
+      var vModified := format('%s%s%s', [copy(aWord, 1, i), aWord[i], copy(aWord, i + 1, aWord.length)]);
+      result := tryTrick(aWord, vModified, 'Doubled consonant may be rendered single in Medieval texts', aPC);
+      case length(result) > 0 of TRUE: EXIT; end;
+    end;end;
+  end;
+end;
+
+function TLatin.parseInitialTricks(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  for var vTrick in INITIAL_FLIP_FLOPS do begin
+    case aWord.startsWith(vTrick.tmFind) of TRUE: result := tryTrick(aWord, format('%s%s', [vTrick.tmReplace, copy(aWord, vTrick.tmFind.length + 1, aWord.length)]), vTrick.tmNote, aPC); end;
+    case length(result) > 0 of TRUE: EXIT; end;
+
+    case aWord.startsWith(vTrick.tmReplace) of TRUE: result := tryTrick(aWord, format('%s%s', [vTrick.tmFind, copy(aWord, vTrick.tmReplace.length + 1, aWord.length)]), vTrick.tmNote, aPC); end;
+    case length(result) > 0 of TRUE: EXIT; end;
+  end;
+
+  for var vTrick in INITIAL_FLIPS do begin
+    case aWord.startsWith(vTrick.tmFind) of TRUE: result := tryTrick(aWord, format('%s%s', [vTrick.tmReplace, copy(aWord, vTrick.tmFind.length + 1, aWord.length)]), vTrick.tmNote, aPC); end;
+    case length(result) > 0 of TRUE: EXIT; end;
+  end;
+end;
+
+function TLatin.parseInternalTricks(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  for var vTrick in INTERNAL_TRICKS do begin
+    case aWord.contains(vTrick.tmFind) of TRUE: result := tryTrick(aWord, aWord.replace(vTrick.tmFind, vTrick.tmReplace), vTrick.tmNote, aPC); end;
+    case length(result) > 0 of TRUE: EXIT; end;
+  end;
+end;
+
+function TLatin.parseMedievalTricks(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  for var vTrick in MEDIEVAL_TRICKS do begin
+    case aWord.contains(vTrick.tmFind) of TRUE: result := tryTrick(aWord, aWord.replace(vTrick.tmFind, vTrick.tmReplace), vTrick.tmNote, aPC); end;
+    case length(result) > 0 of TRUE: EXIT; end;
+  end;
+end;
+
+function TLatin.parseSlurs(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+const
+  SLURS: array[0..3] of string = ('ad', 'in', 'ob', 'sub');
+begin
+  result := NIL;
+  for var vSlur in SLURS do begin
+    case aWord.startsWith(vSlur) and (aWord.length > vSlur.length) of TRUE: begin
+      case NOT isVowel(aWord[vSlur.length + 1]) of TRUE: begin
+        var vModified := format('%s%s', [copy(vSlur, 1, vSlur.length - 1), copy(aWord, vSlur.length + 1, aWord.length)]);
+        var vNote     := format('Slur %s to %s', [vSlur, copy(vSlur, 1, vSlur.length - 1)]);
+        result        := tryTrick(aWord, vModified, vNote, aPC);
+        case length(result) > 0 of TRUE: EXIT; end;
+      end;end;
+    end;end;
+  end;
+end;
+
+function TLatin.parseSyncope(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  for var vTrick in SYNCOPE_TRICKS do begin
+    var vPos := aWord.lastIndexOf(vTrick.tmFind);
+    case vPos >= 0 of TRUE: begin
+      var vModified   := format('%s%s%s', [copy(aWord, 1, vPos), vTrick.tmReplace, copy(aWord, vPos + vTrick.tmFind.length + 1, aWord.length)]);
+      var vRawResults := tryTrick(aWord, vModified, vTrick.tmNote, aPC);
+
+      for var vRes in vRawResults do begin
+        var vValid := (vRes.prPartOfSpeech = 'V') and (vRes.prStemID = '3');
+        case vValid of TRUE: result := result + [vRes]; end;
+      end;
+
+      case length(result) > 0 of TRUE: EXIT; end;
+    end;end;
+  end;
+end;
+
+function TLatin.parseTerminalIis(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+begin
+  result := NIL;
+  case aWord.endsWith('is') and (aWord.length > 3) of TRUE: begin
+    var vModified   := format('%siis', [copy(aWord, 1, aWord.length - 2)]);
+    var vRawResults := tryTrick(aWord, vModified, 'Terminal is -> iis', aPC);
+
+    for var vRes in vRawResults do begin
+      var vValid := (vRes.prPartOfSpeech = 'ADJ') and (vRes.prClass = '1') and (vRes.prVariant = '1') and (vRes.prNumber1 = 'P') and ((vRes.prCase = 'DAT') or (vRes.prCase = 'ABL'));
+      case vValid of TRUE: result := result + [vRes]; end;
+    end;
+  end;end;
+end;
+
+function TLatin.parseTwoWords(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+const
+  COMMON_PREFIXES: array[0..10] of string = ('dis', 'ex', 'in', 'per', 'prae', 'pro', 're', 'si', 'sub', 'super', 'trans');
+begin
+  result := NIL;
+  case (aWord.length < 5) of TRUE: EXIT; end;
+
+  for var i := 2 to aWord.length - 2 do begin
+    var vLeft  := aWord.substring(0, i);
+    var vRight := aWord.substring(i);
+
+    var vIsCommon := FALSE;
+    for var vPrefix in COMMON_PREFIXES do case (vLeft = vPrefix) of TRUE: begin vIsCommon := TRUE; BREAK; end; end;
+    case vIsCommon of TRUE: CONTINUE; end;
+
+    var vSubPC := aPC;
+    vSubPC.pcTricks := FALSE; // Prevent infinite trick/syncope recursion
+
+    var vLeftResults := parseWord(vLeft, vSubPC);
+    case (length(vLeftResults) > 0) of TRUE: begin
+      var vRightResults := parseWord(vRight, vSubPC);
+
+      case (length(vRightResults) > 0) of TRUE: begin
+        var vNumHitOne := FALSE;
+        var vNumHitTwo := FALSE;
+
+        for var vRes in vLeftResults  do case (vRes.prPartOfSpeech.trim = 'NUM') of TRUE: begin vNumHitOne := TRUE; BREAK; end; end;
+        for var vRes in vRightResults do case (vRes.prPartOfSpeech.trim = 'NUM') of TRUE: begin vNumHitTwo := TRUE; BREAK; end; end;
+
+        var vComboRec := default(TParseResultRec);
+        vComboRec.prWord         := aWord;
+        vComboRec.prPartOfSpeech := 'COMPOUND';
+        vComboRec.prStem         := format('%s + %s', [vLeft, vRight]);
+
+        case (vNumHitOne and vNumHitTwo) of
+          TRUE:  vComboRec.prExplanation := format('It is very likely a compound number (%s + %s).', [vLeft, vRight]);
+          FALSE: vComboRec.prExplanation := format('May be 2 words combined (%s + %s). If not obvious, probably incorrect.', [vLeft, vRight]);
+        end;
+
+        result := [vComboRec] + vLeftResults + vRightResults;
+        EXIT;
+      end;end;
+    end;end;
+  end;
+end;
+
 function TLatin.parseTricks(const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
 begin
   result := NIL;
 
-  result  := tryTrick(aWord, aWord.replace('e', 'ae'), 'ae for e', aPC);
-  case (length(result) > 0) of TRUE: EXIT; end;
+  result := parseSyncope(aWord, aPC);
+  case length(result) > 0 of TRUE: EXIT; end;
 
-  result  := tryTrick(aWord, aWord.replace('y', 'i'), 'i for y', aPC);
-  case (length(result) > 0) of TRUE: EXIT; end;
+  result := parseInitialTricks(aWord, aPC);
+  case length(result) > 0 of TRUE: EXIT; end;
 
-  result  := tryTrick(aWord, aWord.replace('f', 'ph'), 'ph for f', aPC);
-  case (length(result) > 0) of TRUE: EXIT; end;
+  result := parseInternalTricks(aWord, aPC);
+  case length(result) > 0 of TRUE: EXIT; end;
 
-  result  := tryTrick(aWord, aWord.replace('t', 'th'), 'th for t', aPC);
-  case (length(result) > 0) of TRUE: EXIT; end;
+  result := parseMedievalTricks(aWord, aPC);
+  case length(result) > 0 of TRUE: EXIT; end;
 
-  result  := tryTrick(aWord, aWord.replace('c', 'ch'), 'ch for c', aPC);
-  case (length(result) > 0) of TRUE: EXIT; end;
+  result := parseSlurs(aWord, aPC);
+  case length(result) > 0 of TRUE: EXIT; end;
 
+  result := parseDoubleConsonants(aWord, aPC);
+  case length(result) > 0 of TRUE: EXIT; end;
+
+  result := parseTerminalIis(aWord, aPC);
+  case length(result) > 0 of TRUE: EXIT; end;
+
+  result := parseTwoWords(aWord, aPC);
+  case length(result) > 0 of TRUE: EXIT; end;
 end;
+
+//===== ------ =====
+
 
 function TLatin.parseWord(const aWord: string; var aPC: TParseContext; const bTricks: boolean = FALSE): TArray<TParseResultRec>;
 begin
@@ -1538,6 +1721,8 @@ begin
   case  (length(result) = 0)  or aPC.pcTricks                     of TRUE: result := result + parseSuffixes (vInflectionRecs); end;
   case  (length(result) = 0)  or aPC.pcTricks                     of TRUE: result := result + parseTackons  (aWord, aPC);      end;
   case ((length(result) = 0)  or aPC.pcTricks) and (NOT bTricks)  of TRUE: result := result + parseTricks   (aWord, aPC);      end;
+
+  result := filterAbbreviations(aWord, result);
 end;
 
 function TLatin.parseUniques(const aWord: string): TArray<TParseResultRec>;
@@ -1742,7 +1927,7 @@ const COL_LABEL = 0;
     var vMood         := MAP_VERB_MOOD_LABELS[  aContext.vcMood];
     var vVoice        := MAP_VERB_VOICE_LABELS  [aContext.vcVoice];
 
-    result            := format('%s, %s, %s, %s: %s conjugation %s %s %s#%s', [vPres1S, vInf, vPerf1S, vSupine, vConjugation, vTense, vMood, vVoice, aContext.vcTranslation]);
+    result            := format('%s, %s, %s, %s#%s conjugation %s %s %s#%s', [vPres1S, vInf, vPerf1S, vSupine, vConjugation, vTense, vMood, vVoice, aContext.vcTranslation]); // consoleUtils will split the line at the #
   end;
 
 begin

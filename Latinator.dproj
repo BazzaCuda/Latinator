@@ -165,6 +165,8 @@
         <DCCReference Include="latin.miscUtils.pas"/>
         <DCCReference Include="latin.LewisAndShort.pas"/>
         <DCCReference Include="latin.consts.pas"/>
+        <DCCReference Include="latin.macronData.pas"/>
+        <DCCReference Include="latin.tricks.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -199,7 +201,7 @@
                 <Platform value="Win64">True</Platform>
             </Platforms>
             <Deployment Version="4">
-                <DeployFile LocalName="Latinator.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win64\Debug\Latinator.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>Latinator.exe</RemoteName>
                         <Overwrite>true</Overwrite>

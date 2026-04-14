@@ -537,10 +537,10 @@ end;
 
 function TLewisAndShort.findEntry(aKey: string): ILewisAndShortEntry;
 begin
+  case length(aKey) = 0 of TRUE: EXIT; end;
+
   var vKey1 := aKey[1];
-
   repeat
-
     var vKey := aKey;
     var i    := 0;
 
@@ -553,7 +553,6 @@ begin
     until (result <> NIL) or (i > 9);
 
     case result = NIL of TRUE: aKey[1] := char(ord(aKey[1]) xor 32); end; // toggle upperCase/lowerCase
-
   until (result <> NIL) or (aKey[1] = vKey1);
 end;
 

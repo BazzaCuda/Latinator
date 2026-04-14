@@ -24,7 +24,7 @@ interface
 type
   TVoid = record end;
 
-  TConsoleCommand = (ccNone, ccWW, ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb, ccLS, ccLoadLS, ccExportLS, ccImportLS, ccClearLS);
+  TConsoleCommand = (ccNone, ccCLS, ccWW, ccDeclineNoun, ccDeclineAdjective, ccConjugateVerb, ccLS, ccLoadLS, ccExportLS, ccImportLS, ccClearLS);
   TConsoleContext = record
     ccCommand: TConsoleCommand;
     ccWW:      boolean;

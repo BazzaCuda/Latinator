@@ -21,9 +21,15 @@ unit latin.charUtils;
 
 interface
 
+function isVowel(const aChar: char): boolean;
 function romanCharToInt(const aChar: char): integer;
 
 implementation
+
+function isVowel(const aChar: char): boolean;
+begin
+  result := aChar in ['a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'];
+end;
 
 function romanCharToInt(const aChar: char): integer;
 begin

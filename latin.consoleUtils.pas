@@ -30,6 +30,7 @@ uses
 
 function centerWindow(aHWND: HWND): TVoid;
 function applyUserConsoleColors(aOutputHandle: THandle): TVoid;
+function writeBanner: TVoid;
 function writeUnicode(const vText: string): TVoid;
 
 implementation
@@ -87,6 +88,13 @@ begin
   var vY := vScreenRect.top + (vScreenHeight - vWindowHeight) div 2;
 
   setWindowPos(aHWND, 0, vX, vY, 0, 0, SWP_NOSIZE or SWP_NOZORDER);
+end;
+
+function writeBanner: TVoid;
+begin
+  // introductory messages from our sponsor
+  writeUnicode('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
+  writeUnicode('');
 end;
 
 function writeUnicode(const vText: string): TVoid;
