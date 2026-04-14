@@ -110,7 +110,7 @@ type
     function  siphonNounData:                                                                                                       TNounData;
     function  siphonVerbData:                                                                                                       TVerbData;
 
-    function sortResults(const aResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+    function  sortResults(const aResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
 
     function  tryTrick                    (const aWord: string; const aModified: string; const aNote: string; var aPC: TParseContext):
                                                                                                                                     TArray<TParseResultRec>;
@@ -1991,6 +1991,39 @@ begin
   TArray.sort<TParseResultRec>(result, TComparer<TParseResultRec>.construct(
     function(const aLeft, aRight: TParseResultRec): integer
 
+  function getCaseWeight(const aRes: TParseResultRec): integer;
+  begin
+//    case aRes.prPartOfSpeech.trim <> 'N' of TRUE: EXIT(99); end;
+
+    var gStdCaseOrder := TRUE;
+
+    var vCase := aRes.prCase.trim;
+
+    case gStdCaseOrder of
+      TRUE:
+        begin
+          case vCase = 'NOM' of true: exit(0); end;
+          case vCase = 'VOC' of true: exit(1); end;
+          case vCase = 'ACC' of true: exit(2); end;
+          case vCase = 'GEN' of true: exit(3); end;
+          case vCase = 'DAT' of true: exit(4); end;
+          case vCase = 'ABL' of true: exit(5); end;
+          case vCase = 'LOC' of true: exit(6); end;
+        end;
+      FALSE:
+        begin
+          case vCase = 'NOM' of true: exit(0); end;
+          case vCase = 'GEN' of true: exit(1); end;
+          case vCase = 'DAT' of true: exit(2); end;
+          case vCase = 'ACC' of true: exit(3); end;
+          case vCase = 'VOC' of true: exit(4); end;
+          case vCase = 'ABL' of true: exit(5); end;
+          case vCase = 'LOC' of true: exit(6); end;
+        end;
+    end;
+    result := 99;
+  end;
+
     function getOriginWeight(const aRes: TParseResultRec): integer;
     begin
       // Weight 0: Uniques (identified by Source 'U' or specific logic)
@@ -2030,7 +2063,21 @@ begin
 
       // Tier 3: Frequency (A < B < C... so ord() works for ascending rank)
       result := ord(aLeft.prFrequency) - ord(aRight.prFrequency);
-    end
+      case result <> 0 of TRUE: EXIT; end;
+
+      result := system.sysUtils.compareStr(aLeft.prExplanation, aRight.prExplanation);
+      case result <> 0 of true: exit; end;
+
+      result := ord(aLeft.prStemID) - ord(aRight.prStemID);
+      case result <> 0 of true: exit; end;
+
+      result := ord(aLeft.prGender) - ord(aRight.prGender);
+      case result <> 0 of true: exit; end;
+
+      result := ord(aRight.prNumber1) - ord(aLeft.prNumber1);
+      case result <> 0 of true: exit; end;
+
+      result := getCaseWeight(aLeft) - getCaseWeight(aRight);    end
   ));
 end;
 
