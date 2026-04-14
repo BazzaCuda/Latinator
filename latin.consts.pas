@@ -39,6 +39,7 @@ const
     (pmSearchString: 'cu';    pmPrefix: '';    pmStemType: stCu)
   );
 
+  USER_MEDIEVAL_TRICKS  = FALSE;
   USER_TRICKS           = TRUE;
   USER_NOUN_CASE_ORDER  = ncoNomAcc;
   USER_NOUN_DEBUG       = FALSE;
