@@ -25,6 +25,8 @@ uses
   latin.types;
 
 const
+  LATINATOR_BANNER = 'Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)';
+
   MAX_STEM      = 18;
   SIZE_OF_CHAR  =  2;
 

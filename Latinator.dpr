@@ -64,10 +64,13 @@ uses
   latin.LewisAndShort in 'latin.LewisAndShort.pas',
   latin.consts in 'latin.consts.pas',
   latin.macronData in 'latin.macronData.pas',
-  latin.tricks in 'latin.tricks.pas';
+  latin.tricks in 'latin.tricks.pas',
+  latin.interfaces in 'latin.interfaces.pas',
+  view.formSplash in 'view.formSplash.pas' {SplashForm};
 
 var
-  vAsGUI: boolean = FALSE;
+  gSplashScreen:  ISplashScreen = NIL;
+  gRunAsGUI:      boolean       = FALSE;
 
 {$ifndef useMadExcept}
 procedure shhh(const aExceptIntf: IMEException; var aHandled: boolean);
@@ -104,7 +107,26 @@ begin
   {$endif}
 end;
 
-function writeEntry(const aEntry: ILewisAndShortEntry): TVoid;
+function informUser(const aString: string): TVoid;
+
+  function checkProgress: TVoid;
+  begin
+    case gSplashScreen = NIL of FALSE: EXIT; end;
+    gSplashScreen         := newSplashScreen;
+    gSplashScreen.owner   := getDesktopWindow;
+    gSplashScreen.heading := LATINATOR_BANNER;
+    gSplashScreen.formShow;
+  end;
+
+begin
+  case gRunAsGUI of  TRUE:  begin
+                              checkProgress;
+                              gSplashScreen.subHeading := aString;
+                            end;
+                    FALSE:  consoleWriteUnicode(aString); end;
+end;
+
+function writeLSEntry(const aEntry: ILewisAndShortEntry): TVoid;
 
   function limitedDefinition: string;
   begin
@@ -118,42 +140,22 @@ function writeEntry(const aEntry: ILewisAndShortEntry): TVoid;
 
 begin
   case aEntry = NIL of TRUE: EXIT; end;
-  writeUnicode('orthography1: ' + aEntry.orthography);
-  writeUnicode('orthography2: ' + aEntry.orthography2);
-  writeUnicode('ID: '           + aEntry.id);
-  writeUnicode('Key: '          + aEntry.key);
-  writeUnicode('Case: '         + aEntry.caseCase);
-  writeUnicode('Type: '         + aEntry.entryType);
-  writeUnicode('Language: '     + aEntry.language);
-  writeUnicode('PartOfSpeech: ' + aEntry.partOfSpeech);
-  writeUnicode('Gender: '       + aEntry.gender);
-  writeUnicode('Inflection: '   + aEntry.inflection);
-  writeUnicode('Mood: '         + aEntry.mood);
-  writeUnicode('Etymology: '    + aEntry.etymology);
-  writeUnicode('Definition: '   + aEntry.definition); //    limitedDefinition);
-  writeUnicode('');
-  aEntry.senseAsStrings(writeUnicode);
-  writeUnicode('');
-end;
-
-procedure clearConsole;
-begin
-  var vHandle := getStdHandle(STD_OUTPUT_HANDLE);
-  var vConsoleScreenBufferInfo: TConsoleScreenBufferInfo;
-
-  getConsoleScreenBufferInfo(vHandle, vConsoleScreenBufferInfo);
-
-  var vLength := vConsoleScreenBufferInfo.dwSize.X * vConsoleScreenBufferInfo.dwSize.Y;
-
-  var vTopLeft: TCoord;
-  vTopLeft.X := 0;
-  vTopLeft.Y := 0;
-
-  var vWritten: DWORD;
-
-  fillConsoleOutputCharacter(vHandle, ' ', vLength, vTopLeft, vWritten);
-  fillConsoleOutputAttribute(vHandle, vConsoleScreenBufferInfo.wAttributes, vLength, vTopLeft, vWritten);
-  setConsoleCursorPosition(vHandle, vTopLeft);
+  consoleWriteUnicode('orthography1: ' + aEntry.orthography);
+  consoleWriteUnicode('orthography2: ' + aEntry.orthography2);
+  consoleWriteUnicode('ID: '           + aEntry.id);
+  consoleWriteUnicode('Key: '          + aEntry.key);
+  consoleWriteUnicode('Case: '         + aEntry.caseCase);
+  consoleWriteUnicode('Type: '         + aEntry.entryType);
+  consoleWriteUnicode('Language: '     + aEntry.language);
+  consoleWriteUnicode('PartOfSpeech: ' + aEntry.partOfSpeech);
+  consoleWriteUnicode('Gender: '       + aEntry.gender);
+  consoleWriteUnicode('Inflection: '   + aEntry.inflection);
+  consoleWriteUnicode('Mood: '         + aEntry.mood);
+  consoleWriteUnicode('Etymology: '    + aEntry.etymology);
+  consoleWriteUnicode('Definition: '   + aEntry.definition); //    limitedDefinition);
+  consoleWriteUnicode('');
+  aEntry.senseAsStrings(consoleWriteUnicode);
+  consoleWriteUnicode('');
 end;
 
 function findDataPath(const aStartPath: string; aDepth: integer = 2): string;
@@ -172,6 +174,7 @@ end;
 function loadWhitakersWords(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
   aLatin.setDataPath                (aDataPath);
+  informUser('Loading Whitaker''''s Words data...');
   aLatin.loadDictionary             ('DICTLINE.LAT');
   aLatin.loadEsse                   ('ESSE.LAT');
   aLatin.loadInflections            ('INFLECTS.LAT');
@@ -184,116 +187,38 @@ end;
 function loadLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
   aLatin.LewisAndShort.setDataPath  (aDataPath);
-  writeUnicode                      ('Loading Lewis & Short...');
+  informUser                      ('Loading Lewis & Short...');
   aLatin.loadLewisAndShort          ('lat.ls.perseus-eng2.xml');
-  writeUnicode                      (format('%d Entries', [aLatin.LewisAndShort.entryCount]));
-  writeUnicode                      ('');
+  informUser                      (format('%d entries loaded', [aLatin.LewisAndShort.entryCount]));
+  informUser('');
 end;
 
 function exportLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
   aLatin.LewisAndShort.setDataPath  (aDataPath);
-  writeUnicode                      ('Exporting Lewis & Short...');
+  informUser                      ('Exporting Lewis & Short...');
   aLatin.LewisAndShort.export       ('Lewis&Short.txt');
-  writeUnicode                      ('');
+  informUser                      ('');
 end;
 
 function importLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
   aLatin.LewisAndShort.setDataPath  (aDataPath);
-  writeUnicode                      ('Importing Lewis & Short...');
+  informUser                      ('Importing Lewis & Short...');
   aLatin.LewisAndShort.import       ('Lewis&Short.txt');
-  writeUnicode                      (format('%d entries', [aLatin.LewisAndShort.entryCount]));
-  writeUnicode                      ('');
+  informUser                      (format('%d entries loaded', [aLatin.LewisAndShort.entryCount]));
+  case gRunAsGUI of FALSE:  informUser(''); end;
 end;
 
 function clearLewisAndShort(const aLatin: ILatin): TVoid;
 begin
   aLatin.LewisAndShort.clear;
-  writeUnicode                      ('Lewis & Short cleared');
-  writeUnicode                      ('');
-end;
-
-function doClearConsole: TVoid;
-begin
-  clearConsole;
-  writeBanner;
-  writeUnicode('Press ENTER to exit');
-end;
-
-function readLine(var aLine: string): TVoid;
-begin
-  var vHandle                 :  THANDLE := getStdHandle(STD_INPUT_HANDLE);
-  var vRead                   :  DWORD;
-  var vBuffer                 :  array [0..1023] of char;
-
-  aLine := '';
-  case readConsole(vHandle, @vBuffer, length(vBuffer), vRead, NIL) of FALSE: EXIT; end;
-
-  setLength(aLine, vRead);
-  case  (vRead > 0) of   TRUE:  begin
-                                  move (vBuffer[0], aLine[1], vRead * sizeOf(char));
-                                  case (vRead >= 2) and (aLine[vRead - 1] = #13) and (aLine[vRead] = #10) of  TRUE: begin setLength(aLine, vRead - 2); end;end;end;end;
+  informUser                      ('Lewis & Short cleared');
+  informUser                      ('');
 end;
 
 var
   gFinished : boolean = FALSE;
-
-function mapConsoleCommand(var aLine: string): TConsoleContext;
-begin
-  result := default(TConsoleContext);
-
-  var vConsoleLine := aLine.split([' '], TStringSplitOptions.ExcludeEmpty);
-  case length(vConsoleLine) = 0 of TRUE: EXIT; end;
-
-  for var vMapping in MAP_CONSOLE_COMMANDS do
-    case vMapping.cmInput = vConsoleLine[0] of TRUE:  begin
-                                                        result.ccCommand := vMapping.cmCommand;
-                                                        BREAK; end;end;
-
-  case result.ccCommand in [ccWW..ccClearLS] of TRUE: delete(aLine, 1, length(vConsoleLine[0]) + 1); end; // allow for the original space after the commnad
-
-  result.ccWW := result.ccCommand in [ccNone, ccWW..ccConjugateVerb];
-  result.ccLS := result.ccCommand in [ccNone, ccLS];
-end;
-
-function consoleLoop(const aLatin: ILatin; const aDataPath: string): TVoid;
-begin
-    var vLine: string;
-
-    try
-      repeat
-        write('> ');
-
-        // readLine (instead of readLn) is the only way to make this block of code possible
-        setLastError(0);
-        readLine(vLine);
-        case (getLastError > 0) of TRUE: EXIT; end; // user probably hit Ctrl-C and handleConsoleClose called freeConsole
-        case (getLastError = 0) and (vLine = '') of  TRUE:  begin
-                                                              writeUnicode('Bene Vale!');
-                                                              BREAK; end;end;
-
-        var vConsoleContext := mapConsoleCommand(vLine);
-
-        case vConsoleContext.ccCommand of
-          ccCLS:      doClearConsole;
-          ccLoadLS:   begin loadLewisAndShort   (aLatin, aDataPath);  CONTINUE; end;
-          ccExportLS: begin exportLewisAndShort (aLatin, aDataPath);  CONTINUE; end;
-          ccImportLS: begin importLewisAndShort (aLatin, aDataPath);  CONTINUE; end;
-          ccClearLS:  begin clearLewisAndShort  (aLatin);             CONTINUE; end;
-        end;
-
-        case vConsoleContext.ccWW of TRUE: for var vString in aLatin.parse(vConsoleContext.ccCommand, vLine) do writeUnicode(vString); end;
-        case vConsoleContext.ccLS of TRUE: writeEntry(aLatin.LewisAndShort.findEntry(vLine.trim)); end;
-
-      until vLine = '';
-
-    finally
-      aLatin.LewisAndShort.clear;
-      aLatin.unload;
-      gFinished := TRUE;
-    end;
-end;
 
 function handleConsoleClose(aCtrlType: DWORD): BOOL; stdcall;
 // do a proper clean-up if the user hits Ctrl-C
@@ -308,33 +233,42 @@ begin
                             while gFinished = FALSE do sleep(100); end;end;
 end;
 
-function disableConsoleCloseButton: TVoid;
+function consoleLoop(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
-  var vConsoleWindow := getConsoleWindow;
+    var vLine: string;
 
-  case (vConsoleWindow <> 0) of  TRUE:  begin
-                                          var vSystemMenu := getSystemMenu(vConsoleWindow, FALSE);
-                                          case (vSystemMenu <> 0) of   TRUE:  begin
-                                                                                deleteMenu  (vSystemMenu, SC_CLOSE, MF_BYCOMMAND);
-                                                                                drawMenuBar (vConsoleWindow); end;end;end;end;
-end;
+    try
+      repeat
+        write('> ');
 
-function setConsoleWidth(aWidth: integer): TVoid;
-begin
-  var vHandle := getStdHandle(STD_OUTPUT_HANDLE);
-  case (vHandle = INVALID_HANDLE_VALUE) of TRUE: EXIT; end;
+        // readLine (instead of readLn) is the only way to make this block of code possible
+        setLastError(0);
+        consoleReadLine(vLine);
+        case (getLastError > 0) of TRUE: EXIT; end; // user probably hit Ctrl-C and handleConsoleClose called freeConsole
+        case (getLastError = 0) and (vLine = '') of  TRUE:  begin
+                                                              consoleWriteUnicode('Bene Vale!');
+                                                              BREAK; end;end;
 
-  var vBuffer: TCoord;
-  vBuffer.X := aWidth;
-  vBuffer.Y := 9000;
-  case setConsoleScreenBufferSize(vHandle, vBuffer) of FALSE: EXIT; end;
+        var vConsoleContext := consoleMapCommand(vLine);
 
-  var vRect: TSmallRect;
-  vRect.Left   := 0;
-  vRect.Top    := 0;
-  vRect.Right  := aWidth - 1;
-  vRect.Bottom := 40;
-  setConsoleWindowInfo(vHandle, TRUE, vRect);
+        case vConsoleContext.ccCommand of
+          ccCLS:      doClearConsole;
+          ccLoadLS:   begin loadLewisAndShort   (aLatin, aDataPath);  CONTINUE; end;
+          ccExportLS: begin exportLewisAndShort (aLatin, aDataPath);  CONTINUE; end;
+          ccImportLS: begin importLewisAndShort (aLatin, aDataPath);  CONTINUE; end;
+          ccClearLS:  begin clearLewisAndShort  (aLatin);             CONTINUE; end;
+        end;
+
+        case vConsoleContext.ccWW of TRUE: for var vString in aLatin.parse(vConsoleContext.ccCommand, vLine) do consoleWriteUnicode(vString); end;
+        case vConsoleContext.ccLS of TRUE: writeLSEntry(aLatin.LewisAndShort.findEntry(vLine.trim)); end;
+
+      until vLine = '';
+
+    finally
+      aLatin.LewisAndShort.clear;
+      aLatin.unload;
+      gFinished := TRUE;
+    end;
 end;
 
 begin
@@ -343,44 +277,51 @@ begin
   var vLatin    := newLatin;
   var vDataPath := findDataPath(extractFilePath(paramStr(0)));
 
-  loadWhitakersWords  (vLatin, vDataPath);
+  gRunAsGUI := paramStr(1).toUpper = 'GUI';
 
-  vAsGUI := paramStr(1) = 'GUI';
-
-  case vAsGUI of   TRUE: begin
+  case gRunAsGUI of  TRUE:  begin
     freeConsole;
     application.initialize;
     application.mainFormOnTaskbar := TRUE;
     TStyleManager.trySetStyle ('Charcoal Dark Slate');
 
+    loadWhitakersWords  (vLatin, vDataPath);
+    importLewisAndShort (vLatin, vDataPath);
+    sleep(500);
+
+    gSplashScreen.formHide;
+    gSplashScreen := NIL;
+
     Application.CreateForm(TFormMain, FormMain);
   application.run;
   end;end;
 
-  case vAsGUI of  FALSE: begin
+  case gRunAsGUI of FALSE:  begin
     case attachConsole      (ATTACH_PARENT_PROCESS) of FALSE: allocConsole; end;
     //disableConsoleCloseButton;
     setConsoleCtrlHandler   (@handleConsoleClose, TRUE);
 
-    setConsoleWidth (150);
+    consoleSetWidth         (150);
     setConsoleTitle         ('Latinator');
-    centerWindow            (getConsoleWindow);
-    showWindow(getConsoleWindow, SW_SHOW); // only needed for the Delphi debugger
-    applyUserConsoleColors  (getStdHandle(STD_OUTPUT_HANDLE));
+    consoleCenterWindow     (getConsoleWindow);
+    showWindow              (getConsoleWindow, SW_SHOW); // only needed for the Delphi debugger
+    consoleApplyUserColors  (getStdHandle(STD_OUTPUT_HANDLE));
 
     assignFile  (input, '');
     reset       (input);
     assignFile  (output, '');
     rewrite     (output);
 
-    writeBanner;
+    consoleWriteBanner;
 
+    loadWhitakersWords  (vLatin, vDataPath);
     importLewisAndShort (vLatin, vDataPath); // have to do this after the banner and console setup because it emits console messages
+    sleep(500);
 
-    clearConsole;
-    writeBanner;
+    consoleClear;
+    consoleWriteBanner;
 
-    consoleLoop(vLatin, vDataPath);
+    consoleLoop (vLatin, vDataPath);
 
     vLatin := NIL;
   end;end;

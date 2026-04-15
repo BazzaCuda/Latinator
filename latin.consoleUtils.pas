@@ -28,17 +28,24 @@ uses
   vcl.Graphics,
   latin.types;
 
-function centerWindow(aHWND: HWND): TVoid;
-function applyUserConsoleColors(aOutputHandle: THandle): TVoid;
-function writeBanner: TVoid;
-function writeUnicode(const vText: string): TVoid;
+function consoleApplyUserColors(aOutputHandle: THandle): TVoid;
+function consoleCenterWindow(aHWND: HWND): TVoid;
+function consoleClear: TVoid;
+function consoleDisableCloseButton: TVoid;
+function consoleMapCommand(var aLine: string): TConsoleContext;
+function consoleReadLine(var aLine: string): TVoid;
+function consoleSetWidth(aWidth: integer): TVoid;
+function consoleWriteBanner: TVoid;
+function consoleWriteUnicode(const aString: string): TVoid;
+function doClearConsole: TVoid;
 
 implementation
 
 uses
+  latin.consts,
   _debugWindow;
 
-function applyUserConsoleColors(aOutputHandle: THandle): TVoid;
+function consoleApplyUserColors(aOutputHandle: THandle): TVoid;
 var
   vInfo:      TConsoleScreenBufferInfoEx;
   vSize:      DWORD;
@@ -64,7 +71,7 @@ begin
   end;end;
 end;
 
-function centerWindow(aHWND: HWND): TVoid;
+function consoleCenterWindow(aHWND: HWND): TVoid;
 begin
   case aHWND = 0 of
     TRUE: begin
@@ -90,22 +97,112 @@ begin
   setWindowPos(aHWND, 0, vX, vY, 0, 0, SWP_NOSIZE or SWP_NOZORDER);
 end;
 
-function writeBanner: TVoid;
+function consoleClear: TVoid;
 begin
-  // introductory messages from our sponsor
-  writeUnicode('Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)');
-  writeUnicode('');
+  var vHandle := getStdHandle(STD_OUTPUT_HANDLE);
+  var vConsoleScreenBufferInfo: TConsoleScreenBufferInfo;
+
+  getConsoleScreenBufferInfo(vHandle, vConsoleScreenBufferInfo);
+
+  var vLength := vConsoleScreenBufferInfo.dwSize.X * vConsoleScreenBufferInfo.dwSize.Y;
+
+  var vTopLeft: TCoord;
+  vTopLeft.X := 0;
+  vTopLeft.Y := 0;
+
+  var vWritten: DWORD;
+
+  fillConsoleOutputCharacter(vHandle, ' ', vLength, vTopLeft, vWritten);
+  fillConsoleOutputAttribute(vHandle, vConsoleScreenBufferInfo.wAttributes, vLength, vTopLeft, vWritten);
+  setConsoleCursorPosition(vHandle, vTopLeft);
 end;
 
-function writeUnicode(const vText: string): TVoid;
+function consoleDisableCloseButton: TVoid;
+begin
+  var vConsoleWindow := getConsoleWindow;
+
+  case (vConsoleWindow <> 0) of  TRUE:  begin
+                                          var vSystemMenu := getSystemMenu(vConsoleWindow, FALSE);
+                                          case (vSystemMenu <> 0) of   TRUE:  begin
+                                                                                deleteMenu  (vSystemMenu, SC_CLOSE, MF_BYCOMMAND);
+                                                                                drawMenuBar (vConsoleWindow); end;end;end;end;
+end;
+
+function consoleMapCommand(var aLine: string): TConsoleContext;
+begin
+  result := default(TConsoleContext);
+
+  var vConsoleLine := aLine.split([' '], TStringSplitOptions.ExcludeEmpty);
+  case length(vConsoleLine) = 0 of TRUE: EXIT; end;
+
+  for var vMapping in MAP_CONSOLE_COMMANDS do
+    case vMapping.cmInput = vConsoleLine[0] of TRUE:  begin
+                                                        result.ccCommand := vMapping.cmCommand;
+                                                        BREAK; end;end;
+
+  case result.ccCommand in [ccWW..ccClearLS] of TRUE: delete(aLine, 1, length(vConsoleLine[0]) + 1); end; // allow for the original space after the commnad
+
+  result.ccWW := result.ccCommand in [ccNone, ccWW..ccConjugateVerb];
+  result.ccLS := result.ccCommand in [ccNone, ccLS];
+end;
+
+function consoleReadLine(var aLine: string): TVoid;
+begin
+  var vHandle                 :  THANDLE := getStdHandle(STD_INPUT_HANDLE);
+  var vRead                   :  DWORD;
+  var vBuffer                 :  array [0..1023] of char;
+
+  aLine := '';
+  case readConsole(vHandle, @vBuffer, length(vBuffer), vRead, NIL) of FALSE: EXIT; end;
+
+  setLength(aLine, vRead);
+  case  (vRead > 0) of   TRUE:  begin
+                                  move (vBuffer[0], aLine[1], vRead * sizeOf(char));
+                                  case (vRead >= 2) and (aLine[vRead - 1] = #13) and (aLine[vRead] = #10) of  TRUE: begin setLength(aLine, vRead - 2); end;end;end;end;
+end;
+
+function consoleSetWidth(aWidth: integer): TVoid;
 begin
   var vHandle := getStdHandle(STD_OUTPUT_HANDLE);
   case (vHandle = INVALID_HANDLE_VALUE) of TRUE: EXIT; end;
 
-  var vOutput  := vText.replace('#', sLineBreak) + sLineBreak;
+  var vBuffer: TCoord;
+  vBuffer.X := aWidth;
+  vBuffer.Y := 9000;
+  case setConsoleScreenBufferSize(vHandle, vBuffer) of FALSE: EXIT; end;
+
+  var vRect: TSmallRect;
+  vRect.Left   := 0;
+  vRect.Top    := 0;
+  vRect.Right  := aWidth - 1;
+  vRect.Bottom := 40;
+  setConsoleWindowInfo(vHandle, TRUE, vRect);
+end;
+
+function consoleWriteBanner: TVoid;
+begin
+  // introductory messages from our sponsor
+  consoleWriteUnicode(LATINATOR_BANNER);
+  consoleWriteUnicode('');
+end;
+
+function consoleWriteUnicode(const aString: string): TVoid;
+begin
+  var vHandle := getStdHandle(STD_OUTPUT_HANDLE);
+  case (vHandle = INVALID_HANDLE_VALUE) of TRUE: EXIT; end;
+
+  var vOutput  := aString.replace('#', sLineBreak) + sLineBreak;
 
   var vWritten: DWORD := 0;
   writeConsoleW(vHandle, PWideChar(vOutput), vOutput.length, vWritten, NIL);
 end;
+
+function doClearConsole: TVoid;
+begin
+  consoleClear;
+  consoleWriteBanner;
+  consoleWriteUnicode('Press ENTER to exit');
+end;
+
 
 end.

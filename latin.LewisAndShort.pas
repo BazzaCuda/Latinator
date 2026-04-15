@@ -28,7 +28,7 @@ uses
   system.win.comObj,
   winApi.activeX,
   winApi.msxml,
-  latin.consoleUtils, latin.types;
+  latin.consoleUtils, latin.interfaces, latin.types;
 
 type
 
