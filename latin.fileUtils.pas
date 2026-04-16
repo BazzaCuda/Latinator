@@ -36,14 +36,14 @@ function loadSuffixes     (const aFilePath: string): TArray<TSuffixRec>;
 function loadTackOns      (const aFilePath: string): TArray<TTackOnRec>;
 function loadUniques      (const aFilePath: string): TArray<TUniquesRec>;
 
-function loadMacronVerbs(const aFilePath: string): TArray<TMacronRec>;
-
+function loadMacronVerbs(const aFilePath: string; const aMacronVerbIx: TDictionary<string, TArray<integer>>): TArray<TMacronRec>;
 
 implementation
 
 uses
   system.generics.defaults,
   latin.miscUtils,
+  latin.stringUtils,
   _debugWindow;
 
 function loadDictionary(const aFilePath: string; var aDictIx: TDictionary<string, TArray<integer>>): TArray<TDictLineRec>;
@@ -378,13 +378,26 @@ begin
   end;
 end;
 
-function loadMacronVerbs(const aFilePath: string): TArray<TMacronRec>;
+function loadMacronVerbs(const aFilePath: string; const aMacronVerbIx: TDictionary<string, TArray<integer>>): TArray<TMacronRec>;
+
+  procedure indexKey(const aKey: string; const aIndex: integer);
+  begin
+    case (aKey = '') of TRUE: EXIT; end;
+
+    var vIndices: TArray<integer>;
+    case aMacronVerbIx.tryGetValue(aKey, vIndices) of
+       TRUE: aMacronVerbIx.addOrSetValue(aKey, vIndices + [aIndex]);
+      FALSE: aMacronVerbIx.add(aKey, [aIndex]);
+    end;
+  end;
+
 var vMacronRec: TMacronRec;
 begin
+  aMacronVerbIx.clear;
   expandArray(result, 700000);
   var vFixedDataSize := sizeOf(vMacronRec);
-  var vLineCount := 0;
-  var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
+  var vLineCount     := 0;
+  var vReader        := TStreamReader.create(aFilePath, TEncoding.UTF8);
 
   try
     while not vReader.endOfStream do  begin
@@ -394,7 +407,11 @@ begin
                                         inc(vLineCount);
                                         case vLineCount > length(result) of TRUE: expandArray(result); end;
 
-                                        move(vLine[1], result[vLineCount - 1], vFixedDataSize);
+                                        var vIndex := vLineCount - 1;
+                                        move(vLine[1], result[vIndex], vFixedDataSize);
+
+                                        indexKey(removeMacrons(trim(result[vIndex].mrInflected)), vIndex);
+                                        indexKey(removeMacrons(trim(result[vIndex].mrHeadWord)),  vIndex);
                                       end;
 
     setLength(result, vLineCount);
@@ -402,5 +419,30 @@ begin
     vReader.free;
   end;
 end;
+
+//function loadMacronVerbs(const aFilePath: string): TArray<TMacronRec>;
+//var vMacronRec: TMacronRec;
+//begin
+//  expandArray(result, 700000);
+//  var vFixedDataSize := sizeOf(vMacronRec);
+//  var vLineCount := 0;
+//  var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
+//
+//  try
+//    while not vReader.endOfStream do  begin
+//                                        var vLine := vReader.readLine;
+//                                        case (vLine = '') of TRUE: CONTINUE; end;
+//
+//                                        inc(vLineCount);
+//                                        case vLineCount > length(result) of TRUE: expandArray(result); end;
+//
+//                                        move(vLine[1], result[vLineCount - 1], vFixedDataSize);
+//                                      end;
+//
+//    setLength(result, vLineCount);
+//  finally
+//    vReader.free;
+//  end;
+//end;
 
 end.

@@ -74,6 +74,7 @@ type
     FUniques:       TArray<TUniquesRec>;
 
     FMacronVerbs:   TArray<TMacronRec>;
+    FMacronVerbIx:  TDictionary<string, TArray<integer>>;
   private
     function  conjugateVerb               (const aWord: string; var aDictionaryEntry: string):                                      TGrammarTable;
     function  declineNoun                 (const aWord: string; var aDictionaryEntry: string):                                      TGrammarTable;
@@ -144,6 +145,8 @@ type
     function parseSyncope           (const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
     function parseTerminalIis       (const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
     function parseTwoWords          (const aWord: string; var aPC: TParseContext): TArray<TParseResultRec>;
+    function addMacrons(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+    function matchVerbMorphology(const aParseResult: TParseResultRec; const aMacronRec: TMacronRec): boolean;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -175,12 +178,14 @@ end;
 constructor TLatin.Create;
 begin
   inherited create;
-  FDictIx := TDictionary<string, TArray<integer>>.create(50000); // length is reset after load so we get an accurate entry count
+  FDictIx         := TDictionary<string, TArray<integer>>.create(50000); // length is reset after load so we get an accurate entry count
+  FMacronVerbIx   := TDictionary<string, TArray<integer>>.create(700000);
 end;
 
 destructor TLatin.Destroy;
 begin
   FDictIx.free;
+  FMacronVerbIx.free;
   inherited;
 end;
 
@@ -193,6 +198,80 @@ begin
 end;
 
 //===== FORMATTING THE OUTPUT ====
+
+function TLatin.matchVerbMorphology(const aParseResult: TParseResultRec; const aMacronRec: TMacronRec): boolean;
+begin
+//  var vMacronPOS := string(aMacronRec.mrPOS).trim;
+//  var vParsePOS  := aParseResult.prPartOfSpeech.trim;
+//
+//  var vPOSMatch := FALSE;
+//  case (vMacronPOS = 'VERB') of TRUE: vPOSMatch := (vParsePOS = 'V'); end;
+//  // Note: Add NOUN, ADJ mapping here later if you expand FMacronVerbs to encompass other parts of speech
+//
+//  case NOT vPOSMatch of TRUE: EXIT(FALSE); end;
+
+  var vMacronVoice := aMacronRec.variant.verb.mrVoice;
+  var vParseVoice  := aParseResult.prVoice.trim;
+  case (vMacronVoice = 'A') and (vParseVoice <> 'ACTIVE')  of TRUE: EXIT(FALSE); end;
+  case (vMacronVoice = 'P') and (vParseVoice <> 'PASSIVE') of TRUE: EXIT(FALSE); end;
+
+  var vMacronMood := string(aMacronRec.variant.verb.mrMood).trim;
+  var vParseMood  := aParseResult.prMood.trim;
+  case (vMacronMood = 'IND') and (vParseMood <> 'IND') of TRUE: EXIT(FALSE); end;
+  case (vMacronMood = 'SUB') and (vParseMood <> 'SUB') of TRUE: EXIT(FALSE); end;
+  case (vMacronMood = 'IPV') and (vParseMood <> 'IMP') of TRUE: EXIT(FALSE); end;
+  case (vMacronMood = 'INF') and (vParseMood <> 'INF') of TRUE: EXIT(FALSE); end;
+  case (vMacronMood = 'PAR') and (vParseMood <> 'PPL') of TRUE: EXIT(FALSE); end;
+
+  var vMacronTense := string(aMacronRec.variant.verb.mrTense).trim;
+  var vParseTense  := aParseResult.prTense.trim;
+  case (vMacronTense = 'PRS') and (vParseTense <> 'PRES') of TRUE: EXIT(FALSE); end;
+  case (vMacronTense = 'IMP') and (vParseTense <> 'IMPF') of TRUE: EXIT(FALSE); end;
+  case (vMacronTense = 'FUT') and (vParseTense <> 'FUT')  of TRUE: EXIT(FALSE); end;
+  case (vMacronTense = 'PRF') and (vParseTense <> 'PERF') of TRUE: EXIT(FALSE); end;
+  case (vMacronTense = 'PLU') and (vParseTense <> 'PLUP') of TRUE: EXIT(FALSE); end;
+  case (vMacronTense = 'FPF') and (vParseTense <> 'FUTP') of TRUE: EXIT(FALSE); end;
+
+  case (aMacronRec.variant.verb.mrPerson <> ' ') and (aParseResult.prPerson <> '') and (aMacronRec.variant.verb.mrPerson <> aParseResult.prPerson) of TRUE: EXIT(FALSE); end;
+
+  case (aMacronRec.variant.verb.mrNumber <> ' ') and (aParseResult.prNumber2 <> '') and (aMacronRec.variant.verb.mrNumber <> aParseResult.prNumber2) of TRUE: EXIT(FALSE); end;
+
+  result := TRUE;
+end;
+
+function TLatin.addMacrons(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+begin
+  result := aParseResults;
+  var vIndices: TArray<integer>;
+
+  for var i := 0 to high(result) do
+    case (result[i].prPartOfSpeech.trim = 'V') of TRUE:
+      case FMacronVerbIx.tryGetValue(result[i].prWord, vIndices) of TRUE:
+        for var vIx in vIndices do
+          case matchVerbMorphology(result[i], FMacronVerbs[vIx]) of TRUE: begin
+            result[i].prWord := string(FMacronVerbs[vIx].mrInflected).trim;
+            BREAK;
+          end;end;end;end;
+end;
+
+//function TLatin.addMacronsv1(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
+//begin
+//  result := aParseResults;
+//  for var i := 0 to high(result) do begin
+//    var vKey := removeMacrons(result[i].prWord.trim);
+//    var vIndices: TArray<integer>;
+//
+//    case FMacronVerbIx.tryGetValue(vKey, vIndices) of TRUE:
+//      for var vIndex in vIndices do begin
+//        var vMacronRec := FMacronVerbs[vIndex];
+//        case matchMacronMorphology(result[i], vMacronRec) of TRUE: begin
+//          result[i].prWord := trim(vMacronRec.mrInflected);
+//          BREAK;
+//        end;end;
+//      end;
+//    end;
+//  end;
+//end;
 
 function TLatin.removeDuplicateResults(const aParseResults: TArray<TParseResultRec>): TArray<TParseResultRec>;
 // DO NOT SORT!!!
@@ -439,13 +518,26 @@ begin
 end;
 
 function TLatin.loadMacronVerbs(const aFileName: string): TVoid;
+
+  procedure indexKey(const aKey: string; const aIndex: integer);
+  begin
+    case (aKey = '') of TRUE: EXIT; end;
+
+    var vIndices: TArray<integer>;
+    case FMacronVerbIx.tryGetValue(aKey, vIndices) of
+       TRUE: FMacronVerbIx.addOrSetValue(aKey, vIndices + [aIndex]);
+      FALSE: FMacronVerbIx.add(aKey, [aIndex]);
+    end;
+  end;
+
 begin
-  FMacronVerbs := latin.fileUtils.loadMacronVerbs(FDataPath + aFileName);
+  FMacronVerbs := latin.fileUtils.loadMacronVerbs(FDataPath + aFileName, FMacronVerbIx);
 
   {$if BazDebugWindow}
   debugInteger('FMacronVerbs', length(FMacronVerbs));
   {$endif}
 end;
+
 
 function TLatin.loadPrefixes(const aFileName: string): TVoid;
 begin
@@ -482,6 +574,13 @@ begin
   debugInteger('FUniques', length(FUniques));
   {$endif}
 end;
+
+//===== lOAD MACRON DATA =====
+
+
+
+//===== ---------------- =====
+
 
 //===== PARSING ETC =====
 
@@ -1008,9 +1107,9 @@ end;
 function TLatin.parse(const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
 begin
 //  var vLine       := lowerCase(aLine);
-//      vLine       := removeMacrons(vLine);
+//     var vLine       := removeMacrons(aLine);
   result          := NIL;
-  var vLine       := cleanSentences   (aLine);
+  var vLine       := cleanSentences   (removeMacrons( aLine) );
   var vSentences  := extractSentences (vLine);
 
   for var vSentence in vSentences do  begin
@@ -1842,6 +1941,7 @@ begin
   case (length(result) = 0) and aPC.pcTricks and (NOT bTricks) of TRUE: result := result + parseTricks(aWord, aPC); end;
 
   result := filterAbbreviations(aWord, result);
+  result := addMacrons(result);
 end;
 
 function TLatin.parseUniques(const aWord: string): TArray<TParseResultRec>;

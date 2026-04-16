@@ -1,4 +1,4 @@
-{   Latinator
+﻿{   Latinator
     Copyright (C) 2019-2099 Baz Cuda
     https://github.com/BazzaCuda/Latinator
 
@@ -58,6 +58,28 @@ begin
 end;
 
 function removeMacrons(const aString: string): string;
+begin
+  setLength(result, aString.length);
+  for var i := 1 to aString.length do
+    case aString[i] of
+      'ā': result[i] := 'a';
+      'Ā': result[i] := 'A';
+      'ē': result[i] := 'e';
+      'Ē': result[i] := 'E';
+      'ī': result[i] := 'i';
+      'Ī': result[i] := 'I';
+      'ō': result[i] := 'o';
+      'Ō': result[i] := 'O';
+      'ū': result[i] := 'u';
+      'Ū': result[i] := 'U';
+      'ȳ': result[i] := 'y';
+      'Ȳ': result[i] := 'Y';
+    else
+      result[i] := aString[i];
+    end;
+end;
+
+function removeMacronsNOT(const aString: string): string;
 begin
   var vSize := normalizeString(normalizationD, pChar(aString), -1, NIL, 0);
   setLength(result, vSize);

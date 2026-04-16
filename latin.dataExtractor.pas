@@ -61,7 +61,6 @@ const
                                         );
 
 type
-
   TDataExtractor = class(TInterfacedObject, IDataExtractor)
   strict private
     FDataPath: string;
