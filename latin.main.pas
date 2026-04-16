@@ -41,6 +41,8 @@ type
     function  loadSuffixes      (const aFileName: string): TVoid;
     function  loadTackOns       (const aFileName: string): TVoid;
     function  loadUniques       (const aFileName: string): TVoid;
+
+    function  loadMacronVerbs   (const aFileName: string): TVoid;
     function  parse             (const aConsoleCommand: TConsoleCommand; const aLine: string): TArray<string>;
     function  setDataPath       (const aPath:     string): TVoid;
     function  unload:                                      TVoid;
@@ -71,7 +73,7 @@ type
     FTackOns:       TArray<TTackOnRec>;
     FUniques:       TArray<TUniquesRec>;
 
-    FMacronVerbs:   TArray<TVerbRec>;
+    FMacronVerbs:   TArray<TMacronRec>;
   private
     function  conjugateVerb               (const aWord: string; var aDictionaryEntry: string):                                      TGrammarTable;
     function  declineNoun                 (const aWord: string; var aDictionaryEntry: string):                                      TGrammarTable;
@@ -155,6 +157,8 @@ type
     function  loadSuffixes      (const aFileName: string): TVoid;
     function  loadTackOns       (const aFileName: string): TVoid;
     function  loadUniques       (const aFileName: string): TVoid;
+
+    function  loadMacronVerbs   (const aFileName: string): TVoid;
 
     function  parse             (const aConsoleCommand: TConsoleCommand; const aLine: string):                                      TArray<string>;
     function  setDataPath       (const aPath:     string): TVoid;
@@ -432,6 +436,15 @@ end;
 function TLatin.loadLewisAndShort(const aFileName: string): TVoid;
 begin
   LewisAndshort.loadLewisAndShort(FDataPath + aFileName); // call the LewisAndShort function - don't use FLewisAndShort!
+end;
+
+function TLatin.loadMacronVerbs(const aFileName: string): TVoid;
+begin
+  FMacronVerbs := latin.fileUtils.loadMacronVerbs(FDataPath + aFileName);
+
+  {$if BazDebugWindow}
+  debugInteger('FMacronVerbs', length(FMacronVerbs));
+  {$endif}
 end;
 
 function TLatin.loadPrefixes(const aFileName: string): TVoid;

@@ -25,7 +25,11 @@ uses
   latin.types;
 
 const
-  LATINATOR_BANNER = 'Latinator v2.0.0 - (c) 2019-2099 Baz Cuda (GPL v3.0)';
+  LATINATOR           = 'Latinator';
+  LATINATOR_VERSION   = 'v2.0.0';
+  LATINATOR_COPYRIGHT = '© 2019-2099 Baz Cuda (GPL v3.0)';
+
+  LATINATOR_BANNER    = LATINATOR + ' ' + LATINATOR_VERSION + ' - ' + LATINATOR_COPYRIGHT;
 
   MAX_STEM      = 18;
   SIZE_OF_CHAR  =  2;

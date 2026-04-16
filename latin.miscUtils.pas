@@ -22,6 +22,7 @@ unit latin.miscUtils;
 interface
 
 uses
+  latin.macronData,
   latin.types;
 
 function expandArray(var aArray: TArray<string>;          const aIncrement: integer = 1): TVoid; overload;
@@ -33,6 +34,9 @@ function expandArray(var aArray: TArray<TPrefixRec>;      const aIncrement: inte
 function expandArray(var aArray: TArray<TSuffixRec>;      const aIncrement: integer = 1): TVoid; overload;
 function expandArray(var aArray: TArray<TTackOnRec>;      const aIncrement: integer = 1): TVoid; overload;
 function expandArray(var aArray: TArray<TUniquesRec>;     const aIncrement: integer = 1): TVoid; overload;
+
+function expandArray(var aArray: TArray<TMacronRec>;     const aIncrement: integer = 1): TVoid; overload;
+
 
 implementation
 
@@ -77,6 +81,11 @@ begin
 end;
 
 function expandArray(var aArray: TArray<TUniquesRec>; const aIncrement: integer = 1): TVoid; overload;
+begin
+  setLength(aArray, length(aArray) + aIncrement);
+end;
+
+function expandArray(var aArray: TArray<TMacronRec>;     const aIncrement: integer = 1): TVoid; overload;
 begin
   setLength(aArray, length(aArray) + aIncrement);
 end;

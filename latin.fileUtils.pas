@@ -22,8 +22,11 @@ unit latin.fileUtils;
 interface
 
 uses
-  system.sysUtils, system.classes, system.generics.collections,
-  latin.types;
+  system.classes,
+  system.generics.collections,
+  system.sysUtils,
+
+  latin.macronData, latin.types;
 
 function loadDictionary   (const aFilePath: string; var aDictIx: TDictionary<string, TArray<integer>>): TArray<TDictLineRec>;
 function loadEsse         (const aFilePath: string): TArray<TEsseRec>;
@@ -32,6 +35,9 @@ function loadPrefixes     (const aFilePath: string): TArray<TPrefixRec>;
 function loadSuffixes     (const aFilePath: string): TArray<TSuffixRec>;
 function loadTackOns      (const aFilePath: string): TArray<TTackOnRec>;
 function loadUniques      (const aFilePath: string): TArray<TUniquesRec>;
+
+function loadMacronVerbs(const aFilePath: string): TArray<TMacronRec>;
+
 
 implementation
 
@@ -365,6 +371,31 @@ begin
 //                                      debugString('translation',  string(result[vLineCount - 1].urTranslation));
 //                                    end;end;
     end;
+
+    setLength(result, vLineCount);
+  finally
+    vReader.free;
+  end;
+end;
+
+function loadMacronVerbs(const aFilePath: string): TArray<TMacronRec>;
+var vMacronRec: TMacronRec;
+begin
+  expandArray(result, 700000);
+  var vFixedDataSize := sizeOf(vMacronRec);
+  var vLineCount := 0;
+  var vReader := TStreamReader.create(aFilePath, TEncoding.UTF8);
+
+  try
+    while not vReader.endOfStream do  begin
+                                        var vLine := vReader.readLine;
+                                        case (vLine = '') of TRUE: CONTINUE; end;
+
+                                        inc(vLineCount);
+                                        case vLineCount > length(result) of TRUE: expandArray(result); end;
+
+                                        move(vLine[1], result[vLineCount - 1], vFixedDataSize);
+                                      end;
 
     setLength(result, vLineCount);
   finally

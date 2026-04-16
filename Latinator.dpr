@@ -66,7 +66,10 @@ uses
   latin.macronData in 'latin.macronData.pas',
   latin.tricks in 'latin.tricks.pas',
   latin.interfaces in 'latin.interfaces.pas',
-  view.formSplash in 'view.formSplash.pas' {SplashForm};
+  view.formSplash in 'view.formSplash.pas' {SplashForm},
+  RAR in 'TRAR\RAR.pas',
+  RAR_DLL in 'TRAR\RAR_DLL.pas',
+  latin.dataExtractor in 'latin.dataExtractor.pas';
 
 var
   gSplashScreen:  ISplashScreen = NIL;
@@ -182,6 +185,8 @@ begin
   aLatin.loadPrefixes               ('ADDONS.LAT');
   aLatin.loadSuffixes               ('ADDONS.LAT');
   aLatin.loadTackOns                ('ADDONS.LAT');
+  informUser('Loading macron data...');
+  aLatin.loadMacronVerbs            ('macronVerbs.txt');
 end;
 
 function loadLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
@@ -271,6 +276,21 @@ begin
     end;
 end;
 
+function loadData(const aLatin: ILatin; const aDataPath: string): TVoid;
+begin
+  var vDataExtractor := newDataExtractor;
+  case vDataExtractor = NIL of TRUE: EXIT; end;
+
+  vDataExtractor.setDataPath(aDataPath);
+  case vDataExtractor.checkData of FALSE: begin
+                                            informUser('Extacting data files...');
+                                            case vDataExtractor.extractData of FALSE: EXIT; end;end;end;
+
+  loadWhitakersWords  (aLatin, aDataPath);
+  importLewisAndShort (aLatin, aDataPath);
+  sleep(500);
+end;
+
 begin
   setupRunMode;
 
@@ -285,20 +305,21 @@ begin
     application.mainFormOnTaskbar := TRUE;
     TStyleManager.trySetStyle ('Charcoal Dark Slate');
 
-    loadWhitakersWords  (vLatin, vDataPath);
-    importLewisAndShort (vLatin, vDataPath);
-    sleep(500);
+    loadData(vLatin, vDataPath);
 
-    gSplashScreen.formHide;
+    gSplashScreen.formHide; // "Thank you for your service"
+    gSplashScreen.formFree;
     gSplashScreen := NIL;
 
-    Application.CreateForm(TFormMain, FormMain);
-  application.run;
+    application.createForm(TFormMain, FormMain);
+    application.run;
+
+    vLatin := NIL;
   end;end;
 
   case gRunAsGUI of FALSE:  begin
     case attachConsole      (ATTACH_PARENT_PROCESS) of FALSE: allocConsole; end;
-    //disableConsoleCloseButton;
+    //disableConsoleCloseButton; // not required now that Ctrl-C etc has been solved
     setConsoleCtrlHandler   (@handleConsoleClose, TRUE);
 
     consoleSetWidth         (150);
@@ -314,9 +335,7 @@ begin
 
     consoleWriteBanner;
 
-    loadWhitakersWords  (vLatin, vDataPath);
-    importLewisAndShort (vLatin, vDataPath); // have to do this after the banner and console setup because it emits console messages
-    sleep(500);
+    loadData(vLatin, vDataPath);
 
     consoleClear;
     consoleWriteBanner;

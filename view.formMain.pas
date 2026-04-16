@@ -23,10 +23,13 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+
+  latin.consts;
 
 type
   TFormMain = class(TForm)
+    procedure FormCreate(Sender: TObject);
   private
   public
   end;
@@ -37,5 +40,10 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  caption := LATINATOR + ' ' + LATINATOR_VERSION;
+end;
 
 end.

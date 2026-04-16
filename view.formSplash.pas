@@ -33,6 +33,7 @@ uses
 
 type
   ISplashScreen = interface
+    procedure   formFree;
     procedure   formHide;
     procedure   formShow;
 
@@ -56,6 +57,7 @@ type
   private
   protected
   public
+    procedure   formFree;
     procedure   formHide;
     procedure   formShow;
 
@@ -109,6 +111,11 @@ begin
     alignWithMargins := TRUE;
     panel1.color     := DARK_MODE_LIGHT;
   end;
+end;
+
+procedure TSplashForm.formFree;
+begin
+  SELF.free;
 end;
 
 procedure TSplashForm.formHide;
