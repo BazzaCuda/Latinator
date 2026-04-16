@@ -177,7 +177,7 @@ end;
 function loadWhitakersWords(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
   aLatin.setDataPath                (aDataPath);
-  informUser('Loading Whitaker''''s Words data...');
+  informUser('Loading Whitaker''s Words data...');
   aLatin.loadDictionary             ('DICTLINE.LAT');
   aLatin.loadEsse                   ('ESSE.LAT');
   aLatin.loadInflections            ('INFLECTS.LAT');
@@ -192,34 +192,34 @@ end;
 function loadLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
   aLatin.LewisAndShort.setDataPath  (aDataPath);
-  informUser                      ('Loading Lewis & Short...');
+  informUser                        ('Loading Lewis & Short...');
   aLatin.loadLewisAndShort          ('lat.ls.perseus-eng2.xml');
-  informUser                      (format('%d entries loaded', [aLatin.LewisAndShort.entryCount]));
-  informUser('');
+  informUser                        (format('%d entries loaded', [aLatin.LewisAndShort.entryCount]));
+  informUser                        ('');
 end;
 
 function exportLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
   aLatin.LewisAndShort.setDataPath  (aDataPath);
-  informUser                      ('Exporting Lewis & Short...');
+  informUser                        ('Exporting Lewis & Short...');
   aLatin.LewisAndShort.export       ('Lewis&Short.txt');
-  informUser                      ('');
+  informUser                        ('');
 end;
 
 function importLewisAndShort(const aLatin: ILatin; const aDataPath: string): TVoid;
 begin
   aLatin.LewisAndShort.setDataPath  (aDataPath);
-  informUser                      ('Importing Lewis & Short...');
+  informUser                        ('Importing Lewis & Short...');
   aLatin.LewisAndShort.import       ('Lewis&Short.txt');
-  informUser                      (format('%d entries loaded', [aLatin.LewisAndShort.entryCount]));
-  case gRunAsGUI of FALSE:  informUser(''); end;
+  informUser                        (format('%d entries loaded', [aLatin.LewisAndShort.entryCount]));
+  case gRunAsGUI of FALSE:  informUser(''); end; // don't blank the final message to the splashScreen
 end;
 
 function clearLewisAndShort(const aLatin: ILatin): TVoid;
 begin
   aLatin.LewisAndShort.clear;
-  informUser                      ('Lewis & Short cleared');
-  informUser                      ('');
+  informUser                        ('Lewis & Short cleared');
+  informUser                        ('');
 end;
 
 var

@@ -40,7 +40,25 @@ uses
   _debugWindow;
 
 const
-  DATA_FILES: array[1..6] of string = ('DICTLINE.LAT', 'ESSE.LAT', 'INFLECTS.LAT', 'UNIQUES.LAT', 'ADDONS.LAT', 'macronVerbs.txt');
+  DATA_FILES: array[1..18] of string =  ( 'DICTLINE.LAT',
+                                          'ESSE.LAT',
+                                          'INFLECTS.LAT',
+                                          'UNIQUES.LAT',
+                                          'ADDONS.LAT',
+                                          'lat.ls.perseus-eng2.xml',
+                                          'Lewis&Short.txt',
+                                          'macronAdjectives.txt',
+                                          'macronAdverbs1.txt',
+                                          'macronAdverbs2.txt',
+                                          'macronConjunctions.txt',
+                                          'macronIndeclinables.txt',
+                                          'macronNouns.txt',
+                                          'macronNumbers.txt',
+                                          'macronParticiples.txt',
+                                          'macronPlaces.txt',
+                                          'macronPronominals.txt',
+                                          'macronVerbs.txt'
+                                        );
 
 type
 
@@ -61,6 +79,7 @@ end;
 { TDataExtractor }
 
 function TDataExtractor.checkData: boolean;
+// any missing file will trigger an extraction
 begin
   result := TRUE;
   for var i := low(DATA_FILES) to high(DATA_FILES) do
@@ -72,7 +91,6 @@ begin
   result := FALSE;
 
   var vDatFile := FDataPath + 'wwData.dat';
-  debug(vDatFile);
   case fileExists(vDatFile) of FALSE: EXIT(FALSE); end;
 
   var vRAR := TRAR.create(NIL);
