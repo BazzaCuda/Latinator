@@ -23,7 +23,7 @@ There are several built-in console commands, for example:
 "ls" will give you just the Lewis & Short Dictionary entry for the Latin word that follows:
 <img width="1222" height="676" alt="image" src="https://github.com/user-attachments/assets/d8f31064-e15a-4ac5-ac9f-126d0d78ea0c" />
 
-"nn" will give you the noun declension table for a given Latin word:
+"nn" will give you the noun declension table for a given Latin noun:
 <img width="1226" height="392" alt="image" src="https://github.com/user-attachments/assets/83106a56-cb14-4493-8bb2-9b3aac11d31d" />
 
 There is provision in the code for using the US order of noun cases (Nominative, Genitive....) which will be implemented later.
