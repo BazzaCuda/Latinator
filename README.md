@@ -49,4 +49,4 @@ The functionality to add the appropriate macrons is currently at the prototype s
 **OPTIMIZATION**
 - currently, no performance optimization is implemented: this will be done, if necessary, when the TLatin class is complete
 - performance is excellent on my machine, however it's a ROG Strix G814JI with 32GB of RAM and an i9-13980HX processor so I accept that results elsewhere may vary 
-
+- wwData.dat is automatically unpacked the first time that Latinator.exe is run and expands from 36MB to 820MB
