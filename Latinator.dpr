@@ -76,10 +76,10 @@ var
   gRunAsGUI:      boolean       = FALSE;
 
 {$ifndef useMadExcept}
-procedure shhh(const aExceptIntf: IMEException; var aHandled: boolean);
-begin
-  aHandled := True;
-end;
+//procedure shhh(const aExceptIntf: IMEException; var aHandled: boolean);
+//begin
+//  aHandled := True;
+//end;
 {$endif}
 
 procedure setupRunMode;
@@ -87,7 +87,7 @@ begin
   {$if BazDebugWindow} debugClear; {$endif}
 
   {$ifndef useMadExcept}
-  reportMemoryLeaksOnShutdown := mmpEnvironmentVariable;
+  // reportMemoryLeaksOnShutdown := mmpEnvironmentVariable;
   {$if BazDebugWindow} debugBoolean('reportMemoryLeaksOnShutdown', reportMemoryLeaksOnShutdown); {$endif}
   {$endif}
 
@@ -311,8 +311,8 @@ begin
     gSplashScreen.formFree;
     gSplashScreen := NIL;
 
-    application.createForm(TFormMain, FormMain);
-    application.run;
+    Application.CreateForm(TFormMain, FormMain);
+  application.run;
 
     vLatin := NIL;
   end;end;

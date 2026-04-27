@@ -522,7 +522,9 @@ end;
 
 destructor TLewisAndShort.Destroy;
 begin
+  {$if BazDebugWindow}
   debug('TLewisAndShort.Destroy');
+  {$endif}
   FEntries.clear;
   FIndex.clear;
   FEntries.free;
