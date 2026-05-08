@@ -37,11 +37,12 @@ Consequently, to address the second criticism first, Latinator incorporates the 
 In addition to the original brief English definition of a Latin word derived from the Whitaker's Words data, you get full access to the entire entry from Lewis & Short including examples (quotes) of where and how that word has been used by various Classical Latin authors.
 
 I wanted to rewrite Whitaker's Words in Delphi so that his work could be further preserved, but also transferred and re-architected more appropriately for 21st Century hardware: CPUs, SDDs and memory.
-In doing so, I also want to make his codification of Latin more accessible to a modern audience, adept at Latin and/or Delphi.
+In doing so, I also wanted to make his codification of Latin more accessible to a modern audience who are adept at either Latin or Delphi or both.
 His codification can then be corrected/improved/expanded, as appropriate, depending on the expertise of those who want to get involved.
-In its ADA form, with the data files he provided, I don't see this ever happening.
+In its ADA form, with the data files he left, I don't see this ever happening.
 
 We can also add additional Latin-English and English-Latin functionality that WW could never have added due the hardware constraints he was working under.
+For example, give a Latin noun or any form of a Latin verb, Latinator will already generate the noun declension table or verb conjugation table.
 
 My aim is to, over time, make Latinator a really useful and well-known general-purpose tool for students of Latin, of which I am one (a student of Latin, I mean, not a useful and well-known tool :P)
 Latinator, and its author, will always explicitly credit William Whitaker for the inspiration his remarkable work is to this project.
