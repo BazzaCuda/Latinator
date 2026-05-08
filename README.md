@@ -1,6 +1,6 @@
 # Latinator
  
-Whitaker's Words on Steroids: reverse-engineered, rewritten, expanded. 
+Whitaker's Words on Steroids: reverse-engineered, re-architected, rewritten, expanded. 
 Noun and Verb tables, Lewis & Short Dictionary lookup. Now with added macrons!
 ---
 
