@@ -42,7 +42,7 @@ His codification can then be corrected/improved/expanded, as appropriate, depend
 In its ADA form, with the data files he left, I don't see this ever happening.
 
 We can also add additional Latin-English and English-Latin functionality that WW could never have added due the hardware constraints he was working under.
-For example, given a Latin noun or any form of a Latin verb, Latinator will already generate the noun declension table or verb conjugation table.
+For example, given a Latin noun or any form of a Latin verb, Latinator will already generate the noun declension table or verb conjugation table (see screenshots below).
 
 My aim is to, over time, make Latinator a really useful and well-known general-purpose tool for students of Latin, of which I am one (a student of Latin, I mean, not a useful and well-known tool :P)
 Latinator, and its author, will always explicitly credit William Whitaker for the inspiration his remarkable work is to this project.
