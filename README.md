@@ -17,9 +17,24 @@ WW's "Words" is especially remarkable given the severe DOS hardware/memory const
 ## So why Latinator, then?
 
 That's kind of you to ask, thank you.
-Two main reasons:
-- WW's ADA code has become something of a "black box"
 
+Two main reasons:
+1. The Code
+- WW's ADA code has become something of a "black box". It is highly convoluted and whilst not entirely "impenetrable", it is certainly approaching it
+- Although some attempts have been made to reorganise the code into more logical units, the code itself appears unchanged in those projects
+- Websites that use WW's "Words" program appear to either be running cut-down Latin-to-English only versions, and without all the user options, or entirely "as is"
+- It was amended and re-amended many many times over the ten years of its development and like all such software projects the code suffered for it
+- WW had to engineer/architect some "less than ideal" shortcuts in order to fit everything into the 640KB (yes kilobytes!!) of memory and onto 1.5MB floppy disks for distribution
+- Because of all the above, and more, although WW's work is preserved as an executable program, his codification of Latin is, for all practical purposes, as good as lost in its current form
+
+2. Context
+- One criticism frequently levelled at "Whitaker's Words" is that when translating Latin words into English, it doesn't take the context of the Latin words into consideration
+- It uses Whitaker's one-to-one dictionary entry of a Latin word to an English summary line which contains one or more very brief [possible] meanings
+- It is then left entirely to the user to decide which of the various meanings of a Latin word might be being used in the phrase they wanted to be translated
+
+### Latinator
+Consequently, to address the second criticism first, Latinator incorporates the full Lewis & Short Latin Dictionary in a format exclusive to Latinator.
+In addition to the original brief English definition of a Latin word derived from the Whitaker's Words data, you get full access to the entire entry from Lewis & Short including examples (quotes) of where and how that word has been used by various Classical Latin authors.
 
 ---
 
@@ -64,6 +79,6 @@ The functionality to add the appropriate macrons is currently at the prototype s
 <img width="642" height="488" alt="image" src="https://github.com/user-attachments/assets/2ec13696-58c6-45ef-8c7f-86956547ac6d" />
 
 **OPTIMIZATION**
-- currently, no performance optimization is implemented: this will be done, if necessary, when the TLatin class is complete
+- currently, no explicit performance optimization is implemented over and above writing Delphi code which should be inherently high-performance: any further tweaking of the code or architecture to make it faster will be done, only if necessary, when the TLatin class is complete
 - performance is excellent on my machine, however it's a ROG Strix G814JI with 32GB of RAM and an i9-13980HX processor so I accept that results elsewhere may vary 
 - wwData.dat is automatically unpacked the first time that Latinator.exe is run and expands from 36MB to 820MB
