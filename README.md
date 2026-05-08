@@ -91,7 +91,7 @@ There is provision in the code for using the US order of noun cases (Nominative,
 
 <img width="1228" height="315" alt="image" src="https://github.com/user-attachments/assets/987da20b-3899-40c6-9e2e-eb511b4a5596" />
 
-
+---
 The functionality to add the appropriate macrons is currently at the prototype stage but the "proof of concept" has been successful:
 <img width="1225" height="204" alt="image" src="https://github.com/user-attachments/assets/b313dab3-fbe6-422a-b628-fd6a4de7e3cf" />
 
