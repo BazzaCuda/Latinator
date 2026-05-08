@@ -59,6 +59,7 @@ To that end then, I have made a number of significant changes:
 - current test results would suggest that Latinator is pretty much replicating WW Words, with even some improvements to the console output
 
 lunch break - more to follow!
+
 ---
 
 Run Latinator.exe directly from your file manager software, not from a command prompt, as it creates its own console window.
@@ -101,13 +102,18 @@ The functionality to add the appropriate macrons is currently at the prototype s
 <img width="329" height="107" alt="image" src="https://github.com/user-attachments/assets/cf77413e-b60c-48b1-85f2-61e637ce416c" />
 <img width="642" height="488" alt="image" src="https://github.com/user-attachments/assets/2ec13696-58c6-45ef-8c7f-86956547ac6d" />
 
+- "cls" will do a "clear screen" exactly as it would in a cmd.exe console window
 - "import" will import the well-known lat.ls.perseus-eng2.xml version of the Lewis & Short Latin Dictionary, parsing the XML into memory objects; on my machine this takes about 14 seconds
 - "export" will export the Lewis & Short to "Lewis&Short.txt" which is the modified and very stylised version that Latinator actually uses; on my machine this takes about 6 seconds
 - "las" will load the Lewis & Short Dictionary from "Lewis&Short.txt" for use by the program; on my machine this takes about 3 seconds
 - during startup, Latinator automatically loads "Lewis&Short.txt". Even on my machine, the difference between 14 seconds and 3 seconds for the program to load is clear justification for the work that was involved in writing the conversion from the original XML to the Latinator format.
+
+The XML version of the Lewis & Short Latin dictionary was downloaded from one of the Perseus Project's repositories: https://github.com/PerseusDL/lexica/tree/master/CTS_XML_TEI/perseus/pdllex/lat/ls
+
 ---
 
 **OPTIMIZATION**
 - currently, no explicit performance optimization is implemented over and above writing Delphi code which should be inherently high-performance: any further tweaking of the code or architecture to make it faster will be done, only if necessary, when the TLatin class is complete
-- performance is excellent on my machine, however it's a ROG Strix G814JI with 32GB of RAM and an i9-13980HX processor so I accept that results elsewhere may vary 
+- performance is excellent on my machine, however it's a ROG Strix G814JI gaming laptop with 32GB of RAM and an i9-13980HX processor so I accept that results elsewhere may vary
+- I mention that only to highlight the fact that absent any user feedback thus far, I have no idea how the code currently performs on a more typical Windows machine 
 - wwData.dat is automatically unpacked the first time that Latinator.exe is run and expands from 36MB to 820MB (sorry William! :D)
