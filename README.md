@@ -1,10 +1,27 @@
 # Latinator
  
-Whitaker's Words on Steroids: re-engineered, rewritten, expanded. 
+Whitaker's Words on Steroids: reverse-engineered, rewritten, expanded. 
 Noun and Verb tables, Lewis & Short Dictionary lookup. Now with added macrons!
 ---
 
 This is intended to be a Delphi/Latin Community project, so Pull Requests are not only welcome but invited and encouraged.
+
+---
+William A. Whitaker (1936–2010) was a Colonel in the United States Air Force (USAF). While working at the Defense Advanced Research Projects Agency (DARPA), he chaired the High Order Language Working Group. This group was responsible for the development of the computer language ADA. WW was an accomplished Latinist who created "Whitaker's Words," a [still] widely used Latin-to-English and English-to-Latin translation program. 
+
+WW did a remarkable job of codifying, to a large extent, the entire Latin language, including its adaptation through the ages.
+WW's "Words" is especially remarkable given the severe DOS hardware/memory constraints he was working under at the time.
+
+---
+
+## So why Latinator, then?
+
+That's kind of you to ask, thank you.
+Two main reasons:
+- WW's ADA code has become something of a "black box"
+
+
+---
 
 Run Latinator.exe directly from your file manager software, not from a command prompt, as it creates its own console window.
 A GUI version will follow once the full Latin-English and English-Latin engine/pipeline is deemed acceptable and fully reliable.
