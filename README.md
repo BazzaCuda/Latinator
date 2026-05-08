@@ -47,15 +47,18 @@ For example, given a Latin noun or any form of a Latin verb, Latinator will alre
 My aim is to, over time, make Latinator a really useful and well-known general-purpose tool for students of Latin, of which I am one (a student of Latin, I mean, not a useful and well-known tool :P)
 Latinator, and its author, will always explicitly credit William Whitaker for the inspiration his remarkable work is to this project.
 
-To that end then, I have made a number of subtle but significant changes:
+To that end then, I have made a number of significant changes:
 - I have adapted his original data files so that they are fixed-column
 - This allows them to be "sucked", unparsed, straight from SDD files into Windows memory in milliseconds, as indexed Delphi records
-- 
+- It also makes them significantly clearer and easier to amend
+- Changes to the data files are instantaneously available in Latinator because it reads the data "as is", whereas WW Words had to then convert the data into additional optimized indexed files
+- As a result, we are now able to amend the WW data which has, mostly, been frozen since 2010
+- The ADA code has been "completely" reverse-engineered and rewritten in Delphi. During testing I'm still checking just how complete I have been in incorporating all of WW's Latin logic
+- I have not in any way copied WW's architecture: on the contrary, I have tried to make Latinator's architecture significantly more straight-forward so that other developers can quickly come to terms with it
+- I have only concentrated on how WW processed a Latin word and I have simply tried to replicate his approach not his code
+- current test results would suggest that Latinator is pretty much replicating WW Words, with even some improvements to the console output
 
-The ADA code has been completely [see footnote] reverse-engineered and rewritten in Delphi
-
-footnote: I still regularly check whether I got everything
-
+lunch break - more to follow!
 ---
 
 Run Latinator.exe directly from your file manager software, not from a command prompt, as it creates its own console window.
