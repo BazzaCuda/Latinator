@@ -73,7 +73,7 @@ Entering a series of Latin words will give you the Whitaker's Words data for eac
 There are several built-in console commands, for example:
 
 "ww" will give you just the Whitaker's Words entries for the Latin words that follow:
-<img width="1226" height="681" alt="image" src="https://github.com/user-attachments/assets/dc4e0956-dced-4eba-bf1b-f1d0aee06905" />
+<img width="1220" height="225" alt="image" src="https://github.com/user-attachments/assets/acf44d40-384e-4b5d-bbc4-7998ccc9dffd" />
 
 "ls" will give you just the Lewis & Short Dictionary entry for the Latin word that follows:
 <img width="1222" height="676" alt="image" src="https://github.com/user-attachments/assets/d8f31064-e15a-4ac5-ac9f-126d0d78ea0c" />
@@ -106,4 +106,4 @@ The functionality to add the appropriate macrons is currently at the prototype s
 **OPTIMIZATION**
 - currently, no explicit performance optimization is implemented over and above writing Delphi code which should be inherently high-performance: any further tweaking of the code or architecture to make it faster will be done, only if necessary, when the TLatin class is complete
 - performance is excellent on my machine, however it's a ROG Strix G814JI with 32GB of RAM and an i9-13980HX processor so I accept that results elsewhere may vary 
-- wwData.dat is automatically unpacked the first time that Latinator.exe is run and expands from 36MB to 820MB
+- wwData.dat is automatically unpacked the first time that Latinator.exe is run and expands from 36MB to 820MB (sorry William! :D)
