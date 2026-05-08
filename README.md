@@ -36,6 +36,25 @@ Two main reasons:
 Consequently, to address the second criticism first, Latinator incorporates the full Lewis & Short Latin Dictionary in a format exclusive to Latinator.
 In addition to the original brief English definition of a Latin word derived from the Whitaker's Words data, you get full access to the entire entry from Lewis & Short including examples (quotes) of where and how that word has been used by various Classical Latin authors.
 
+I wanted to rewrite Whitaker's Words in Delphi so that his work could be further preserved, but also transferred and re-architected more appropriately for 21st Century hardware: CPUs, SDDs and memory.
+In doing so, I also want to make his codification of Latin more accessible to a modern audience, adept at Latin and/or Delphi.
+His codification can then be corrected/improved/expanded, as appropriate, depending on the expertise of those who want to get involved.
+In its ADA form, with the data files he provided, I don't see this ever happening.
+
+We can also add additional Latin-English and English-Latin functionality that WW could never have added due the hardware constraints he was working under.
+
+My aim is to, over time, make Latinator a really useful and well-known general-purpose tool for students of Latin, of which I am one (a student of Latin, I mean, not a useful and well-known tool :P)
+Latinator, and its author, will always explicitly credit William Whitaker for the inspiration his remarkable work is to this project.
+
+To that end then, I have made a number of subtle but significant changes:
+- I have adapted his original data files so that they are fixed-column
+- This allows them to be "sucked", unparsed, straight from SDD files into Windows memory in milliseconds, as indexed Delphi records
+- 
+
+The ADA code has been completely [see footnote] reverse-engineered and rewritten in Delphi
+
+footnote: I still regularly check whether I got everything
+
 ---
 
 Run Latinator.exe directly from your file manager software, not from a command prompt, as it creates its own console window.
@@ -71,12 +90,14 @@ There is provision in the code for using the US order of noun cases (Nominative,
 The functionality to add the appropriate macrons is currently at the prototype stage:
 <img width="1225" height="204" alt="image" src="https://github.com/user-attachments/assets/b313dab3-fbe6-422a-b628-fd6a4de7e3cf" />
 
-
+---
 **NOTES**
 - You can run Latinator.exe in GUI mode by creating a shortcut to the .exe and including a "GUI" parameter
 - However, this currently needs some work and is waiting for the TLatin class to be stable :D
 <img width="329" height="107" alt="image" src="https://github.com/user-attachments/assets/cf77413e-b60c-48b1-85f2-61e637ce416c" />
 <img width="642" height="488" alt="image" src="https://github.com/user-attachments/assets/2ec13696-58c6-45ef-8c7f-86956547ac6d" />
+
+---
 
 **OPTIMIZATION**
 - currently, no explicit performance optimization is implemented over and above writing Delphi code which should be inherently high-performance: any further tweaking of the code or architecture to make it faster will be done, only if necessary, when the TLatin class is complete
