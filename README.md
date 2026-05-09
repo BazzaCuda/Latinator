@@ -19,6 +19,8 @@ E&OE, but feedback is welcomed if you spot an error
 
 ---
 
+### William Whitaker and "Whitaker's Words"
+
 William A. Whitaker (1936–2010) was a Colonel in the United States Air Force (USAF). While working at the Defense Advanced Research Projects Agency (DARPA), he chaired the High Order Language Working Group. This group was responsible for the development of the computer language ADA. WW was an accomplished Latinist who created "Whitaker's Words," a [still] widely used Latin-to-English and English-to-Latin translation program. 
 
 WW did a remarkable job of codifying, to a large extent, the entire Latin language, including its adaptation through the ages.
