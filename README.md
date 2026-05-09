@@ -7,6 +7,18 @@ Noun and Verb tables, Lewis & Short Dictionary lookup. Now with added macrons!
 This is intended to be a Delphi/Latin Community project, so Pull Requests are not only welcome but invited and encouraged.
 
 ---
+
+### Significant Updates
+added a "Latin Finite Verbs" mindmap showing how to form all verb forms
+<img width="3320" height="1349" alt="image" src="https://github.com/user-attachments/assets/f12bbaa2-baf6-4c10-ba0f-8ffe9dabc2fb" />
+
+https://github.com/BazzaCuda/Latinator/blob/main/Latin%20Charts/Baz%20Cuda%20-%20Latin%20Finite%20Verbs.png
+
+
+E&OE, but feedback is welcomed if you spot an error
+
+---
+
 William A. Whitaker (1936–2010) was a Colonel in the United States Air Force (USAF). While working at the Defense Advanced Research Projects Agency (DARPA), he chaired the High Order Language Working Group. This group was responsible for the development of the computer language ADA. WW was an accomplished Latinist who created "Whitaker's Words," a [still] widely used Latin-to-English and English-to-Latin translation program. 
 
 WW did a remarkable job of codifying, to a large extent, the entire Latin language, including its adaptation through the ages.
