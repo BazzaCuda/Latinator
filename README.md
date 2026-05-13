@@ -10,7 +10,7 @@ This is intended to be a Delphi/Latin Community project, so Pull Requests are no
 
 ### Significant Updates
 added a "Latin Finite Verbs" mindmap showing how to form all verb forms together with their full conjugations
-<img width="3320" height="1348" alt="image" src="https://github.com/BazzaCuda/Latinator/blob/main/Latin_Charts/Baz_Cuda-Latin_Finite_Verbs.png" />
+<img width="3320" height="1348" alt="Latin Finite Verbs Mindmap" src="https://github.com/BazzaCuda/Latinator/blob/main/Latin_Charts/Baz_Cuda-Latin_Finite_Verbs.png" />
 
 
 
@@ -66,7 +66,7 @@ Latinator, and its author, will always explicitly credit William Whitaker for th
 
 To that end then, I have made a number of significant changes:
 - I have adapted his original data files so that they are fixed-column
-- This allows them to be "sucked up", unparsed, direct from SDD files into Windows memory in milliseconds, as indexed Delphi records
+- This allows them to be "sucked up", unparsed, direct from SSD files into Windows memory in milliseconds, as indexed Delphi records
 - It also makes them significantly clearer and easier to amend
 - Changes to the data files are instantaneously available in Latinator because it reads the data "as is", whereas WW Words had to then convert the data into additional optimized indexed files
 - As a result, we are now able to amend the WW data which has, mostly, been frozen since 2010
