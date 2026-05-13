@@ -14,7 +14,7 @@ added a "Latin Finite Verbs" mindmap showing how to form all verb forms together
 
 
 
-Latest Version:
+Latest Version (2026/05/13):
 https://github.com/BazzaCuda/Latinator/blob/main/Latin_Charts/Baz_Cuda-Latin_Finite_Verbs.png
 
 
