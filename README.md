@@ -10,7 +10,9 @@ This is intended to be a Delphi/Latin Community project, so Pull Requests are no
 
 ### Significant Updates
 added a "Latin Finite Verbs" mindmap showing how to form all verb forms together with their full conjugations
-<img style="max-width: 100%; height: auto;" alt="Latin Finite Verbs Mindmap" title="Latin Finite Verbs Mindmap" src="Latin_Charts/Baz_Cuda-Latin-Finite-Verbs-Mindmap.png" />
+<a href="Latin_Charts/Baz_Cuda-Latin_Finite_Verbs.png" target="_blank">
+<img style="max-width: 100%; height: auto;" alt="Latin Finite Verbs Mindmap" title="Latin Finite Verbs Mindmap" src="Latin_Charts/Baz_Cuda-Latin-Finite-Verbs-Mindmap.png">
+</a>
 
 
 
