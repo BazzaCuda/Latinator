@@ -114,16 +114,23 @@ The functionality to add the appropriate macrons is currently at the prototype s
 
 ---
 **Additional**
-- You can run Latinator.exe in GUI mode by creating a shortcut to the .exe and including a "GUI" parameter
-- However, this currently needs some work and is waiting for the TLatin class to be stable :D
-<img width="329" height="107" alt="image" src="https://github.com/user-attachments/assets/cf77413e-b60c-48b1-85f2-61e637ce416c" />
-<img width="642" height="488" alt="image" src="https://github.com/user-attachments/assets/2ec13696-58c6-45ef-8c7f-86956547ac6d" />
-
 - "cls" will do a "clear screen" exactly as it would in a cmd.exe console window
 - "import" will import the well-known lat.ls.perseus-eng2.xml version of the Lewis & Short Latin Dictionary, parsing the XML into memory objects; on my machine this takes about 14 seconds
 - "export" will export the Lewis & Short to "Lewis&Short.txt" which is the modified and very stylised version that Latinator actually uses; on my machine this takes about 6 seconds
 - "las" will load the Lewis & Short Dictionary from "Lewis&Short.txt" for use by the program; on my machine this takes about 3 seconds
 - during startup, Latinator automatically loads "Lewis&Short.txt". Even on my machine, the difference between 14 seconds and 3 seconds for the program to load is clear justification for the work that was involved in writing the conversion from the original XML to the Latinator format.
+
+- You can run Latinator.exe in GUI mode by creating a shortcut to the .exe and including a "GUI" parameter
+- However, this currently needs some work and is waiting for the TLatin class to be stable :D
+
+splash screen
+
+<img width="329" height="107" alt="image" src="https://github.com/user-attachments/assets/cf77413e-b60c-48b1-85f2-61e637ce416c" />
+
+Windows UI
+
+<img width="642" height="488" alt="image" src="https://github.com/user-attachments/assets/2ec13696-58c6-45ef-8c7f-86956547ac6d" />
+
 
 The XML version of the Lewis & Short Latin dictionary was downloaded from one of the Perseus Project's repositories: https://github.com/PerseusDL/lexica/tree/master/CTS_XML_TEI/perseus/pdllex/lat/ls
 
