@@ -15,7 +15,7 @@ added a "Latin Finite Verbs" mindmap showing how to form all verb forms together
 
 
 Latest Version (2026/05/13):
-[Latin Finite Verbs Mindmap - View Full Image](Latin_Charts/Baz_Cuda-Latin_Finite_Verbs.png)
+[Latin Finite Verbs Mindmap - View Full Image](./Latin_Charts/Baz_Cuda-Latin_Finite_Verbs.png)
 
 E&OE, but feedback is welcomed if you spot an error
 
