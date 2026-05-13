@@ -6,6 +6,8 @@ Noun and Verb tables, Lewis & Short Dictionary lookup. Now with added macrons!
 
 This is intended to be a Delphi/Latin Community project, so Pull Requests are not only welcome but invited and encouraged.
 
+[Latinator on Github](https://github.com/BazzaCuda/Latinator/tree/main)
+
 ---
 
 ### Significant Updates
