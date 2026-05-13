@@ -82,34 +82,34 @@ Run Latinator.exe directly from your file manager software, not from a command p
 A GUI version will follow once the full Latin-English and English-Latin engine/pipeline is deemed acceptable and fully reliable.
 
 Entering a single word will give you both the Whitaker's Words and the full Lewis & Short Dictionary entries:
-<img width="1222" height="675" alt="image" src="https://github.com/user-attachments/assets/13ebc417-f1e3-462d-a2d9-c015752f9547" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/13ebc417-f1e3-462d-a2d9-c015752f9547" />
 
 Entering a series of Latin words will give you the Whitaker's Words data for each word
-<img width="1225" height="331" alt="image" src="https://github.com/user-attachments/assets/21fdccd7-73bb-4ce9-8f4a-6ec449600691" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/21fdccd7-73bb-4ce9-8f4a-6ec449600691" />
 
 There are several built-in console commands, for example:
 
 "ww" will give you just the Whitaker's Words entries for the Latin words that follow:
-<img width="1220" height="225" alt="image" src="https://github.com/user-attachments/assets/acf44d40-384e-4b5d-bbc4-7998ccc9dffd" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/acf44d40-384e-4b5d-bbc4-7998ccc9dffd" />
 
 "ls" will give you just the Lewis & Short Dictionary entry for the Latin word that follows:
-<img width="1222" height="676" alt="image" src="https://github.com/user-attachments/assets/d8f31064-e15a-4ac5-ac9f-126d0d78ea0c" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/d8f31064-e15a-4ac5-ac9f-126d0d78ea0c" />
 
 "nn" will give you the noun declension table for a given Latin noun:
-<img width="1226" height="392" alt="image" src="https://github.com/user-attachments/assets/83106a56-cb14-4493-8bb2-9b3aac11d31d" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/83106a56-cb14-4493-8bb2-9b3aac11d31d" />
 
 There is provision in the code for using the US order of noun cases (Nominative, Genitive....) which will be implemented later.
 
 "vv" will give you the verb conjugation table for the form of the verb you supply:
-<img width="1226" height="296" alt="image" src="https://github.com/user-attachments/assets/52aae8e3-5ab5-4f15-b952-5eb64c97de0a" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/52aae8e3-5ab5-4f15-b952-5eb64c97de0a" />
 
-<img width="1221" height="300" alt="image" src="https://github.com/user-attachments/assets/cb8883b1-b7d9-407c-9b67-573ae4e7b90f" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/cb8883b1-b7d9-407c-9b67-573ae4e7b90f" />
 
-<img width="1228" height="315" alt="image" src="https://github.com/user-attachments/assets/987da20b-3899-40c6-9e2e-eb511b4a5596" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/987da20b-3899-40c6-9e2e-eb511b4a5596" />
 
 ---
 The functionality to add the appropriate macrons is currently at the prototype stage but the "proof of concept" has been successful:
-<img width="1225" height="204" alt="image" src="https://github.com/user-attachments/assets/b313dab3-fbe6-422a-b628-fd6a4de7e3cf" />
+<img style="max-width: 100%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/b313dab3-fbe6-422a-b628-fd6a4de7e3cf" />
 
 ---
 **Additional**
