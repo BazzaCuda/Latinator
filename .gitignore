@@ -63,7 +63,7 @@
 *.htm
 # *.xml
 *WebView2*
-*.html
+# *.html
 LatinWords.txt
 *.css
 
